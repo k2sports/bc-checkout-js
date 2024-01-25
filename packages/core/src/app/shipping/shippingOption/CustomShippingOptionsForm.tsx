@@ -1,4 +1,9 @@
-import { CheckoutSelectors, Consignment } from '@bigcommerce/checkout-sdk';
+import {
+  CheckoutSelectors,
+  Consignment,
+  Customer,
+  ShippingOption,
+} from '@bigcommerce/checkout-sdk';
 import { FormikProps, withFormik } from 'formik';
 import { noop } from 'lodash';
 import React, { PureComponent, ReactNode } from 'react';
@@ -21,7 +26,7 @@ export type ShippingOptionsFormProps = ShippingOptionsProps &
   WithCheckoutShippingOptionsProps &
   AnalyticsContextProps;
 
-class ShippingOptionsForm extends PureComponent<
+class CustomShippingOptionsForm extends PureComponent<
   ShippingOptionsFormProps & FormikProps<ShippingOptionsFormValues>
 > {
   private unsubscribe?: () => void;
@@ -55,11 +60,12 @@ class ShippingOptionsForm extends PureComponent<
       shouldShowShippingOptions,
       invalidShippingMessage,
       methodId,
+      customer,
     } = this.props;
 
     const { checkoutConfig } = window as CustomCheckoutWindow;
 
-    console.log('shipping options form - window.checkoutConfig', checkoutConfig);
+    console.log('custom shipping options form - window.checkoutConfig', checkoutConfig);
 
     if (!consignments?.length || !shouldShowShippingOptions) {
       return (
@@ -95,7 +101,7 @@ class ShippingOptionsForm extends PureComponent<
               selectedShippingOptionId={
                 consignment.selectedShippingOption && consignment.selectedShippingOption.id
               }
-              shippingOptions={consignment.availableShippingOptions}
+              shippingOptions={filterShippingOptions(consignment, customer)}
             />
 
             {(!consignment.availableShippingOptions ||
@@ -175,6 +181,24 @@ function getRadioInputName(consignmentId: string): string {
   return `shippingOptionIds.${consignmentId}`;
 }
 
+function filterShippingOptions(consignment: Consignment, customer: Customer): ShippingOption[] {
+  console.log('getFilteredOptions', consignment, customer);
+
+  const isPro = customer?.customerGroup?.id === 2;
+
+  const options = consignment?.availableShippingOptions || [];
+
+  return (
+    options.filter((option) => {
+      if (isPro) {
+        return option?.cost > 0;
+      }
+
+      return option;
+    }) || []
+  );
+}
+
 export interface ShippingOptionsFormValues {
   shippingOptionIds: {
     [shippingOptionIds: string]: string;
@@ -195,5 +219,5 @@ export default withAnalytics(
 
       return { shippingOptionIds };
     },
-  })(ShippingOptionsForm),
+  })(CustomShippingOptionsForm),
 );
