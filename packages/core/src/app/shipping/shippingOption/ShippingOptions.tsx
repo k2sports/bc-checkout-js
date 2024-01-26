@@ -9,7 +9,7 @@ import getShippableLineItems from '../getShippableLineItems';
 import getShippingMethodId from '../getShippingMethodId';
 
 import CustomShippingOptionsForm from './CustomShippingOptionsForm';
-import ShippingOptionsForm from './ShippingOptionsForm';
+// import ShippingOptionsForm from './ShippingOptionsForm';
 
 export interface ShippingOptionsProps {
   isMultiShippingMode: boolean;

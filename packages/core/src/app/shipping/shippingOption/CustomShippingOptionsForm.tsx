@@ -14,7 +14,7 @@ import { ChecklistSkeleton } from '@bigcommerce/checkout/ui';
 
 import { AddressType, StaticAddress } from '../../address';
 import { withAnalytics } from '../../analytics';
-import { CustomCheckoutWindow } from '../../auto-loader';
+import { CustomCheckoutWindow, HideShippingMethods } from '../../auto-loader';
 import getRecommendedShippingOption from '../getRecommendedShippingOption';
 import StaticConsignmentItemList from '../StaticConsignmentItemList';
 
@@ -63,9 +63,9 @@ class CustomShippingOptionsForm extends PureComponent<
       customer,
     } = this.props;
 
-    const { checkoutConfig } = window as CustomCheckoutWindow;
-
-    console.log('custom shipping options form - window.checkoutConfig', checkoutConfig);
+    const customCheckoutWindow: CustomCheckoutWindow = window as unknown as CustomCheckoutWindow;
+    const hideShippingMethods: HideShippingMethods | undefined =
+      customCheckoutWindow?.checkoutConfig?.hideShippingMethods;
 
     if (!consignments?.length || !shouldShowShippingOptions) {
       return (
@@ -101,7 +101,7 @@ class CustomShippingOptionsForm extends PureComponent<
               selectedShippingOptionId={
                 consignment.selectedShippingOption && consignment.selectedShippingOption.id
               }
-              shippingOptions={filterShippingOptions(consignment, customer)}
+              shippingOptions={filterShippingOptions(consignment, customer, hideShippingMethods)}
             />
 
             {(!consignment.availableShippingOptions ||
@@ -181,22 +181,28 @@ function getRadioInputName(consignmentId: string): string {
   return `shippingOptionIds.${consignmentId}`;
 }
 
-function filterShippingOptions(consignment: Consignment, customer: Customer): ShippingOption[] {
-  console.log('getFilteredOptions', consignment, customer);
+function filterShippingOptions(
+  consignment: Consignment,
+  customer: Customer | undefined,
+  hideShippingMethods: HideShippingMethods | undefined,
+): ShippingOption[] {
+  console.log('getFilteredOptions - v10', { consignment, customer, hideShippingMethods });
 
-  const isPro = customer?.customerGroup?.id === 2;
+  const shippingOptions = consignment?.availableShippingOptions || [];
 
-  const options = consignment?.availableShippingOptions || [];
+  if (!customer || !hideShippingMethods || !hideShippingMethods?.isEnabled) {
+    return shippingOptions;
+  }
 
-  return (
-    options.filter((option) => {
-      if (isPro) {
-        return option?.cost > 0;
-      }
+  // IF the customer is in the customer group THEN hide free shipping options
+  if (customer?.customerGroup?.id === hideShippingMethods?.customerGroupId) {
+    return shippingOptions.filter((option) => option.cost > 0);
+  }
 
-      return option;
-    }) || []
-  );
+  // IF free methods exist THEN return first free shipping option
+  const freeShippingOption = shippingOptions.find((option) => option.cost === 0);
+
+  return freeShippingOption ? [freeShippingOption] : shippingOptions;
 }
 
 export interface ShippingOptionsFormValues {

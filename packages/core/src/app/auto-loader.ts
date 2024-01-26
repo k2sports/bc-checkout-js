@@ -2,6 +2,11 @@ import { BrowserOptions } from '@sentry/browser';
 
 import { loadFiles } from './loader';
 
+export interface HideShippingMethods {
+  customerGroupId?: number;
+  isEnabled: boolean;
+}
+
 export interface CustomCheckoutWindow extends Window {
   checkoutConfig: {
     containerId: string;
@@ -9,7 +14,7 @@ export interface CustomCheckoutWindow extends Window {
     checkoutId?: string;
     publicPath?: string;
     sentryConfig?: BrowserOptions;
-    modifyShippingMethods?: boolean;
+    hideShippingMethods?: HideShippingMethods;
   };
 }
 

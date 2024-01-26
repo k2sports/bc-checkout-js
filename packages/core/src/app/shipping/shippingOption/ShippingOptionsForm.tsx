@@ -57,10 +57,6 @@ class ShippingOptionsForm extends PureComponent<
       methodId,
     } = this.props;
 
-    const { checkoutConfig } = window as CustomCheckoutWindow;
-
-    console.log('shipping options form - window.checkoutConfig', checkoutConfig);
-
     if (!consignments?.length || !shouldShowShippingOptions) {
       return (
         <ChecklistSkeleton
