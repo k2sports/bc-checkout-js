@@ -9,7 +9,6 @@ import { ChecklistSkeleton } from '@bigcommerce/checkout/ui';
 
 import { AddressType, StaticAddress } from '../../address';
 import { withAnalytics } from '../../analytics';
-import { CustomCheckoutWindow } from '../../auto-loader';
 import getRecommendedShippingOption from '../getRecommendedShippingOption';
 import StaticConsignmentItemList from '../StaticConsignmentItemList';
 

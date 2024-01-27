@@ -1,9 +1,4 @@
-import {
-  CheckoutSelectors,
-  Consignment,
-  Customer,
-  ShippingOption,
-} from '@bigcommerce/checkout-sdk';
+import { CheckoutSelectors, Consignment } from '@bigcommerce/checkout-sdk';
 import { FormikProps, withFormik } from 'formik';
 import { noop } from 'lodash';
 import React, { PureComponent, ReactNode } from 'react';
@@ -14,7 +9,7 @@ import { ChecklistSkeleton } from '@bigcommerce/checkout/ui';
 
 import { AddressType, StaticAddress } from '../../address';
 import { withAnalytics } from '../../analytics';
-import { CustomCheckoutWindow, HideShippingMethods } from '../../auto-loader';
+import getFilteredShippingOptions from '../getFilteredShippingOptions';
 import getRecommendedShippingOption from '../getRecommendedShippingOption';
 import StaticConsignmentItemList from '../StaticConsignmentItemList';
 
@@ -63,10 +58,6 @@ class CustomShippingOptionsForm extends PureComponent<
       customer,
     } = this.props;
 
-    const customCheckoutWindow: CustomCheckoutWindow = window as unknown as CustomCheckoutWindow;
-    const hideShippingMethods: HideShippingMethods | undefined =
-      customCheckoutWindow?.checkoutConfig?.hideShippingMethods;
-
     if (!consignments?.length || !shouldShowShippingOptions) {
       return (
         <ChecklistSkeleton
@@ -101,7 +92,10 @@ class CustomShippingOptionsForm extends PureComponent<
               selectedShippingOptionId={
                 consignment.selectedShippingOption && consignment.selectedShippingOption.id
               }
-              shippingOptions={filterShippingOptions(consignment, customer, hideShippingMethods)}
+              shippingOptions={getFilteredShippingOptions(
+                consignment?.availableShippingOptions,
+                customer,
+              )}
             />
 
             {(!consignment.availableShippingOptions ||
@@ -121,7 +115,7 @@ class CustomShippingOptionsForm extends PureComponent<
   }
 
   private selectDefaultShippingOptions: (state: CheckoutSelectors) => void = async ({ data }) => {
-    const { selectShippingOption, setFieldValue } = this.props;
+    const { selectShippingOption, setFieldValue, customer } = this.props;
 
     const consignment = (data.getConsignments() || []).find(
       ({ selectedShippingOption, availableShippingOptions: shippingOptions }) =>
@@ -133,9 +127,9 @@ class CustomShippingOptionsForm extends PureComponent<
     }
 
     const { availableShippingOptions, id } = consignment;
-    const recommendedOption = getRecommendedShippingOption(availableShippingOptions);
-    const singleShippingOption =
-      availableShippingOptions.length === 1 && availableShippingOptions[0];
+    const filteredShippingOptions = getFilteredShippingOptions(availableShippingOptions, customer);
+    const recommendedOption = getRecommendedShippingOption(filteredShippingOptions);
+    const singleShippingOption = filteredShippingOptions.length === 1 && filteredShippingOptions[0];
     const defaultShippingOption = recommendedOption || singleShippingOption;
 
     if (!defaultShippingOption) {
@@ -179,35 +173,6 @@ class CustomShippingOptionsForm extends PureComponent<
 
 function getRadioInputName(consignmentId: string): string {
   return `shippingOptionIds.${consignmentId}`;
-}
-
-function filterShippingOptions(
-  consignment: Consignment,
-  customer: Customer | undefined,
-  hideShippingMethods: HideShippingMethods | undefined,
-): ShippingOption[] {
-  console.log('getFilteredOptions - v11', { consignment, customer, hideShippingMethods });
-
-  const shippingOptions = consignment?.availableShippingOptions || [];
-
-  if (!customer || !hideShippingMethods || !hideShippingMethods?.isEnabled) {
-    return shippingOptions;
-  }
-
-  // IF the customer is in the customer group THEN hide free shipping options
-  if (customer?.customerGroup?.id === hideShippingMethods?.customerGroupId) {
-    return shippingOptions.filter((option) => option.cost > 0);
-  }
-
-  // Return recommended shipping option
-  // const freeShippingOption = shippingOptions.find((option) => option.cost === 0);
-  const recommendedOption = getRecommendedShippingOption(shippingOptions);
-
-  return recommendedOption ? [recommendedOption] : shippingOptions;
-
-  // IF free methods exist THEN return first free shipping option
-  // const freeShippingOption = shippingOptions.find((option) => option.cost === 0);
-  // return freeShippingOption ? [freeShippingOption] : shippingOptions;
 }
 
 export interface ShippingOptionsFormValues {
