@@ -12,7 +12,7 @@ export default function getFilteredShippingOptions(
   const hideShippingMethods: HideShippingMethods | undefined =
     customCheckoutWindow?.checkoutConfig?.hideShippingMethods;
 
-  console.log('getFilteredShippingOptions - v30', {
+  console.log('getFilteredShippingOptions - v35', {
     availableShippingOptions,
     customer,
     hideShippingMethods,

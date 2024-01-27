@@ -8,8 +8,8 @@ import { withCheckout } from '../../checkout';
 import getShippableLineItems from '../getShippableLineItems';
 import getShippingMethodId from '../getShippingMethodId';
 
-import CustomShippingOptionsForm from './CustomShippingOptionsForm';
-// import ShippingOptionsForm from './ShippingOptionsForm';
+// import CustomShippingOptionsForm from './CustomShippingOptionsForm';
+import ShippingOptionsForm from './ShippingOptionsForm';
 
 export interface ShippingOptionsProps {
   isMultiShippingMode: boolean;
@@ -110,4 +110,4 @@ export function mapToShippingOptions(
   };
 }
 
-export default withCheckout(mapToShippingOptions)(CustomShippingOptionsForm);
+export default withCheckout(mapToShippingOptions)(ShippingOptionsForm);

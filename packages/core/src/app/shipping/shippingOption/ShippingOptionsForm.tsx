@@ -9,6 +9,7 @@ import { ChecklistSkeleton } from '@bigcommerce/checkout/ui';
 
 import { AddressType, StaticAddress } from '../../address';
 import { withAnalytics } from '../../analytics';
+import getFilteredShippingOptions from '../getFilteredShippingOptions';
 import getRecommendedShippingOption from '../getRecommendedShippingOption';
 import StaticConsignmentItemList from '../StaticConsignmentItemList';
 
@@ -20,7 +21,7 @@ export type ShippingOptionsFormProps = ShippingOptionsProps &
   WithCheckoutShippingOptionsProps &
   AnalyticsContextProps;
 
-class ShippingOptionsForm extends PureComponent<
+class CustomShippingOptionsForm extends PureComponent<
   ShippingOptionsFormProps & FormikProps<ShippingOptionsFormValues>
 > {
   private unsubscribe?: () => void;
@@ -54,6 +55,7 @@ class ShippingOptionsForm extends PureComponent<
       shouldShowShippingOptions,
       invalidShippingMessage,
       methodId,
+      customer,
     } = this.props;
 
     if (!consignments?.length || !shouldShowShippingOptions) {
@@ -90,7 +92,10 @@ class ShippingOptionsForm extends PureComponent<
               selectedShippingOptionId={
                 consignment.selectedShippingOption && consignment.selectedShippingOption.id
               }
-              shippingOptions={consignment.availableShippingOptions}
+              shippingOptions={getFilteredShippingOptions(
+                consignment?.availableShippingOptions,
+                customer,
+              )}
             />
 
             {(!consignment.availableShippingOptions ||
@@ -110,7 +115,7 @@ class ShippingOptionsForm extends PureComponent<
   }
 
   private selectDefaultShippingOptions: (state: CheckoutSelectors) => void = async ({ data }) => {
-    const { selectShippingOption, setFieldValue } = this.props;
+    const { selectShippingOption, setFieldValue, customer } = this.props;
 
     const consignment = (data.getConsignments() || []).find(
       ({ selectedShippingOption, availableShippingOptions: shippingOptions }) =>
@@ -122,9 +127,9 @@ class ShippingOptionsForm extends PureComponent<
     }
 
     const { availableShippingOptions, id } = consignment;
-    const recommendedOption = getRecommendedShippingOption(availableShippingOptions);
-    const singleShippingOption =
-      availableShippingOptions.length === 1 && availableShippingOptions[0];
+    const filteredShippingOptions = getFilteredShippingOptions(availableShippingOptions, customer);
+    const recommendedOption = getRecommendedShippingOption(filteredShippingOptions);
+    const singleShippingOption = filteredShippingOptions.length === 1 && filteredShippingOptions[0];
     const defaultShippingOption = recommendedOption || singleShippingOption;
 
     if (!defaultShippingOption) {
@@ -190,5 +195,5 @@ export default withAnalytics(
 
       return { shippingOptionIds };
     },
-  })(ShippingOptionsForm),
+  })(CustomShippingOptionsForm),
 );
