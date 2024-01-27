@@ -186,7 +186,7 @@ function filterShippingOptions(
   customer: Customer | undefined,
   hideShippingMethods: HideShippingMethods | undefined,
 ): ShippingOption[] {
-  console.log('getFilteredOptions - v10', { consignment, customer, hideShippingMethods });
+  console.log('getFilteredOptions - v11', { consignment, customer, hideShippingMethods });
 
   const shippingOptions = consignment?.availableShippingOptions || [];
 
@@ -199,10 +199,15 @@ function filterShippingOptions(
     return shippingOptions.filter((option) => option.cost > 0);
   }
 
-  // IF free methods exist THEN return first free shipping option
-  const freeShippingOption = shippingOptions.find((option) => option.cost === 0);
+  // Return recommended shipping option
+  // const freeShippingOption = shippingOptions.find((option) => option.cost === 0);
+  const recommendedOption = getRecommendedShippingOption(shippingOptions);
 
-  return freeShippingOption ? [freeShippingOption] : shippingOptions;
+  return recommendedOption ? [recommendedOption] : shippingOptions;
+
+  // IF free methods exist THEN return first free shipping option
+  // const freeShippingOption = shippingOptions.find((option) => option.cost === 0);
+  // return freeShippingOption ? [freeShippingOption] : shippingOptions;
 }
 
 export interface ShippingOptionsFormValues {
