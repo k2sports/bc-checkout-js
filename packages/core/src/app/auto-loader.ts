@@ -5,6 +5,7 @@ import { loadFiles } from './loader';
 export interface HideShippingMethods {
   customerGroupId?: number;
   isEnabled: boolean;
+  showRecommendedMethod?: boolean;
 }
 export interface CustomCheckoutWindow extends Window {
   checkoutConfig: {

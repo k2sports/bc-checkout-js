@@ -29,10 +29,14 @@ export default function getFilteredShippingOptions(
     return shippingOptions.filter((option) => option.cost > 0);
   }
 
-  // Return recommended shipping option (should always be the free option)
-  const recommendedOption = getRecommendedShippingOption(shippingOptions);
+  // IF showRecommendedMethod is true THEN return recommended shipping option (should always be the free option)
+  if (hideShippingMethods?.showRecommendedMethod) {
+    const recommendedOption = getRecommendedShippingOption(shippingOptions);
 
-  return recommendedOption ? [recommendedOption] : shippingOptions;
+    return recommendedOption ? [recommendedOption] : shippingOptions;
+  }
+
+  return shippingOptions;
 
   // IF free methods exist THEN return first free shipping option
   // const freeShippingOption = shippingOptions.find((option) => option.cost === 0);
