@@ -3,9 +3,9 @@ import { BrowserOptions } from '@sentry/browser';
 import { loadFiles } from './loader';
 
 export interface HideShippingMethods {
-  customerGroupId?: number;
   isEnabled: boolean;
   showRecommendedMethod?: boolean;
+  customerGroupIds?: number[];
 }
 export interface CustomCheckoutWindow extends Window {
   checkoutConfig: {
