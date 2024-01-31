@@ -26,6 +26,15 @@ export default function getFilteredShippingOptions(
 
   // IF the customer is in the customer group THEN hide free shipping options
   if (customer?.customerGroup?.id === hideShippingMethods?.customerGroupId) {
+    // Allow the free shipping promotion
+    const freeShippingPromoOption = shippingOptions.find(
+      (option) => option.type === 'freeshipping',
+    );
+
+    if (freeShippingPromoOption) {
+      return [freeShippingPromoOption];
+    }
+
     return shippingOptions.filter((option) => option.cost > 0);
   }
 
@@ -37,8 +46,4 @@ export default function getFilteredShippingOptions(
   }
 
   return shippingOptions;
-
-  // IF free methods exist THEN return first free shipping option
-  // const freeShippingOption = shippingOptions.find((option) => option.cost === 0);
-  // return freeShippingOption ? [freeShippingOption] : shippingOptions;
 }
