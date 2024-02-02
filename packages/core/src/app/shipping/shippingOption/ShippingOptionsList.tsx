@@ -1,5 +1,5 @@
 import { ShippingOption } from '@bigcommerce/checkout-sdk';
-import React, { FunctionComponent, memo, useCallback, useState } from 'react';
+import React, { FunctionComponent, memo, useCallback } from 'react';
 
 import { EMPTY_ARRAY } from '../../common/utility';
 import { Checklist, ChecklistItem } from '../../ui/form';
