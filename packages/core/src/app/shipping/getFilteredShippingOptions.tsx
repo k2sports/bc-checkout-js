@@ -1,6 +1,6 @@
 import { Customer, ShippingOption } from '@bigcommerce/checkout-sdk';
 
-import { CustomCheckoutWindow, HideShippingMethods } from '../auto-loader';
+import { CustomCheckoutWindow, ManageShippingMethods } from '../auto-loader';
 
 import getRecommendedShippingOption from './getRecommendedShippingOption';
 
@@ -9,18 +9,18 @@ export default function getFilteredShippingOptions(
   customer: Customer | undefined,
 ): ShippingOption[] {
   const customCheckoutWindow: CustomCheckoutWindow = window as unknown as CustomCheckoutWindow;
-  const hideShippingMethods: HideShippingMethods | undefined =
-    customCheckoutWindow?.checkoutConfig?.hideShippingMethods;
+  const manageShippingMethods: ManageShippingMethods | undefined =
+    customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
 
   console.log('getFilteredShippingOptions - v35', {
     availableShippingOptions,
     customer,
-    hideShippingMethods,
+    manageShippingMethods,
   });
 
   const shippingOptions = availableShippingOptions || [];
 
-  if (!customer || !hideShippingMethods || !hideShippingMethods?.isEnabled) {
+  if (!customer || !manageShippingMethods || !manageShippingMethods?.isEnabled) {
     return shippingOptions;
   }
 
@@ -29,7 +29,7 @@ export default function getFilteredShippingOptions(
   // IF the customer is in the customer group THEN hide free shipping options
   if (
     currentCustomerGroupId &&
-    hideShippingMethods?.customerGroupIds?.includes(currentCustomerGroupId)
+    manageShippingMethods?.hideFreeShippingGroups?.includes(currentCustomerGroupId)
   ) {
     // Allow the free shipping promotion
     const freeShippingPromoOption = shippingOptions.find(
@@ -44,7 +44,7 @@ export default function getFilteredShippingOptions(
   }
 
   // IF showRecommendedMethod is true THEN return recommended shipping option (should always be the free option)
-  if (hideShippingMethods?.showRecommendedMethod) {
+  if (manageShippingMethods?.showRecommendedMethod) {
     const recommendedOption = getRecommendedShippingOption(shippingOptions);
 
     return recommendedOption ? [recommendedOption] : shippingOptions;

@@ -2,10 +2,10 @@ import { BrowserOptions } from '@sentry/browser';
 
 import { loadFiles } from './loader';
 
-export interface HideShippingMethods {
+export interface ManageShippingMethods {
   isEnabled: boolean;
   showRecommendedMethod?: boolean;
-  customerGroupIds?: number[];
+  hideFreeShippingGroups?: number[];
 }
 export interface CustomCheckoutWindow extends Window {
   checkoutConfig: {
@@ -14,7 +14,7 @@ export interface CustomCheckoutWindow extends Window {
     checkoutId?: string;
     publicPath?: string;
     sentryConfig?: BrowserOptions;
-    hideShippingMethods?: HideShippingMethods;
+    manageShippingMethods?: ManageShippingMethods;
   };
 }
 
