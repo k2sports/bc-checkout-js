@@ -1,5 +1,5 @@
 import { ShippingOption } from '@bigcommerce/checkout-sdk';
-import React, { FunctionComponent, memo, useCallback } from 'react';
+import React, { FunctionComponent, memo, useCallback, useEffect } from 'react';
 
 import { EMPTY_ARRAY } from '../../common/utility';
 import { Checklist, ChecklistItem } from '../../ui/form';
@@ -51,6 +51,20 @@ const ShippingOptionsList: FunctionComponent<ShippingOptionListProps> = ({
   selectedShippingOptionId,
   onSelectedOption,
 }) => {
+  useEffect(() => {
+    if (shippingOptions?.length) {
+      console.log('running use effect');
+
+      const isSelectedOptionAvailable = shippingOptions.find(
+        (option) => option.id === selectedShippingOptionId,
+      );
+
+      if (!isSelectedOptionAvailable && shippingOptions?.length === 1) {
+        handleSelect(shippingOptions[0]?.id);
+      }
+    }
+  }, []);
+
   const handleSelect = useCallback(
     (value: string) => {
       onSelectedOption(consignmentId, value);
@@ -60,14 +74,6 @@ const ShippingOptionsList: FunctionComponent<ShippingOptionListProps> = ({
 
   if (!shippingOptions.length) {
     return null;
-  }
-
-  const isSelectedOptionAvailable = shippingOptions.find(
-    (option) => option.id === selectedShippingOptionId,
-  );
-
-  if (!isSelectedOptionAvailable && shippingOptions?.length === 1) {
-    handleSelect(shippingOptions[0]?.id);
   }
 
   return (
