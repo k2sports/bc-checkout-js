@@ -12,17 +12,15 @@ export default function getFilteredShippingOptions(
   const manageShippingMethods: ManageShippingMethods | undefined =
     customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
 
-  console.log('getFilteredShippingOptions', {
-    // availableShippingOptions,
-    // customer,
-    manageShippingMethods,
-  });
+  //   console.log('getFilteredShippingOptions', {
+  //     availableShippingOptions,
+  //     customer,
+  //     manageShippingMethods,
+  //   });
 
   const shippingOptions = availableShippingOptions || [];
 
   if (!customer || !manageShippingMethods || !manageShippingMethods?.isEnabled) {
-    console.log('here', !customer, !manageShippingMethods, !manageShippingMethods?.isEnabled);
-
     return shippingOptions;
   }
 
@@ -33,8 +31,6 @@ export default function getFilteredShippingOptions(
     currentCustomerGroupId &&
     manageShippingMethods?.hideFreeShippingGroups?.includes(currentCustomerGroupId)
   ) {
-    console.log('and here');
-
     // Allow the free shipping promotion
     const freeShippingPromoOption = shippingOptions.find(
       (option) => option.type === 'freeshipping',
@@ -49,14 +45,10 @@ export default function getFilteredShippingOptions(
 
   // IF showRecommendedMethod is true THEN return recommended shipping option (should always be the free option)
   if (manageShippingMethods?.showRecommendedMethod) {
-    console.log('doing this');
-
     const recommendedOption = getRecommendedShippingOption(shippingOptions);
 
     return recommendedOption ? [recommendedOption] : shippingOptions;
   }
-
-  console.log('nope');
 
   return shippingOptions;
 }

@@ -27,184 +27,155 @@ describe('getFilteredShippingOptions()', () => {
   const freeShippingMethod: ShippingOption = { ...shippingMethodMock, isRecommended: false };
   const shippingMethod: ShippingOption = { ...shippingMethodMock, isRecommended: false, cost: 5 };
 
-  it('Return all shipping methods when manageShippingMethods is undefined', () => {
-    expect(
-      getFilteredShippingOptions(
+  describe('When manageShippingMethods is undefined or disabled', () => {
+    test('Return all shipping methods', () => {
+      expect(
+        getFilteredShippingOptions(
+          [freeShippingMethod, freeShippingPromo, shippingMethod],
+          customerMock,
+        ),
+      ).toHaveLength(3);
+
+      (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
+        hideFreeShippingGroups: undefined,
+        isEnabled: false,
+        showRecommendedMethod: false,
+      };
+
+      expect(
+        getFilteredShippingOptions(
+          [freeShippingMethod, freeShippingPromo, shippingMethod],
+          customerMock,
+        ),
+      ).toHaveLength(3);
+    });
+  });
+
+  describe("When manageShippingMethods is enabled and hideFreeShippingGroups includes the customer's group", () => {
+    beforeAll(() => {
+      (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
+        hideFreeShippingGroups: [1],
+        isEnabled: true,
+        showRecommendedMethod: true,
+      };
+    });
+
+    test('Return free shipping promo if it exists', () => {
+      const availableMethods = getFilteredShippingOptions(
         [freeShippingMethod, freeShippingPromo, shippingMethod],
         customerMock,
-      ),
-    ).toHaveLength(3);
+      );
+
+      expect(availableMethods).toHaveLength(1);
+      expect(availableMethods).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'freeshipping',
+          }),
+        ]),
+      );
+    });
+
+    test("Return non-free method if promo doesn't exist", () => {
+      const availableMethods = getFilteredShippingOptions(
+        [freeShippingMethod, shippingMethod],
+        customerMock,
+      );
+
+      expect(availableMethods).toHaveLength(1);
+      expect(availableMethods).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'shipping_flatrate',
+            cost: 5,
+          }),
+        ]),
+      );
+    });
   });
 
-  it('Return all shipping methods when manageShippingMethods is disabled', () => {
-    (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
-      hideFreeShippingGroups: undefined,
-      isEnabled: false,
-      showRecommendedMethod: false,
-    };
+  describe("When manageShippingMethods is enabled and hideFreeShippingGroups does not include the customer's group", () => {
+    test('Return recommended method when showRecommendedMethod is true', () => {
+      (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
+        hideFreeShippingGroups: [2],
+        isEnabled: true,
+        showRecommendedMethod: true,
+      };
 
-    expect(
-      getFilteredShippingOptions(
+      let availableMethods = getFilteredShippingOptions(
         [freeShippingMethod, freeShippingPromo, shippingMethod],
         customerMock,
-      ),
-    ).toHaveLength(3);
-  });
+      );
 
-  it('Return all shipping methods when manageShippingMethods is enabled and showRecommendedMethod is false', () => {
-    (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
-      hideFreeShippingGroups: undefined,
-      isEnabled: true,
-      showRecommendedMethod: false,
-    };
+      expect(availableMethods).toHaveLength(1);
+      expect(availableMethods).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'freeshipping',
+            isRecommended: true,
+          }),
+        ]),
+      );
 
-    expect(
-      getFilteredShippingOptions(
+      const freeShippingMethodRecommended: ShippingOption = {
+        ...shippingMethodMock,
+        isRecommended: true,
+      };
+
+      availableMethods = getFilteredShippingOptions(
+        [freeShippingMethodRecommended, shippingMethod],
+        customerMock,
+      );
+
+      expect(availableMethods).toHaveLength(1);
+      expect(availableMethods).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'shipping_flatrate',
+            cost: 0,
+            isRecommended: true,
+          }),
+        ]),
+      );
+    });
+
+    test('Return all shipping methods when showRecommendedMethod is false', () => {
+      (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
+        hideFreeShippingGroups: [2],
+        isEnabled: true,
+        showRecommendedMethod: false,
+      };
+
+      let availableMethods = getFilteredShippingOptions(
         [freeShippingMethod, freeShippingPromo, shippingMethod],
         customerMock,
-      ),
-    ).toHaveLength(3);
-  });
+      );
 
-  it('Return 1 recommended shipping method when manageShippingMethods is enabled and showRecommendedMethod is true', () => {
-    (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
-      hideFreeShippingGroups: undefined,
-      isEnabled: true,
-      showRecommendedMethod: true,
-    };
+      expect(getFilteredShippingOptions(availableMethods, customerMock)).toHaveLength(3);
 
-    expect(
-      getFilteredShippingOptions(
-        [freeShippingMethod, freeShippingPromo, shippingMethod],
+      const freeShippingMethodRecommended: ShippingOption = {
+        ...shippingMethodMock,
+        isRecommended: true,
+      };
+
+      availableMethods = getFilteredShippingOptions(
+        [freeShippingMethodRecommended, shippingMethod],
         customerMock,
-      ),
-    ).toHaveLength(1);
-  });
+      );
 
-  it("Returns free shipping promo when manageShippingMethods is enabled and hideFreeShippingGroups matches the customer's group", () => {
-    (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
-      hideFreeShippingGroups: [1],
-      isEnabled: true,
-      showRecommendedMethod: true,
-    };
-
-    const availableMethods = getFilteredShippingOptions(
-      [freeShippingMethod, freeShippingPromo, shippingMethod],
-      customerMock,
-    );
-
-    expect(availableMethods).toHaveLength(1);
-    expect(availableMethods).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'freeshipping',
-        }),
-      ]),
-    );
-  });
-
-  it("Returns non-free method when manageShippingMethods is enabled and hideFreeShippingGroups matches the customer's group", () => {
-    (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
-      hideFreeShippingGroups: [1],
-      isEnabled: true,
-      showRecommendedMethod: true,
-    };
-
-    const availableMethods = getFilteredShippingOptions(
-      [freeShippingMethod, shippingMethod],
-      customerMock,
-    );
-
-    expect(availableMethods).toHaveLength(1);
-    expect(availableMethods).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'shipping_flatrate',
-          cost: 5,
-        }),
-      ]),
-    );
-  });
-
-  it("Returns free shipping promo when manageShippingMethods is enabled and hideFreeShippingGroups does not match the customer's group", () => {
-    (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
-      hideFreeShippingGroups: [2],
-      isEnabled: true,
-      showRecommendedMethod: true,
-    };
-
-    const availableMethods = getFilteredShippingOptions(
-      [freeShippingMethod, freeShippingPromo, shippingMethod],
-      customerMock,
-    );
-
-    expect(availableMethods).toHaveLength(1);
-    expect(availableMethods).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'freeshipping',
-        }),
-      ]),
-    );
-  });
-
-  it("Returns free method when manageShippingMethods is enabled and hideFreeShippingGroups does not match the customer's group and showRecommendedMethod is true", () => {
-    (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
-      hideFreeShippingGroups: [2],
-      isEnabled: true,
-      showRecommendedMethod: true,
-    };
-
-    const freeShippingMethodRecommended: ShippingOption = {
-      ...shippingMethodMock,
-      isRecommended: true,
-    };
-
-    const availableMethods = getFilteredShippingOptions(
-      [freeShippingMethodRecommended, shippingMethod],
-      customerMock,
-    );
-
-    expect(availableMethods).toHaveLength(1);
-    expect(availableMethods).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'shipping_flatrate',
-          cost: 0,
-        }),
-      ]),
-    );
-  });
-
-  it("Returns 2 methods when manageShippingMethods is enabled and hideFreeShippingGroups does not match the customer's group and showRecommendedMethod is false", () => {
-    (window as unknown as CustomCheckoutWindow).checkoutConfig.manageShippingMethods = {
-      hideFreeShippingGroups: [2],
-      isEnabled: true,
-      showRecommendedMethod: false,
-    };
-
-    const freeShippingMethodRecommended: ShippingOption = {
-      ...shippingMethodMock,
-      isRecommended: true,
-    };
-
-    const availableMethods = getFilteredShippingOptions(
-      [freeShippingMethodRecommended, shippingMethod],
-      customerMock,
-    );
-
-    expect(availableMethods).toHaveLength(2);
-    expect(availableMethods).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          type: 'shipping_flatrate',
-          cost: 0,
-        }),
-        expect.objectContaining({
-          type: 'shipping_flatrate',
-          cost: 5,
-        }),
-      ]),
-    );
+      expect(availableMethods).toHaveLength(2);
+      expect(availableMethods).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'shipping_flatrate',
+            cost: 0,
+          }),
+          expect.objectContaining({
+            type: 'shipping_flatrate',
+            cost: 5,
+          }),
+        ]),
+      );
+    });
   });
 });
