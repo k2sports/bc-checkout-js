@@ -53,8 +53,6 @@ const ShippingOptionsList: FunctionComponent<ShippingOptionListProps> = ({
 }) => {
   useEffect(() => {
     if (shippingOptions?.length) {
-      console.log('running use effect');
-
       const isSelectedOptionAvailable = shippingOptions.find(
         (option) => option.id === selectedShippingOptionId,
       );
