@@ -12,12 +12,6 @@ export default function getFilteredShippingOptions(
   const manageShippingMethods: ManageShippingMethods | undefined =
     customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
 
-  console.log('getFilteredShippingOptions', {
-    availableShippingOptions,
-    customer,
-    manageShippingMethods,
-  });
-
   const shippingOptions = availableShippingOptions || [];
 
   if (!customer || !manageShippingMethods || !manageShippingMethods?.isEnabled) {
