@@ -2,34 +2,42 @@ import { BrowserOptions } from '@sentry/browser';
 
 import { loadFiles } from './loader';
 
+export interface ManageShippingMethods {
+  isEnabled: boolean;
+  showRecommendedMethod?: boolean;
+  hideFreeShippingGroups?: number[];
+}
 export interface CustomCheckoutWindow extends Window {
-    checkoutConfig: {
-        containerId: string;
-        orderId?: number;
-        checkoutId?: string;
-        publicPath?: string;
-        sentryConfig?: BrowserOptions;
-    };
+  checkoutConfig: {
+    containerId: string;
+    orderId?: number;
+    checkoutId?: string;
+    publicPath?: string;
+    sentryConfig?: BrowserOptions;
+    manageShippingMethods?: ManageShippingMethods;
+  };
 }
 
 function isCustomCheckoutWindow(window: Window): window is CustomCheckoutWindow {
-    const customCheckoutWindow: CustomCheckoutWindow = window as CustomCheckoutWindow;
+  const customCheckoutWindow: CustomCheckoutWindow = window as CustomCheckoutWindow;
 
-    return !!customCheckoutWindow.checkoutConfig;
+  return !!customCheckoutWindow.checkoutConfig;
 }
 
 (async function autoLoad() {
-    if (!isCustomCheckoutWindow(window)) {
-        throw new Error('Checkout config is missing.');
-    }
+  if (!isCustomCheckoutWindow(window)) {
+    throw new Error('Checkout config is missing.');
+  }
 
-    const { renderOrderConfirmation, renderCheckout } = await loadFiles();
+  console.log('Manage Shipping Methods v1.0.0');
 
-    const { orderId, checkoutId, ...appProps } = window.checkoutConfig;
+  const { renderOrderConfirmation, renderCheckout } = await loadFiles();
 
-    if (orderId) {
-        renderOrderConfirmation({ ...appProps, orderId });
-    } else if (checkoutId) {
-        renderCheckout({ ...appProps, checkoutId });
-    }
+  const { orderId, checkoutId, ...appProps } = window.checkoutConfig;
+
+  if (orderId) {
+    renderOrderConfirmation({ ...appProps, orderId });
+  } else if (checkoutId) {
+    renderCheckout({ ...appProps, checkoutId });
+  }
 })();
