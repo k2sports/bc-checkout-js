@@ -1,5 +1,5 @@
 import { CheckoutSelectors, Consignment } from '@bigcommerce/checkout-sdk';
-import { FormikProps, withFormik } from 'formik';
+import { FormikProps } from 'formik';
 import { noop } from 'lodash';
 import React, { PureComponent, ReactNode } from 'react';
 
@@ -9,6 +9,7 @@ import { ChecklistSkeleton } from '@bigcommerce/checkout/ui';
 
 import { AddressType, StaticAddress } from '../../address';
 import { withAnalytics } from '../../analytics';
+import { withFormikExtended } from '../../common/form';
 import getFilteredShippingOptions from '../getFilteredShippingOptions';
 import getRecommendedShippingOption from '../getRecommendedShippingOption';
 import StaticConsignmentItemList from '../StaticConsignmentItemList';
@@ -183,7 +184,7 @@ export interface ShippingOptionsFormValues {
 }
 
 export default withAnalytics(
-  withFormik<ShippingOptionsFormProps, ShippingOptionsFormValues>({
+  withFormikExtended<ShippingOptionsFormProps, ShippingOptionsFormValues>({
     handleSubmit: noop,
     mapPropsToValues({ consignments }) {
       const shippingOptionIds: { [id: string]: string } = {};

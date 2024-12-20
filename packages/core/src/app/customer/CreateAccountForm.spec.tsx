@@ -67,7 +67,7 @@ describe('CreateAccountForm Component', () => {
     });
 
     it.each([
-        ['Password needs to contain a letter', '1234567'],
+        ['password must match the following: "/[a-zA-Z]/"', '1234567'],
         ['Password needs to contain a number', 'abcdefg'],
         ['Password is too short', '1a'],
     ])('renders correct error when %s', async (expected, passwordCase) => {
@@ -221,9 +221,9 @@ describe('CreateAccountForm Component', () => {
             <LocaleContext.Provider value={localeContext}>
                 <CreateAccountForm
                     formFields={formFields}
+                    isCreatingAccount={true}
                     onSubmit={onSubmit}
                     requiresMarketingConsent={true}
-                    isCreatingAccount={true}
                 />
             </LocaleContext.Provider>,
         );
@@ -240,9 +240,9 @@ describe('CreateAccountForm Component', () => {
             <LocaleContext.Provider value={localeContext}>
                 <CreateAccountForm
                     formFields={formFields}
+                    isExecutingPaymentMethodCheckout={true}
                     onSubmit={onSubmit}
                     requiresMarketingConsent={true}
-                    isExecutingPaymentMethodCheckout={true}
                 />
             </LocaleContext.Provider>,
         );

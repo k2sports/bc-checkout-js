@@ -230,6 +230,8 @@ const StripeGuestForm: FunctionComponent<StripeGuestFormProps & FormikProps<Gues
                                     data-test="customer-continue-button"
                                     id="checkout-customer-login"
                                     onClick={ onShowLogin }
+                                    role="button"
+                                    tabIndex={0}
                                 >
                                     <TranslatedString id="customer.login_action"/>
                                 </a>

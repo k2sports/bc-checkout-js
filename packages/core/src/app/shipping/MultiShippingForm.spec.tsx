@@ -45,6 +45,7 @@ describe('MultiShippingForm Component', () => {
             cartHasChanged: false,
             customerMessage: 'x',
             countriesWithAutocomplete: [],
+            isInitialValueLoaded: true,
             isLoading: false,
             consignments: [
                 { ...getConsignment(), id: 'foo' },
@@ -57,26 +58,6 @@ describe('MultiShippingForm Component', () => {
             onUnhandledError: jest.fn(),
             onUseNewAddress: jest.fn(),
         };
-    });
-
-    describe('when user is guest', () => {
-        beforeEach(() => {
-            component = mount(
-                <CheckoutProvider checkoutService={checkoutService}>
-                    <LocaleContext.Provider value={localeContext}>
-                        <ExtensionProvider checkoutService={checkoutService}>
-                            <MultiShippingForm {...defaultProps} isGuest={true} />
-                        </ExtensionProvider>
-                    </LocaleContext.Provider>
-                </CheckoutProvider>,
-            );
-        });
-
-        it('renders sign in message', () => {
-            component.find('[data-test="shipping-sign-in-link"]').simulate('click');
-
-            expect(defaultProps.onSignIn).toHaveBeenCalled();
-        });
     });
 
     describe('when user is signed in', () => {

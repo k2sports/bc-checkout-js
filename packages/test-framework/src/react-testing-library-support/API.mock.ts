@@ -1,4 +1,9 @@
+import { Checkout, Consignment, PhysicalItem } from '@bigcommerce/checkout-sdk';
+
 const timeString = new Date().toISOString();
+
+const shippingQuoteFailedMessage =
+    "Unfortunately one or more items in your cart can't be shipped to your location. Please choose a different delivery address.";
 
 const checkoutSettings = {
     context: {
@@ -6,7 +11,7 @@ const checkoutSettings = {
         payment: {
             token: null,
         },
-        checkoutId: 'x',
+        checkoutId: 'xxxxxxxxxx-xxxx-xxax-xxxx-xxxxxx',
         geoCountryCode: 'AU',
     },
     customization: {
@@ -33,8 +38,7 @@ const checkoutSettings = {
             orderTermsAndConditionsLink: '',
             orderTermsAndConditionsType: 'textarea',
             privacyPolicyUrl: '',
-            shippingQuoteFailedMessage:
-                "Unfortunately one or more items in your cart can't be shipped to your location. Please choose a different delivery address.",
+            shippingQuoteFailedMessage,
             isAccountCreationEnabled: true,
             realtimeShippingProviders: ['Fedex', 'UPS', 'USPS'],
             remoteCheckoutProviders: null,
@@ -338,10 +342,137 @@ const checkoutSettingsWithCustomErrorFlashMessage = {
     },
 };
 
-const cart = {
+const physicalItem: PhysicalItem = {
     id: 'x',
+    parentId: null,
+    variantId: 71,
+    productId: 103,
+    sku: 'CLC',
+    name: 'Item X',
+    url: 'https://store.url/item-x/',
+    quantity: 1,
+    brand: 'OFS',
+    isTaxable: true,
+    imageUrl: 'https://image.url',
+    discounts: [],
+    discountAmount: 0,
+    couponAmount: 0,
+    retailPrice: 200,
+    listPrice: 200,
+    salePrice: 200,
+    extendedListPrice: 200,
+    extendedSalePrice: 200,
+    comparisonPrice: 200,
+    extendedComparisonPrice: 200,
+    isShippingRequired: true,
+    giftWrapping: undefined,
+    addedByPromotion: false,
+    options: [],
+    categoryNames: ['Shop All', 'Utility'],
+};
+
+const shippingAddress1 = {
+    firstName: 'First',
+    lastName: 'Address',
+    company: '',
+    address1: '111 Testing Rd',
+    address2: '',
+    city: 'Cityville',
+    stateOrProvince: 'State',
+    stateOrProvinceCode: 'ST',
+    country: 'Country',
+    countryCode: 'CC',
+    postalCode: '10000',
+    phone: '0000000000',
+    type: 'residential',
+    customFields: [],
+};
+
+const shippingAddress2 = {
+    firstName: 'Second',
+    lastName: 'Address',
+    company: '',
+    address1: '222 Testing Rd',
+    address2: '',
+    city: 'Townsville',
+    stateOrProvince: 'State',
+    stateOrProvinceCode: 'ST',
+    country: 'Country',
+    countryCode: 'CC',
+    postalCode: '20000',
+    phone: '0000000001',
+    type: 'residential',
+    customFields: [],
+};
+
+const shippingAddress3 = {
+    firstName: 'Third',
+    lastName: 'Address',
+    company: '',
+    address1: '333 Testing Rd',
+    address2: '',
+    city: 'Villageburg',
+    stateOrProvince: 'State',
+    stateOrProvinceCode: 'ST',
+    country: 'Country',
+    countryCode: 'CC',
+    postalCode: '30000',
+    phone: '0000000002',
+    type: 'residential',
+    customFields: [],
+};
+
+const consignment: Consignment = {
+    id: 'consignment-1',
+    shippingCost: 0,
+    handlingCost: 0,
+    lineItemIds: ['x'],
+    selectedShippingOption: {
+        id: 'option-id-pick-up',
+        type: 'shipping_pickupinstore',
+        description: 'Pickup In Store',
+        imageUrl: '',
+        cost: 3,
+        transitTime: '',
+        additionalDescription: '',
+        isRecommended: true,
+    },
+    shippingAddress: {
+        ...shippingAddress1,
+        shouldSaveAddress: true,
+    },
+    address: {
+        ...shippingAddress1,
+        shouldSaveAddress: true,
+    },
+    availableShippingOptions: [
+        {
+            id: 'option-id-pick-up',
+            type: 'shipping_pickupinstore',
+            description: 'Pickup In Store',
+            imageUrl: '',
+            cost: 3,
+            transitTime: '',
+            isRecommended: true,
+            additionalDescription: '',
+        },
+        {
+            id: 'option-id-flat-rate',
+            type: 'shipping_flatrate',
+            description: 'Flat Rate',
+            imageUrl: '',
+            cost: 10,
+            transitTime: '',
+            isRecommended: false,
+            additionalDescription: '',
+        },
+    ],
+};
+
+const cart: Checkout = {
+    id: 'xxxxxxxxxx-xxxx-xxax-xxxx-xxxxxx',
     cart: {
-        id: 'x,',
+        id: 'xxxxxxxxxx-xxxx-xxax-xxxx-xxxxxx',
         customerId: 0,
         email: '',
         currency: {
@@ -362,48 +493,16 @@ const cart = {
             },
         ],
         lineItems: {
-            physicalItems: [
-                {
-                    id: 'x',
-                    parentId: null,
-                    variantId: 71,
-                    productId: 103,
-                    sku: 'CLC',
-                    name: '[Sample] Canvas Laundry Cart',
-                    url: 'https://store.url/canvas-laundry-cart/',
-                    quantity: 1,
-                    brand: 'OFS',
-                    isTaxable: true,
-                    imageUrl: 'https://image.url',
-                    discounts: [],
-                    discountAmount: 0,
-                    couponAmount: 0,
-                    originalPrice: 249,
-                    listPrice: 200,
-                    salePrice: 200,
-                    extendedListPrice: 200,
-                    extendedSalePrice: 200,
-                    comparisonPrice: 200,
-                    extendedComparisonPrice: 200,
-                    isShippingRequired: true,
-                    giftWrapping: null,
-                    addedByPromotion: false,
-                    isMutable: true,
-                    options: [],
-                    categoryNames: ['Shop All', 'Utility'],
-                },
-            ],
+            physicalItems: [physicalItem],
             digitalItems: [],
             giftCertificates: [],
             customItems: [],
         },
         createdTime: timeString,
         updatedTime: timeString,
-        locale: 'en',
     },
-    billingAddress: {},
     consignments: [],
-    orderId: null,
+    orderId: undefined,
     shippingCostTotal: 0,
     shippingCostBeforeDiscount: 0,
     handlingCostTotal: 0,
@@ -438,7 +537,53 @@ const cart = {
         shouldEncourageSignIn: false,
     },
     promotions: [],
-    payments: [{}],
+    balanceDue: 200,
+    discounts: [],
+    fees: [],
+};
+
+const cartReadyForMultiShipping = {
+    ...cart,
+    cart: {
+        ...cart.cart,
+        lineItems: {
+            ...cart.cart.lineItems,
+            physicalItems: [
+                physicalItem,
+                { ...physicalItem, id: 'y', quantity: 2, sku: 'CLC2', name: 'Item Y' },
+                { ...physicalItem, id: 'z', quantity: 2, sku: 'CLC3', name: 'Item Z' },
+            ],
+        },
+    },
+    customer: {
+        id: 1,
+        isGuest: false,
+        email: 'user@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        fullName: 'John Doe',
+        addresses: [
+            {
+                ...shippingAddress1,
+                id: 1,
+            },
+            {
+                id: 2,
+                ...shippingAddress2,
+            },
+            {
+                id: 3,
+                ...shippingAddress3,
+            },
+        ],
+        storeCredit: 0,
+        shouldEncourageSignIn: true,
+        customerGroup: {
+            id: 1,
+            name: 'Discount Group',
+        },
+    },
+    consignment: [],
 };
 
 const cartWithoutPhysicalItem = {
@@ -474,81 +619,7 @@ const cartWithBillingEmail = {
 
 const cartWithShippingAddress = {
     ...cartWithBillingEmail,
-    consignments: [
-        {
-            id: 'x',
-            shippingCost: 0,
-            handlingCost: 0,
-            couponDiscounts: [],
-            discounts: [],
-            lineItemIds: ['x'],
-            selectedShippingOption: {
-                id: 'x',
-                type: 'shipping_pickupinstore',
-                description: 'Pickup In Store',
-                imageUrl: '',
-                cost: 0,
-                transitTime: '',
-                additionalDescription: '',
-            },
-            shippingAddress: {
-                firstName: 'checkout',
-                lastName: 'test',
-                email: '',
-                company: '',
-                address1: '130 Pitt St',
-                address2: '',
-                city: 'Sydney',
-                stateOrProvince: 'New South Wales',
-                stateOrProvinceCode: 'NSW',
-                country: 'Australia',
-                countryCode: 'AU',
-                postalCode: '2000',
-                phone: '',
-                customFields: [],
-                shouldSaveAddress: true,
-            },
-            address: {
-                firstName: 'checkout',
-                lastName: 'test',
-                email: '',
-                company: '',
-                address1: '130 Pitt St',
-                address2: '',
-                city: 'Sydney',
-                stateOrProvince: 'New South Wales',
-                stateOrProvinceCode: 'NSW',
-                country: 'Australia',
-                countryCode: 'AU',
-                postalCode: '2000',
-                phone: '',
-                customFields: [],
-                shouldSaveAddress: true,
-            },
-            availableShippingOptions: [
-                {
-                    id: 'x',
-                    type: 'shipping_pickupinstore',
-                    description: 'Pickup In Store',
-                    imageUrl: '',
-                    cost: 0,
-                    transitTime: '',
-                    isRecommended: false,
-                    additionalDescription: '',
-                },
-                {
-                    id: 'xx',
-                    type: 'shipping_flatrate',
-                    description: 'Flat Rate',
-                    imageUrl: '',
-                    cost: 10,
-                    transitTime: '',
-                    isRecommended: true,
-                    additionalDescription: '',
-                },
-            ],
-        },
-    ],
+    consignments: [consignment],
 };
 
 const cartWithShippingAndBilling = {
@@ -571,6 +642,24 @@ const cartWithShippingAndBilling = {
         phone: '',
         customFields: [],
     },
+};
+
+const cartWithCustomShippingAndBilling = {
+    ...cartWithShippingAndBilling,
+    consignments: [
+        {
+            ...cartWithShippingAndBilling.consignments[0],
+            selectedShippingOption: {
+                id: '',
+                type: 'custom',
+                description: 'Manual Order Custom Shipping Method',
+                imageUrl: '',
+                cost: 256,
+                transitTime: '',
+                additionalDescription: '',
+            },
+        },
+    ],
 };
 
 // intentionally shortened
@@ -950,16 +1039,22 @@ const payments = [
 
 export {
     cart,
+    cartReadyForMultiShipping,
     cartWithBillingEmail,
     cartWithPromotions,
     cartWithShippingAddress,
     cartWithShippingAndBilling,
+    cartWithCustomShippingAndBilling,
     cartWithoutPhysicalItem,
     checkoutSettings,
     checkoutSettingsWithCustomErrorFlashMessage,
     checkoutSettingsWithErrorFlashMessage,
     checkoutSettingsWithUnsupportedProvider,
     countries,
+    consignment,
     formFields,
     payments,
+    shippingAddress2,
+    shippingAddress3,
+    shippingQuoteFailedMessage,
 };

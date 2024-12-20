@@ -14,17 +14,29 @@ export interface FormFieldValues {
 export default memoize(function getFormFieldsValidationSchema({
     formFields,
     translate = () => undefined,
+    validateGoogleMapAutoCompleteMaxLength = false,
+    validateAddressFields = false,
 }: FormFieldsValidationSchemaOptions): ObjectSchema<FormFieldValues> {
     return object({
         ...formFields
             .filter(({ custom }) => !custom)
-            .reduce((schema, { name, required, label }) => {
+            .reduce((schema, { name, required, label, maxLength }) => {
                 schema[name] = string();
 
                 if (required) {
                     schema[name] = schema[name]
                         .trim()
-                        .required(translate('required', { label, name }));
+                        .required(translate('required', { label, name}));
+                }
+
+                if (name === 'address1' && maxLength && validateGoogleMapAutoCompleteMaxLength) {
+                    schema[name] = schema[name]
+                        .max(maxLength, translate('max', { label, name, max: maxLength }));
+                }
+
+                if ((name === 'address1' || name === 'address2') && maxLength && validateAddressFields) {
+                    schema[name] = schema[name]
+                        .max(maxLength, translate('max', { label, name, max: maxLength }));
                 }
 
                 schema[name] = schema[name].matches(

@@ -1,10 +1,13 @@
+import { Checkout } from '@bigcommerce/checkout-sdk';
 import { screen, waitFor } from '@testing-library/react';
-import { rest } from 'msw';
+import { RequestHandler, rest } from 'msw';
 import { SetupServer, setupServer } from 'msw/node';
 
 import {
     cart,
+    cartReadyForMultiShipping,
     cartWithBillingEmail,
+    cartWithCustomShippingAndBilling,
     cartWithoutPhysicalItem,
     cartWithPromotions,
     cartWithShippingAddress,
@@ -35,6 +38,7 @@ export class CheckoutPageNodeObject {
             rest.post('/api/storefront/checkouts/*/billing-address', (_, res, ctx) =>
                 res(ctx.json(cartWithBillingEmail)),
             ),
+            rest.get('/api/storefront/checkout-extensions', (_, res, ctx) => res(ctx.json([]))),
         ];
 
         this.server = setupServer(...defaultHandlers);
@@ -52,6 +56,35 @@ export class CheckoutPageNodeObject {
 
     resetHandlers(): void {
         this.server.resetHandlers();
+    }
+
+    updateCheckout(
+        method: 'get' | 'put' | 'delete' | 'post',
+        url: string,
+        checkout: Checkout,
+    ): void {
+        let handler: RequestHandler;
+
+        const storeFrontUrl = `/api/storefront${url}`;
+
+        switch (method) {
+            case 'delete':
+                handler = rest.delete(storeFrontUrl, (_, res, ctx) => res(ctx.json(checkout)));
+                break;
+
+            case 'put':
+                handler = rest.put(storeFrontUrl, (_, res, ctx) => res(ctx.json(checkout)));
+                break;
+
+            case 'post':
+                handler = rest.post(storeFrontUrl, (_, res, ctx) => res(ctx.json(checkout)));
+                break;
+
+            default:
+                handler = rest.get(storeFrontUrl, (_, res, ctx) => res(ctx.json(checkout)));
+        }
+
+        this.server.use(handler);
     }
 
     use(preset: string): void {
@@ -84,6 +117,22 @@ export class CheckoutPageNodeObject {
                 this.server.use(
                     rest.get('/api/storefront/checkout/*', (_, res, ctx) =>
                         res(ctx.json(cartWithShippingAndBilling)),
+                    ),
+                );
+                break;
+
+            case 'cartReadyForMultiShipping':
+                this.server.use(
+                    rest.get('/api/storefront/checkout/*', (_, res, ctx) =>
+                        res(ctx.json(cartReadyForMultiShipping)),
+                    ),
+                );
+                break;
+
+            case 'CartWithCustomShippingAndBilling':
+                this.server.use(
+                    rest.get('/api/storefront/checkout/*', (_, res, ctx) =>
+                        res(ctx.json(cartWithCustomShippingAndBilling)),
                     ),
                 );
                 break;
@@ -130,7 +179,7 @@ export class CheckoutPageNodeObject {
     }
 
     async waitForShippingStep(): Promise<void> {
-        await waitFor(() => screen.getByText(/shipping method/i));
+        await waitFor(() => screen.getByText(/shipping method/i), { timeout: 20000 });
     }
 
     async waitForBillingStep(): Promise<void> {

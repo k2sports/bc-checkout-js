@@ -18,19 +18,21 @@ import React, { Component, ReactNode } from 'react';
 import { createSelector } from 'reselect';
 
 import { shouldUseStripeLinkByMinimumAmount } from '@bigcommerce/checkout/instrument-utils';
+import { TranslatedString } from '@bigcommerce/checkout/locale';
 import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
-import { AddressFormSkeleton } from '@bigcommerce/checkout/ui';
+import { AddressFormSkeleton, ConfirmationModal } from '@bigcommerce/checkout/ui';
 
 import { isEqualAddress, mapAddressFromFormValues } from '../address';
 import { withCheckout } from '../checkout';
 import CheckoutStepStatus from '../checkout/CheckoutStepStatus';
-import { EMPTY_ARRAY, isFloatingLabelEnabled } from '../common/utility';
+import { EMPTY_ARRAY, isExperimentEnabled, isFloatingLabelEnabled } from '../common/utility';
 import getProviderWithCustomCheckout from '../payment/getProviderWithCustomCheckout';
 import { PaymentMethodId } from '../payment/paymentMethod';
 
 import { UnassignItemError } from './errors';
 import getShippableItemsCount from './getShippableItemsCount';
 import getShippingMethodId from './getShippingMethodId';
+import hasPromotionalItems from './hasPromotionalItems';
 import { MultiShippingFormValues } from './MultiShippingForm';
 import ShippingForm from './ShippingForm';
 import ShippingHeader from './ShippingHeader';
@@ -53,6 +55,7 @@ export interface ShippingProps {
 export interface WithCheckoutShippingProps {
     billingAddress?: Address;
     cart: Cart;
+    cartHasPromotionalItems: boolean;
     consignments: Consignment[];
     countries: Country[];
     countriesWithAutocomplete: string[];
@@ -65,11 +68,14 @@ export interface WithCheckoutShippingProps {
     isShippingStepPending: boolean;
     methodId?: string;
     shippingAddress?: Address;
-    shouldShowAddAddressInCheckout: boolean;
     shouldShowMultiShipping: boolean;
+    isNewMultiShippingUIEnabled: boolean;
     shouldShowOrderComments: boolean;
+    shouldRenderWhileLoading: boolean;
     providerWithCustomCheckout?: string;
     isFloatingLabelEnabled?: boolean;
+    validateGoogleMapAutoCompleteMaxLength: boolean;
+    validateAddressFields: boolean;
     assignItem(consignment: ConsignmentAssignmentRequestBody): Promise<CheckoutSelectors>;
     deinitializeShippingMethod(options: ShippingRequestOptions): Promise<CheckoutSelectors>;
     deleteConsignments(): Promise<Address | undefined>;
@@ -89,6 +95,7 @@ export interface WithCheckoutShippingProps {
 
 interface ShippingState {
     isInitializing: boolean;
+    isMultiShippingUnavailableModalOpen: boolean;
 }
 
 class Shipping extends Component<ShippingProps & WithCheckoutShippingProps, ShippingState> {
@@ -97,6 +104,7 @@ class Shipping extends Component<ShippingProps & WithCheckoutShippingProps, Ship
 
         this.state = {
             isInitializing: true,
+            isMultiShippingUnavailableModalOpen: false,
         };
     }
 
@@ -107,10 +115,17 @@ class Shipping extends Component<ShippingProps & WithCheckoutShippingProps, Ship
             loadShippingOptions,
             onReady = noop,
             onUnhandledError = noop,
+            cartHasPromotionalItems,
+            isMultiShippingMode,
+            isNewMultiShippingUIEnabled,
         } = this.props;
 
         try {
             await Promise.all([loadShippingAddressFields(), loadShippingOptions(), loadBillingAddressFields()]);
+
+            if(cartHasPromotionalItems && isMultiShippingMode && isNewMultiShippingUIEnabled) {
+                this.setState({ isMultiShippingUnavailableModalOpen: true });
+            }
 
             onReady();
         } catch (error) {
@@ -125,6 +140,9 @@ class Shipping extends Component<ShippingProps & WithCheckoutShippingProps, Ship
             isBillingSameAsShipping,
             isGuest,
             shouldShowMultiShipping,
+            isNewMultiShippingUIEnabled,
+            validateGoogleMapAutoCompleteMaxLength,
+            validateAddressFields,
             customer,
             updateShippingAddress,
             initializeShippingMethod,
@@ -133,12 +151,20 @@ class Shipping extends Component<ShippingProps & WithCheckoutShippingProps, Ship
             step,
             isFloatingLabelEnabled,
             shouldRenderStripeForm,
+            shouldRenderWhileLoading,
+            cartHasPromotionalItems,
             ...shippingFormProps
         } = this.props;
 
         const {
             isInitializing,
+            isMultiShippingUnavailableModalOpen,
         } = this.state;
+
+        const handleSwitchToSingleShipping = async () => {
+            this.setState({ isMultiShippingUnavailableModalOpen: false });
+            await this.handleMultiShippingModeSwitch();
+        }
 
         if (shouldRenderStripeForm && !customer.email && this.props.countries.length > 0) {
             return <StripeShipping
@@ -148,8 +174,10 @@ class Shipping extends Component<ShippingProps & WithCheckoutShippingProps, Ship
                 initialize={initializeShippingMethod}
                 isBillingSameAsShipping={isBillingSameAsShipping}
                 isGuest={ isGuest }
+                isInitialValueLoaded={shouldRenderWhileLoading ? !isInitializing : true}
                 isLoading={ isInitializing }
                 isMultiShippingMode={isMultiShippingMode}
+                isNewMultiShippingUIEnabled={isNewMultiShippingUIEnabled}
                 isShippingMethodLoading={ this.props.isLoading }
                 onMultiShippingChange={ this.handleMultiShippingModeSwitch }
                 onSubmit={this.handleSingleShippingSubmit}
@@ -160,11 +188,21 @@ class Shipping extends Component<ShippingProps & WithCheckoutShippingProps, Ship
         }
 
         return (
-            <AddressFormSkeleton isLoading={isInitializing}>
+            <AddressFormSkeleton isLoading={isInitializing} renderWhileLoading={shouldRenderWhileLoading}>
                 <div className="checkout-form">
+                    <ConfirmationModal 
+                        action={handleSwitchToSingleShipping}
+                        actionButtonLabel={<TranslatedString id="common.ok_action" />}
+                        headerId="shipping.multishipping_unavailable_action"
+                        isModalOpen={isMultiShippingUnavailableModalOpen}
+                        messageId="shipping.checkout_switched_to_single_shipping"
+                        shouldShowCloseButton={false}
+                    />
                     <ShippingHeader
+                        cartHasPromotionalItems={cartHasPromotionalItems}
                         isGuest={isGuest}
                         isMultiShippingMode={isMultiShippingMode}
+                        isNewMultiShippingUIEnabled={isNewMultiShippingUIEnabled}
                         onMultiShippingChange={this.handleMultiShippingModeSwitch}
                         shouldShowMultiShipping={shouldShowMultiShipping}
                     />
@@ -176,12 +214,16 @@ class Shipping extends Component<ShippingProps & WithCheckoutShippingProps, Ship
                         isBillingSameAsShipping={isBillingSameAsShipping}
                         isFloatingLabelEnabled={isFloatingLabelEnabled}
                         isGuest={isGuest}
+                        isInitialValueLoaded={shouldRenderWhileLoading ? !isInitializing : true}
                         isMultiShippingMode={isMultiShippingMode}
+                        isNewMultiShippingUIEnabled={isNewMultiShippingUIEnabled}
                         onMultiShippingSubmit={this.handleMultiShippingSubmit}
                         onSingleShippingSubmit={this.handleSingleShippingSubmit}
                         onUseNewAddress={this.handleUseNewAddress}
                         shouldShowSaveAddress={!isGuest}
                         updateAddress={updateShippingAddress}
+                        validateAddressFields={validateAddressFields}
+                        validateGoogleMapAutoCompleteMaxLength={validateGoogleMapAutoCompleteMaxLength}
                     />
                 </div>
             </AddressFormSkeleton>
@@ -192,22 +234,33 @@ class Shipping extends Component<ShippingProps & WithCheckoutShippingProps, Ship
         const {
             consignments,
             isMultiShippingMode,
+            isNewMultiShippingUIEnabled,
             onToggleMultiShipping = noop,
             onUnhandledError = noop,
             updateShippingAddress,
+            deleteConsignments,
         } = this.props;
 
-        if (isMultiShippingMode && consignments.length > 1) {
+        try {
             this.setState({ isInitializing: true });
 
-            try {
+            if (isNewMultiShippingUIEnabled) {
+                if (isMultiShippingMode && consignments.length) {
+                    // Collapse all consignments into one
+                    await updateShippingAddress(consignments[0].shippingAddress);
+                }
+                else {
+                    await deleteConsignments();
+                }
+            }
+            else if (isMultiShippingMode && consignments.length > 1) {
                 // Collapse all consignments into one
                 await updateShippingAddress(consignments[0].shippingAddress);
-            } catch (error) {
-                onUnhandledError(error);
-            } finally {
-                this.setState({ isInitializing: false });
             }
+        } catch (error) {
+            onUnhandledError(error);
+        } finally {
+            this.setState({ isInitializing: false });
         }
 
         onToggleMultiShipping();
@@ -353,6 +406,7 @@ export function mapToShippingProps({
             isLoadingShippingCountries,
             isUpdatingBillingAddress,
             isUpdatingCheckout,
+            isDeletingConsignment,
         },
     } = checkoutState;
 
@@ -384,14 +438,29 @@ export function mapToShippingProps({
         isCreatingConsignments() ||
         isUpdatingBillingAddress() ||
         isUpdatingCheckout() ||
-        isCreatingCustomerAddress();
+        isCreatingCustomerAddress() ||
+        isDeletingConsignment();
     const shouldShowMultiShipping =
         hasMultiShippingEnabled && !methodId && shippableItemsCount > 1;
-    const countriesWithAutocomplete = ['US', 'CA', 'AU', 'NZ'];
+    const isNewMultiShippingUIEnabled =
+        isExperimentEnabled(
+            config.checkoutSettings,
+            'PROJECT-4159.improve_multi_address_shipping_ui',
+        );
 
-    if (features['CHECKOUT-4183.checkout_google_address_autocomplete_uk']) {
-        countriesWithAutocomplete.push('GB');
-    }
+    const countriesWithAutocomplete = ['US', 'CA', 'AU', 'NZ', 'GB'];
+
+    const validateGoogleMapAutoCompleteMaxLength =
+        isExperimentEnabled(
+            config.checkoutSettings,
+            'CHECKOUT-8776.google_autocomplete_max_length_validation',
+        ) && Boolean(googleMapsApiKey);
+
+    const validateAddressFields =
+        isExperimentEnabled(
+            config.checkoutSettings,
+            'CHECKOUT-7560.address_fields_max_length_validation',
+        );
 
     const shippingAddress =
         !shouldShowMultiShipping && consignments.length > 1 ? undefined : getShippingAddress();
@@ -404,6 +473,7 @@ export function mapToShippingProps({
         assignItem: checkoutService.assignItemsToAddress,
         billingAddress: getBillingAddress(),
         cart,
+        cartHasPromotionalItems: hasPromotionalItems(cart),
         consignments,
         countries: getShippingCountries() || EMPTY_ARRAY,
         countriesWithAutocomplete,
@@ -425,9 +495,11 @@ export function mapToShippingProps({
         methodId,
         providerWithCustomCheckout,
         shippingAddress,
+        shouldRenderWhileLoading: features['CHECKOUT-8300.improve_extension_performance'] ?? true,
         shouldShowMultiShipping,
-        shouldShowAddAddressInCheckout:
-            features['CHECKOUT-4726.add_address_in_multishipping_checkout'],
+        isNewMultiShippingUIEnabled,
+        validateGoogleMapAutoCompleteMaxLength,
+        validateAddressFields,
         shouldShowOrderComments: enableOrderComments,
         signOut: checkoutService.signOutCustomer,
         unassignItem: checkoutService.unassignItemsToAddress,

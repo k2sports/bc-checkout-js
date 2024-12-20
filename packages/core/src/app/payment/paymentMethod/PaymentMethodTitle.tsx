@@ -17,6 +17,7 @@ import getPaymentMethodName from './getPaymentMethodName';
 import { isHostedCreditCardFieldsetValues } from './HostedCreditCardFieldsetValues';
 import PaymentMethodId from './PaymentMethodId';
 import PaymentMethodType from './PaymentMethodType';
+import PaypalCommerceCreditDescription from './PaypalCommerceCreditDescription';
 
 export interface PaymentMethodTitleProps {
     method: PaymentMethod;
@@ -80,6 +81,7 @@ function getPaymentMethodTitle(
             [PaymentMethodId.PaypalCommerceCredit]: {
                 logoUrl: cdnPath('/img/payment-providers/paypal_commerce_logo_letter.svg'),
                 titleText: methodDisplayName,
+                subtitle: (props: { onUnhandledError?(error: Error): void }) => <PaypalCommerceCreditDescription {...props} />
             },
             [PaymentMethodId.PaypalCommerceAlternativeMethod]: {
                 logoUrl: method.logoUrl || '',
@@ -108,10 +110,6 @@ function getPaymentMethodTitle(
             [PaymentMethodId.Bolt]: {
                 logoUrl: '',
                 titleText: methodDisplayName,
-            },
-            [PaymentMethodId.ChasePay]: {
-                logoUrl: cdnPath('/img/payment-providers/chase-pay.png'),
-                titleText: '',
             },
             [PaymentMethodId.Clearpay]: {
                 logoUrl: cdnPath('/img/payment-providers/clearpay-header.png'),

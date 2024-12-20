@@ -5,7 +5,9 @@ import { noop } from 'lodash';
 import React from 'react';
 
 import { AnalyticsProviderMock } from '@bigcommerce/checkout/analytics';
+import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
 import { LocaleProvider, TranslatedString } from '@bigcommerce/checkout/locale';
+import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
 
 import { getCart } from '../../cart/carts.mock';
 import { getConsignment } from '../consignment.mock';
@@ -26,6 +28,7 @@ describe('ShippingOptions Component', () => {
     ];
     let triggerConsignmentsUpdated: (state: CheckoutSelectors) => void;
     const defaultProps: ShippingOptionsFormProps = {
+        isInitialValueLoaded: true,
         isMultiShippingMode: true,
         consignments,
         invalidShippingMessage: 'foo',
@@ -42,13 +45,17 @@ describe('ShippingOptions Component', () => {
     const checkoutService = createCheckoutService();
 
     const TestWrap: React.FC = ({ children }) => (
-        <AnalyticsProviderMock>
-            <LocaleProvider checkoutService={checkoutService}>
-                <Formik initialValues={{}} onSubmit={noop}>
-                    {children}
-                </Formik>
-            </LocaleProvider>
-        </AnalyticsProviderMock>
+        <CheckoutProvider checkoutService={checkoutService}>
+            <ExtensionProvider checkoutService={checkoutService}>
+                <AnalyticsProviderMock>
+                    <LocaleProvider checkoutService={checkoutService}>
+                        <Formik initialValues={{}} onSubmit={noop}>
+                            {children}
+                        </Formik>
+                    </LocaleProvider>
+                </AnalyticsProviderMock>
+            </ExtensionProvider>
+        </CheckoutProvider>
     );
 
     it('renders sorted options for all consignments when multi-shipping', () => {

@@ -2,8 +2,8 @@ import {
     CardInstrument,
     CheckoutSelectors,
     HostedFieldType,
-    HostedFormOptions,
     Instrument,
+    LegacyHostedFormOptions,
     PaymentInitializeOptions,
     PaymentInstrument,
     PaymentMethod,
@@ -48,7 +48,7 @@ export interface CreditCardPaymentMethodProps {
     deinitializePayment(options: PaymentRequestOptions): Promise<CheckoutSelectors>;
     getHostedFormOptions?(
         selectedInstrument?: CardInstrument | undefined,
-    ): Promise<HostedFormOptions>;
+    ): Promise<LegacyHostedFormOptions>;
     getStoredCardValidationFieldset?(selectedInstrument?: CardInstrument): ReactNode;
 }
 
@@ -61,7 +61,7 @@ interface CreditCardPaymentMethodDerivedProps {
     isPaymentDataRequired: boolean;
     shouldShowInstrumentFieldset: boolean;
     isInstrumentCardCodeRequired(instrument: Instrument, method: PaymentMethod): boolean;
-    isInstrumentCardNumberRequired(instrument: Instrument): boolean;
+    isInstrumentCardNumberRequired(instrument: Instrument, method: PaymentMethod): boolean;
     loadInstruments(): Promise<CheckoutSelectors>;
 }
 
@@ -206,7 +206,7 @@ class CreditCardPaymentMethodComponent extends Component<
         const shouldShowCreditCardFieldset = !shouldShowInstrumentFieldset || isAddingNewCard;
         const isLoading = isInitializing || isLoadingInstruments;
         const shouldShowNumberField = selectedInstrument
-            ? isInstrumentCardNumberRequiredProp(selectedInstrument)
+            ? isInstrumentCardNumberRequiredProp(selectedInstrument, method)
             : false;
         const shouldShowCardCodeField = selectedInstrument
             ? isInstrumentCardCodeRequiredProp(selectedInstrument, method)
@@ -258,6 +258,7 @@ class CreditCardPaymentMethodComponent extends Component<
                         {isInstrumentFeatureAvailableProp && (
                             <StoreInstrumentFieldset
                                 instrumentId={selectedInstrument && selectedInstrument.bigpayToken}
+                                instruments={instruments}
                             />
                         )}
                     </div>
@@ -313,7 +314,10 @@ class CreditCardPaymentMethodComponent extends Component<
                         selectedInstrument,
                         method,
                     ),
-                    isCardNumberRequired: isInstrumentCardNumberRequiredProp(selectedInstrument),
+                    isCardNumberRequired: isInstrumentCardNumberRequiredProp(
+                        selectedInstrument,
+                        method,
+                    ),
                     language,
                 })
             );

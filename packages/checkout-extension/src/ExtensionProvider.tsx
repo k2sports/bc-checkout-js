@@ -1,10 +1,11 @@
 import { CheckoutService } from '@bigcommerce/checkout-sdk';
 import React, { ReactNode, useReducer } from 'react';
 
+import { ErrorLogger } from '@bigcommerce/checkout/error-handling-utils';
+
 import { ExtensionContext } from './ExtensionContext';
 import { extensionReducer } from './ExtensionReducer';
 import { ExtensionService } from './ExtensionService';
-import { isCheckoutExtensionEnabled } from './isCheckoutExtensionEnabled';
 
 export interface ExtensionState {
     isShowingLoadingIndicator: boolean;
@@ -22,18 +23,20 @@ export enum ExtensionActionType {
 export interface ExtensionProviderProps {
     checkoutService: CheckoutService;
     children: ReactNode;
+    errorLogger: ErrorLogger;
 }
 
-export const ExtensionProvider = ({ checkoutService, children }: ExtensionProviderProps) => {
-    const isExtensionEnabled = () =>
-        isCheckoutExtensionEnabled(checkoutService.getState().data.getConfig()?.checkoutSettings);
+export const ExtensionProvider = ({
+    checkoutService,
+    children,
+    errorLogger,
+}: ExtensionProviderProps) => {
     const [extensionState, dispatch] = useReducer(extensionReducer, {
         isShowingLoadingIndicator: false,
     });
-    const extensionService = new ExtensionService(checkoutService, dispatch);
+    const extensionService = new ExtensionService(checkoutService, dispatch, errorLogger);
 
     const extensionValues = {
-        isExtensionEnabled,
         extensionService,
         extensionState,
     };

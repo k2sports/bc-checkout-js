@@ -5,19 +5,16 @@ import {
     FormField,
     ShippingInitializeOptions,
 } from '@bigcommerce/checkout-sdk';
-import classNames from 'classnames';
-import { isEmpty } from 'lodash';
 import React, { FunctionComponent, memo } from 'react';
 
+import { localizeAddress } from '@bigcommerce/checkout/locale';
 import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
-import { isPayPalConnectAddress, usePayPalConnectAddress } from '@bigcommerce/checkout/paypal-connect-integration';
-import { IconPayPalConnectSmall } from '@bigcommerce/checkout/ui';
 
 import { withCheckout } from '../checkout';
+import { isExperimentEnabled } from '../common/utility';
 
 import AddressType from './AddressType';
-import isValidAddress from './isValidAddress';
-import localizeAddress from './localizeAddress';
+import isValidStaticAddress from './isValidStaticAddress';
 
 import './StaticAddress.scss';
 
@@ -33,32 +30,22 @@ export interface StaticAddressEditableProps extends StaticAddressProps {
 interface WithCheckoutStaticAddressProps {
     countries?: Country[];
     fields?: FormField[];
+    validateAddressFields?: boolean;
 }
 
 const StaticAddress: FunctionComponent<
     StaticAddressEditableProps & WithCheckoutStaticAddressProps
-> = ({ countries, fields, address: addressWithoutLocalization }) => {
-    const { isPayPalAxoEnabled, paypalConnectAddresses } = usePayPalConnectAddress();
+    > = ({
+        countries,
+        fields,
+        address: addressWithoutLocalization,
+        validateAddressFields = false,
+    }) => {
     const address = localizeAddress(addressWithoutLocalization, countries);
-    const isValid = !fields
-        ? !isEmpty(address)
-        : isValidAddress(
-              address,
-              fields.filter((field) => !field.custom),
-          );
-    const shouldShowProviderIcon = isPayPalAxoEnabled && isPayPalConnectAddress(addressWithoutLocalization, paypalConnectAddresses);
+    const isValid = isValidStaticAddress(address, validateAddressFields, fields);
 
     return !isValid ? null : (
-        <div
-            className={classNames(
-                'vcard checkout-address--static',
-                {
-                    'checkout-address--with-provider-icon': shouldShowProviderIcon,
-                }
-            )}
-        >
-            {shouldShowProviderIcon && <IconPayPalConnectSmall />}
-
+        <div className="vcard checkout-address--static" data-test="static-address">
             {(address.firstName || address.lastName) && (
                 <p className="fn address-entry">
                     <span className="first-name">{`${address.firstName} `}</span>
@@ -104,9 +91,17 @@ export function mapToStaticAddressProps(
 ): WithCheckoutStaticAddressProps | null {
     const {
         checkoutState: {
-            data: { getBillingCountries, getShippingCountries, getBillingAddressFields, getShippingAddressFields },
+            data: { getConfig, getBillingCountries, getShippingCountries, getBillingAddressFields, getShippingAddressFields },
         },
     } = context;
+
+    const config = getConfig();
+
+    const validateAddressFields =
+        isExperimentEnabled(
+            config?.checkoutSettings,
+            'CHECKOUT-7560.address_fields_max_length_validation',
+        );
 
     return {
         countries: type === AddressType.Billing
@@ -118,6 +113,7 @@ export function mapToStaticAddressProps(
                 : type === AddressType.Shipping
                 ? getShippingAddressFields(address.countryCode)
                 : undefined,
+        validateAddressFields,
     };
 }
 
