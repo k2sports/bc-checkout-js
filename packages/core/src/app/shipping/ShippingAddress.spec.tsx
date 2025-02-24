@@ -1,5 +1,5 @@
 import { CheckoutService, createCheckoutService } from '@bigcommerce/checkout-sdk';
-import { mount, ReactWrapper, shallow } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React, { FunctionComponent } from 'react';
@@ -62,7 +62,15 @@ describe('ShippingAddress Component', () => {
 
     describe('when no method id is provided', () => {
         it('renders ShippingAddressForm with expected props', () => {
-            const component = shallow(<ShippingAddress {...defaultProps} />);
+            const component = mount(
+                <CheckoutProvider checkoutService={checkoutService}>
+                    <LocaleContext.Provider value={localeContext}>
+                        <Formik initialValues={{}} onSubmit={noop}>
+                            <ShippingAddress {...defaultProps} />
+                        </Formik>
+                    </LocaleContext.Provider>
+                </CheckoutProvider>
+            );
 
             expect(component.find(ShippingAddressForm).props()).toEqual(
                 expect.objectContaining({
@@ -108,5 +116,19 @@ describe('ShippingAddress Component', () => {
 
             expect(component.find(StaticAddressEditable)).toHaveLength(1);
         });
+    });
+
+    it('calls initialize function when fastlane enabled and shouldShowPayPalFastlaneShippingForm false', () => {
+        const initializeMock = jest.fn();
+        const shippingFormProps = {
+            ...defaultProps,
+            initialize: initializeMock,
+        };
+
+        mount(
+            <TestComponent {...shippingFormProps} methodId="braintreeacceleratedcheckout" />,
+        );
+
+        expect(initializeMock).toHaveBeenCalled();
     });
 });

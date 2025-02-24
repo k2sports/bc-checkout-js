@@ -331,6 +331,7 @@ class Payment extends Component<
             selectedMethod.type === PaymentMethodProviderType.Hosted ||
             selectedMethod.type === PaymentMethodProviderType.PPSDK ||
             selectedMethod.gateway === PaymentMethodId.BlueSnapDirect ||
+            selectedMethod.gateway === PaymentMethodId.BlueSnapV2 ||
             selectedMethod.id === PaymentMethodId.AmazonPay ||
             selectedMethod.id === PaymentMethodId.CBAMPGS ||
             selectedMethod.id === PaymentMethodId.Checkoutcom ||
@@ -642,6 +643,10 @@ export function mapToPaymentProps({
     filteredMethods = methods.filter((method: PaymentMethod) => {
         if (method.id === PaymentMethodId.Bolt && method.initializationData) {
             return !!method.initializationData.showInCheckout;
+        }
+
+        if (method.id === PaymentMethodId.BraintreeLocalPaymentMethod) {
+            return false;
         }
 
         return true;
