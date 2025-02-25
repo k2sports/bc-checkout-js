@@ -1,7 +1,7 @@
 import { ExtensionRegion } from '@bigcommerce/checkout-sdk';
-import React, { FunctionComponent, useEffect } from 'react';
+import React, { FunctionComponent } from 'react';
 
-import { ExtensionRegionContainer, useExtensions } from '@bigcommerce/checkout/checkout-extension';
+import { Extension } from '@bigcommerce/checkout/checkout-extension';
 import { TranslatedString } from '@bigcommerce/checkout/locale';
 
 import { OrderComments } from '../orderComments';
@@ -17,7 +17,9 @@ export interface ShippingFormFooterProps {
     shouldShowOrderComments: boolean;
     shouldShowShippingOptions?: boolean;
     shouldDisableSubmit: boolean;
+    isInitialValueLoaded: boolean;
     isLoading: boolean;
+    shippingFormRenderTimestamp?: number;
 }
 
 const ShippingFormFooter: FunctionComponent<ShippingFormFooterProps> = ({
@@ -26,32 +28,13 @@ const ShippingFormFooter: FunctionComponent<ShippingFormFooterProps> = ({
     shouldShowOrderComments,
     shouldShowShippingOptions = true,
     shouldDisableSubmit,
+    isInitialValueLoaded,
     isLoading,
+    shippingFormRenderTimestamp,
 }) => {
-    const { extensionService, isExtensionEnabled } = useExtensions();
-    const isExtensionRegionEnabled = Boolean(
-        isExtensionEnabled() &&
-            extensionService.isRegionEnabled(ExtensionRegion.ShippingShippingAddressFormAfter),
-    );
-
-    useEffect(() => {
-        if (isExtensionRegionEnabled) {
-            void extensionService.renderExtension(
-                ExtensionRegionContainer.ShippingShippingAddressFormAfter,
-                ExtensionRegion.ShippingShippingAddressFormAfter,
-            );
-
-            return () => {
-                extensionService.removeListeners(ExtensionRegion.ShippingShippingAddressFormAfter);
-            };
-        }
-    }, [extensionService, isExtensionRegionEnabled]);
-
     return (
         <>
-            {isExtensionRegionEnabled && (
-                <div id={ExtensionRegionContainer.ShippingShippingAddressFormAfter} />
-            )}
+            <Extension region={ExtensionRegion.ShippingShippingAddressFormAfter} />
             <Fieldset
                 id="checkout-shipping-options"
                 legend={
@@ -71,8 +54,10 @@ const ShippingFormFooter: FunctionComponent<ShippingFormFooterProps> = ({
                 }
             >
                 <ShippingOptions
+                    isInitialValueLoaded={isInitialValueLoaded}
                     isMultiShippingMode={isMultiShippingMode}
                     isUpdatingAddress={isLoading}
+                    shippingFormRenderTimestamp={shippingFormRenderTimestamp}
                     shouldShowShippingOptions={shouldShowShippingOptions}
                 />
             </Fieldset>

@@ -2,7 +2,7 @@ aliases:
   - &node_executor
       executor:
         name: node/node
-        node-version: "18.17"
+        node-version: "20.6.0"
 
   - &release_filter
       branches:
@@ -19,16 +19,27 @@ version: 2.1
 orbs:
   ci: bigcommerce/internal@volatile
   node: bigcommerce/internal-node@volatile
+  security: bigcommerce/internal-security@volatile
 
 jobs:
   test-packages:
     <<: *node_executor
+    resource_class: medium+
     steps:
       - ci/pre-setup
       - node/npm-install
       - run:
           name: "Run unit tests for packages"
           command: npm run test:others
+
+  test-extension:
+    <<: *node_executor
+    steps:
+      - ci/pre-setup
+      - node/npm-install
+      - run:
+          name: "Run unit tests for checkout extension"
+          command: npm run test:extension
 
   test-core:
     <<: *node_executor
@@ -164,6 +175,9 @@ workflows:
       - test-packages:
           filters:
             <<: *pull_request_filter
+      - test-extension:
+          filters:
+            <<: *pull_request_filter
       - test-core:
           filters:
             <<: *pull_request_filter
@@ -182,6 +196,13 @@ workflows:
       - ci/validate-commits:
           filters:
             <<: *pull_request_filter
+      - security/scan:
+          name: "Gitleaks secrets scan"
+          filters:
+            branches:
+              ignore: /pull\/[0-9]+/
+          context: org-global
+          GITLEAKS_BLOCK: "false"
 
   release:
     jobs:
@@ -189,6 +210,9 @@ workflows:
           filters:
             <<: *release_filter
       - test-packages:
+          filters:
+            <<: *release_filter
+      - test-extension:
           filters:
             <<: *release_filter
       - lint:
@@ -207,6 +231,7 @@ workflows:
           requires:
             - test-core
             - test-packages
+            - test-extension
             - lint
             - build
             - e2e

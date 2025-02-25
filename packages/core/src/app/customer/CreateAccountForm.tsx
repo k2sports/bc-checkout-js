@@ -1,3 +1,6 @@
+/* istanbul ignore file */
+
+// TODO: CHECKOUT-9010 Cover 'Customer registration failure due to using an existing email' in functional tests repo
 import { FormField } from '@bigcommerce/checkout-sdk';
 import { FormikProps, withFormik } from 'formik';
 import { noop } from 'lodash';
@@ -43,7 +46,7 @@ function transformFormFieldsData(formFields: FormField[], defaultShouldSubscribe
         if (field.name === 'acceptsMarketingEmails') {
             const { options } = field;
             const items = options?.items || [];
-            
+
             const updatedItems = items.map(item => {
                 return {
                     value: defaultShouldSubscribe ? '1' : item.value,

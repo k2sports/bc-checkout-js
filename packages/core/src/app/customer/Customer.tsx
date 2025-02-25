@@ -1,6 +1,6 @@
 import {
     CheckoutPaymentMethodExecutedOptions,
-    CheckoutSelectors,
+    CheckoutSelectors, CheckoutSettings,
     CustomerAccountRequestBody,
     CustomerCredentials,
     CustomerInitializeOptions,
@@ -17,7 +17,7 @@ import React, { Component, ReactNode } from 'react';
 import { AnalyticsContextProps } from '@bigcommerce/checkout/analytics';
 import { shouldUseStripeLinkByMinimumAmount } from '@bigcommerce/checkout/instrument-utils';
 import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
-import { isPaypalConnectMethod } from '@bigcommerce/checkout/paypal-connect-integration';
+import { isPayPalFastlaneMethod } from '@bigcommerce/checkout/paypal-fastlane-integration';
 import { CustomerSkeleton } from '@bigcommerce/checkout/ui';
 
 import { withAnalytics } from '../analytics';
@@ -37,6 +37,7 @@ import GuestForm, { GuestFormValues } from './GuestForm';
 import LoginForm from './LoginForm';
 import mapCreateAccountFromFormValues from './mapCreateAccountFromFormValues';
 import StripeGuestForm from './StripeGuestForm';
+import { SubscribeSessionStorage } from './SubscribeSessionStorage';
 
 export interface CustomerProps {
     viewType: CustomerViewType;
@@ -65,6 +66,7 @@ export interface WithCheckoutCustomerProps {
     email?: string;
     firstName?: string;
     fixNewsletterCheckboxExperimentEnabled: boolean;
+    checkoutSettings: CheckoutSettings;
     forgotPasswordUrl: string;
     isContinuingAsGuest: boolean;
     isCreatingAccount: boolean;
@@ -191,6 +193,8 @@ class Customer extends Component<CustomerProps & WithCheckoutCustomerProps & Ana
             isExpressPrivacyPolicy,
             isPaymentDataRequired,
             shouldRenderStripeForm,
+            providerWithCustomCheckout,
+            checkoutSettings,
         } = this.props;
 
         const checkoutButtons = isWalletButtonsOnTop || !isPaymentDataRequired
@@ -203,11 +207,10 @@ class Customer extends Component<CustomerProps & WithCheckoutCustomerProps & Ana
             methodIds={checkoutButtonIds}
             onClick={onWalletButtonClick}
             onError={onUnhandledError}
+            checkoutSettings={checkoutSettings}
           />;
 
-        const isLoadingGuestForm = isWalletButtonsOnTop ?
-            isContinuingAsGuest || isExecutingPaymentMethodCheckout :
-            isContinuingAsGuest || isInitializing || isExecutingPaymentMethodCheckout;
+        const isLoadingGuestForm = isContinuingAsGuest || isExecutingPaymentMethodCheckout;
 
         return (
             shouldRenderStripeForm ?
@@ -242,6 +245,7 @@ class Customer extends Component<CustomerProps & WithCheckoutCustomerProps & Ana
                 onContinueAsGuest={this.handleContinueAsGuest}
                 onShowLogin={this.handleShowLogin}
                 privacyPolicyUrl={privacyPolicyUrl}
+                shouldShowEmailWatermark={isPayPalFastlaneMethod(providerWithCustomCheckout)}
                 requiresMarketingConsent={requiresMarketingConsent}
             />
         );
@@ -369,6 +373,8 @@ class Customer extends Component<CustomerProps & WithCheckoutCustomerProps & Ana
 
         try {
             await sendLoginEmail(values);
+        } catch (error) {
+        // Need to write catch block since one test covers the case when `sendLoginEmail` fails
         } finally {
             this.setState({
                 hasRequestedLoginEmail: true,
@@ -408,6 +414,8 @@ class Customer extends Component<CustomerProps & WithCheckoutCustomerProps & Ana
 
             onSubscribeToNewsletter(formValues.shouldSubscribe);
 
+            SubscribeSessionStorage.setSubscribeStatus(formValues.shouldSubscribe);
+
             const customer = data.getCustomer();
 
             const paymentProviderCustomer = data.getPaymentProviderCustomer();
@@ -446,25 +454,15 @@ class Customer extends Component<CustomerProps & WithCheckoutCustomerProps & Ana
         credentials,
     ) => {
         const {
-            executePaymentMethodCheckout,
             signIn,
             onSignIn = noop,
             onSignInError = noop,
-            providerWithCustomCheckout,
         } = this.props;
 
         try {
             await signIn(credentials);
 
-            if (isPaypalConnectMethod(providerWithCustomCheckout)) {
-                await executePaymentMethodCheckout({
-                    methodId: providerWithCustomCheckout,
-                    continueWithCheckoutCallback: onSignIn,
-                    checkoutPaymentMethodExecuted: (payload) => this.checkoutPaymentMethodExecuted(payload)
-                });
-            } else {
-                onSignIn();
-            }
+            onSignIn();
 
             this.draftEmail = undefined;
         } catch (error) {
@@ -474,23 +472,13 @@ class Customer extends Component<CustomerProps & WithCheckoutCustomerProps & Ana
 
     private handleCreateAccount: (values: CreateAccountFormValues) => void = async (values) => {
         const {
-            executePaymentMethodCheckout,
             createAccount = noop,
             onAccountCreated = noop,
-            providerWithCustomCheckout,
         } = this.props;
 
         await createAccount(mapCreateAccountFromFormValues(values));
 
-        if (isPaypalConnectMethod(providerWithCustomCheckout)) {
-            await executePaymentMethodCheckout({
-                methodId: providerWithCustomCheckout,
-                continueWithCheckoutCallback: onAccountCreated,
-                checkoutPaymentMethodExecuted: (payload) => this.checkoutPaymentMethodExecuted(payload)
-            });
-        } else {
-            onAccountCreated();
-        }
+        onAccountCreated();
     };
 
     private showCreateAccount: () => void = () => {
@@ -649,6 +637,7 @@ export function mapToWithCheckoutCustomerProps({
         isExpressPrivacyPolicy,
         isPaymentDataRequired: isPaymentDataRequired(),
         shouldRenderStripeForm: providerWithCustomCheckout === PaymentMethodId.StripeUPE && shouldUseStripeLinkByMinimumAmount(cart),
+        checkoutSettings: config.checkoutSettings,
     };
 }
 

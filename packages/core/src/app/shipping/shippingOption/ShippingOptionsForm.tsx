@@ -1,5 +1,5 @@
 import { CheckoutSelectors, Consignment } from '@bigcommerce/checkout-sdk';
-import { FormikProps, withFormik } from 'formik';
+import { FormikProps } from 'formik';
 import { noop } from 'lodash';
 import React, { PureComponent, ReactNode } from 'react';
 
@@ -9,6 +9,7 @@ import { ChecklistSkeleton } from '@bigcommerce/checkout/ui';
 
 import { AddressType, StaticAddress } from '../../address';
 import { withAnalytics } from '../../analytics';
+import { withFormikExtended } from '../../common/form';
 import getFilteredShippingOptions from '../getFilteredShippingOptions';
 import getRecommendedShippingOption from '../getRecommendedShippingOption';
 import StaticConsignmentItemList from '../StaticConsignmentItemList';
@@ -21,6 +22,18 @@ export type ShippingOptionsFormProps = ShippingOptionsProps &
   WithCheckoutShippingOptionsProps &
   AnalyticsContextProps;
 
+const getShippingOptionIds = ({ consignments }: ShippingOptionsFormProps) => {
+  const shippingOptionIds: { [id: string]: string } = {};
+
+  (consignments || []).forEach((consignment) => {
+    shippingOptionIds[consignment.id] = consignment.selectedShippingOption
+      ? consignment.selectedShippingOption.id
+      : '';
+  });
+
+  return { shippingOptionIds };
+};
+
 class ShippingOptionsForm extends PureComponent<
   ShippingOptionsFormProps & FormikProps<ShippingOptionsFormValues>
 > {
@@ -32,11 +45,21 @@ class ShippingOptionsForm extends PureComponent<
     this.unsubscribe = subscribeToConsignments(this.selectDefaultShippingOptions);
   }
 
-  componentDidUpdate(): void {
-    const { analyticsTracker, consignments, shouldShowShippingOptions } = this.props;
+  componentDidUpdate({ shippingFormRenderTimestamp }: ShippingOptionsFormProps): void {
+    const {
+      analyticsTracker,
+      consignments,
+      shouldShowShippingOptions,
+      shippingFormRenderTimestamp: newShippingFormRenderTimestamp,
+      setValues,
+    } = this.props;
 
     if (consignments?.length && shouldShowShippingOptions) {
       analyticsTracker.showShippingMethods();
+    }
+
+    if (newShippingFormRenderTimestamp !== shippingFormRenderTimestamp) {
+      setValues(getShippingOptionIds(this.props));
     }
   }
 
@@ -89,6 +112,7 @@ class ShippingOptionsForm extends PureComponent<
               consignmentId={consignment.id}
               inputName={getRadioInputName(consignment.id)}
               isLoading={isLoading(consignment.id)}
+              isMultiShippingMode={isMultiShippingMode}
               onSelectedOption={selectShippingOption}
               selectedShippingOptionId={
                 consignment.selectedShippingOption && consignment.selectedShippingOption.id
@@ -183,18 +207,8 @@ export interface ShippingOptionsFormValues {
 }
 
 export default withAnalytics(
-  withFormik<ShippingOptionsFormProps, ShippingOptionsFormValues>({
+  withFormikExtended<ShippingOptionsFormProps, ShippingOptionsFormValues>({
     handleSubmit: noop,
-    mapPropsToValues({ consignments }) {
-      const shippingOptionIds: { [id: string]: string } = {};
-
-      (consignments || []).forEach((consignment) => {
-        shippingOptionIds[consignment.id] = consignment.selectedShippingOption
-          ? consignment.selectedShippingOption.id
-          : '';
-      });
-
-      return { shippingOptionIds };
-    },
+    mapPropsToValues: getShippingOptionIds,
   })(ShippingOptionsForm),
 );

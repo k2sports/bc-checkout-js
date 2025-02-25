@@ -27,7 +27,6 @@ enum PaymentMethodId {
     BraintreePaypalCredit = 'braintreepaypalcredit',
     CBAMPGS = 'cba_mpgs',
     CCAvenueMars = 'ccavenuemars',
-    ChasePay = 'chasepay',
     Checkoutcom = 'checkoutcom',
     CheckoutcomGooglePay = 'googlepaycheckoutcom',
     Clearpay = 'clearpay',
@@ -66,6 +65,7 @@ enum PaymentMethodId {
     WorldpayAccess = 'worldpayaccess',
     WorldpayAccessGooglePay = 'googlepayworldpayaccess',
     Zip = 'zip',
+    TdOnlineMartGooglePay = 'googlepaytdonlinemart',
 }
 
 export default PaymentMethodId;

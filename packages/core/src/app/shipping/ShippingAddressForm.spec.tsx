@@ -1,16 +1,13 @@
-import { CheckoutService, createCheckoutService } from '@bigcommerce/checkout-sdk';
+import { createCheckoutService } from '@bigcommerce/checkout-sdk';
 import { mount, ReactWrapper } from 'enzyme';
 import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React from 'react';
 
-import { createLocaleContext, LocaleContext, LocaleContextType } from '@bigcommerce/checkout/locale';
 import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
 
 import { AddressForm, AddressSelect } from '../address';
 import { getFormFields } from '../address/formField.mock';
-import { getCheckout } from '../checkout/checkouts.mock';
-import { getStoreConfig } from '../config/config.mock';
 import { getCustomer } from '../customer/customers.mock';
 
 import { getConsignment } from './consignment.mock';
@@ -132,42 +129,6 @@ describe('ShippingAddressForm Component', () => {
             expect(component.find(AddressForm).props()).toMatchObject({
                 formFields: defaultProps.formFields,
             });
-        });
-    });
-
-    describe('when address is updated', () => {
-        let checkoutService: CheckoutService;
-        let localeContext: LocaleContextType;
-
-        beforeEach(() => {
-            checkoutService = createCheckoutService();
-            localeContext = createLocaleContext(getStoreConfig());
-
-            jest.spyOn(checkoutService.getState().data, 'getCheckout').mockReturnValue(
-                getCheckout(),
-            );
-            jest.spyOn(checkoutService.getState().data, 'getConfig').mockReturnValue(
-                getStoreConfig(),
-            );
-
-            component = mount(
-                <CheckoutProvider checkoutService={checkoutService}>
-                    <LocaleContext.Provider value={localeContext}>
-                        <Formik
-                            initialValues={{
-                                shippingAddress: getShippingAddress(),
-                            }}
-                            onSubmit={noop}
-                        >
-                            <ShippingAddressForm
-                                {...defaultProps}
-                                address={getShippingAddress()}
-                                addresses={[]}
-                            />
-                        </Formik>
-                    </LocaleContext.Provider>
-                </CheckoutProvider>,
-            );
         });
     });
 });

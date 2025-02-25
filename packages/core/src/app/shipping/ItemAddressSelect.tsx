@@ -1,3 +1,5 @@
+/* istanbul ignore file */ // Pending removal: Deprecated old multi-shipping UI
+
 import { Address, CustomerAddress } from '@bigcommerce/checkout-sdk';
 import React, { FunctionComponent, memo, useCallback } from 'react';
 
@@ -9,7 +11,7 @@ export interface ItemAddressSelectProps {
     item: ShippableItem;
     addresses: CustomerAddress[];
     onSelectAddress(address: Address, itemId: string, itemKey: string): void;
-    onUseNewAddress(address: Address | undefined, itemId: string, itemKey: string): void;
+    onUseNewAddress(itemId: string, itemKey: string): void;
 }
 
 const ItemAddressSelect: FunctionComponent<ItemAddressSelectProps> = ({
@@ -19,8 +21,8 @@ const ItemAddressSelect: FunctionComponent<ItemAddressSelectProps> = ({
     onUseNewAddress,
 }) => {
     const handleUseNewAddress = useCallback(
-        (address: Address) => {
-            onUseNewAddress(address, id as string, key);
+        () => {
+            onUseNewAddress(id as string, key);
         },
         [id, onUseNewAddress, key],
     );

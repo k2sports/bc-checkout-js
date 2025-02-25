@@ -123,4 +123,88 @@ describe('getFormFielsValidationSchema', () => {
             expect(spy).toHaveBeenCalled();
         });
     });
+
+    describe('google autocomplete validation', () => {
+        it('throws error for google maps autocomplete validation for max length', async () => {
+            const formFieldsWithMaxLength = formFields.map(field => {
+                const { name } = field;
+                
+                return name === 'address1' ? { ...field, maxLength: 20 } : field;
+            });
+    
+            const schema = getFormFieldsValidationSchema({ formFields: formFieldsWithMaxLength, translate });
+            const errors = await schema
+                .validate({
+                    ...getShippingAddress(),
+                    address1: 'this is a long address 1 from somewhere',
+                })
+                .catch((error: ValidationError) => error.message);
+            
+
+            expect(translate).toHaveBeenCalledWith('max', {
+                label: 'Address Line 1',
+                name: 'address1',
+                max: 20,
+            });
+            expect(errors).toBe('address1 must be at most 20 characters');
+        });
+    });
+
+    describe('address fields max length validation', () => {
+        it('throws error for address field 1 validation for max length', async () => {
+            const formFieldsWithMaxLength = formFields.map(field => {
+                const { name } = field;
+                
+                if(name === 'address1') {
+                    return { ...field, maxLength: 15 };
+                }
+                
+                return field;
+            });
+    
+            const schema = getFormFieldsValidationSchema({ formFields: formFieldsWithMaxLength, translate });
+            const errors = await schema
+                .validate({
+                    ...getShippingAddress(),
+                    address1: 'this is a long address 1 from somewhere',
+                })
+                .catch((error: ValidationError) => error.message);
+            
+
+            expect(translate).toHaveBeenCalledWith('max', {
+                label: 'Address Line 1',
+                name: 'address1',
+                max: 15,
+            });
+            expect(errors).toBe('address1 must be at most 15 characters');
+        });
+
+        it('throws error for address field 2 validation for max length', async () => {
+            const formFieldsWithMaxLength = formFields.map(field => {
+                const { name } = field;
+                
+                if(name === 'address2') {
+                    return { ...field, maxLength: 10 };
+                }
+                
+                return field;
+            });
+    
+            const schema = getFormFieldsValidationSchema({ formFields: formFieldsWithMaxLength, translate });
+            const errors = await schema
+                .validate({
+                    ...getShippingAddress(),
+                    address2: 'this is a long address 2 from somewhere',
+                })
+                .catch((error: ValidationError) => error.message);
+            
+
+            expect(translate).toHaveBeenCalledWith('max', {
+                label: 'Address Line 2',
+                name: 'address2',
+                max: 10,
+            });
+            expect(errors).toBe('address2 must be at most 10 characters');
+        });
+    });
 });

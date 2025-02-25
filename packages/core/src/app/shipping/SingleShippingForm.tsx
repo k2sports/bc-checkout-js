@@ -11,7 +11,7 @@ import {
     ShippingInitializeOptions,
     ShippingRequestOptions,
 } from '@bigcommerce/checkout-sdk';
-import { FormikProps, withFormik } from 'formik';
+import { FormikProps } from 'formik';
 import { debounce, isEqual, noop } from 'lodash';
 import React, { PureComponent, ReactNode } from 'react';
 import { lazy, object } from 'yup';
@@ -27,6 +27,7 @@ import {
     mapAddressFromFormValues,
     mapAddressToFormValues,
 } from '../address';
+import { withFormikExtended } from '../common/form';
 import { getCustomFormFieldsValidationSchema } from '../formFields';
 import { PaymentMethodId } from '../payment/paymentMethod';
 import { Fieldset, Form } from '../ui/form';
@@ -51,9 +52,12 @@ export interface SingleShippingFormProps {
     isMultiShippingMode: boolean;
     methodId?: string;
     shippingAddress?: Address;
+    shippingAutosaveDelay?: number;
     shouldShowSaveAddress?: boolean;
     shouldShowOrderComments: boolean;
     isFloatingLabelEnabled?: boolean;
+    isInitialValueLoaded: boolean;
+    shippingFormRenderTimestamp?: number;
     deinitialize(options: ShippingRequestOptions): Promise<CheckoutSelectors>;
     deleteConsignments(): Promise<Address | undefined>;
     getFields(countryCode?: string): FormField[];
@@ -82,7 +86,7 @@ interface SingleShippingFormState {
 function shouldHaveCustomValidation(methodId?: string): boolean {
     const methodIdsWithoutCustomValidation: string[] = [
         PaymentMethodId.BraintreeAcceleratedCheckout,
-        PaymentMethodId.PayPalCommerceAcceleratedCheckout
+        PaymentMethodId.PayPalCommerceAcceleratedCheckout,
     ];
 
     return Boolean(methodId && !methodIdsWithoutCustomValidation.includes(methodId));
@@ -128,14 +132,37 @@ class SingleShippingForm extends PureComponent<
                     this.setState({ isUpdatingShippingData: false });
                 }
             },
-            SHIPPING_AUTOSAVE_DELAY,
+            props.shippingAutosaveDelay ?? SHIPPING_AUTOSAVE_DELAY,
         );
+    }
+
+    componentDidUpdate({ shippingFormRenderTimestamp }: SingleShippingFormProps) {
+        const {
+            shippingFormRenderTimestamp: newShippingFormRenderTimestamp,
+            setValues,
+            getFields,
+            shippingAddress,
+            isBillingSameAsShipping,
+            customerMessage,
+        } = this.props;
+
+        if (newShippingFormRenderTimestamp !== shippingFormRenderTimestamp) {
+            setValues({
+                billingSameAsShipping: isBillingSameAsShipping,
+                orderComment: customerMessage,
+                shippingAddress: mapAddressToFormValues(
+                    getFields(shippingAddress && shippingAddress.countryCode),
+                    shippingAddress,
+                ),
+            });
+        }
     }
 
     render(): ReactNode {
         const {
             addresses,
             cartHasChanged,
+            isInitialValueLoaded,
             isLoading,
             onUnhandledError,
             methodId,
@@ -152,6 +179,7 @@ class SingleShippingForm extends PureComponent<
             values: { shippingAddress: addressForm },
             isShippingStepPending,
             isFloatingLabelEnabled,
+            shippingFormRenderTimestamp,
         } = this.props;
 
         const { isResettingAddress, isUpdatingShippingData, hasRequestedShippingOptions } =
@@ -195,8 +223,10 @@ class SingleShippingForm extends PureComponent<
 
                 <ShippingFormFooter
                     cartHasChanged={cartHasChanged}
+                    isInitialValueLoaded={isInitialValueLoaded}
                     isLoading={isLoading || isUpdatingShippingData}
                     isMultiShippingMode={false}
+                    shippingFormRenderTimestamp={shippingFormRenderTimestamp}
                     shouldDisableSubmit={this.shouldDisableSubmit()}
                     shouldShowOrderComments={shouldShowOrderComments}
                     shouldShowShippingOptions={isValid}
@@ -316,7 +346,7 @@ class SingleShippingForm extends PureComponent<
 }
 
 export default withLanguage(
-    withFormik<SingleShippingFormProps & WithLanguageProps, SingleShippingFormValues>({
+    withFormikExtended<SingleShippingFormProps & WithLanguageProps, SingleShippingFormValues>({
         handleSubmit: (values, { props: { onSubmit } }) => {
             onSubmit(values);
         },

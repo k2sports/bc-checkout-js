@@ -60,7 +60,7 @@ export interface WithCheckoutHostedWidgetPaymentMethodProps {
     isPaymentDataRequired: boolean;
     isSignedIn: boolean;
     isInstrumentCardCodeRequired(instrument: Instrument, method: PaymentMethod): boolean;
-    isInstrumentCardNumberRequired(instrument: Instrument): boolean;
+    isInstrumentCardNumberRequired(instrument: Instrument, method: PaymentMethod): boolean;
     loadInstruments(): Promise<CheckoutSelectors>;
     signOut(options: CustomerRequestOptions): void;
 }
@@ -269,6 +269,7 @@ class HostedWidgetPaymentComponent extends Component<
                     {isInstrumentFeatureAvailableProp && (
                         <StoreInstrumentFieldset
                             instrumentId={selectedInstrumentId}
+                            instruments={instruments}
                             isAccountInstrument={isAccountInstrument || shouldShowAccountInstrument}
                         />
                     )}
@@ -283,6 +284,7 @@ class HostedWidgetPaymentComponent extends Component<
         const {
             hideVerificationFields,
             instruments,
+            method,
             isInstrumentCardNumberRequired: isInstrumentCardNumberRequiredProp,
             validateInstrument,
         } = this.props;
@@ -295,7 +297,10 @@ class HostedWidgetPaymentComponent extends Component<
         if (selectedInstrument) {
             assertIsCardInstrument(selectedInstrument);
 
-            const shouldShowNumberField = isInstrumentCardNumberRequiredProp(selectedInstrument);
+            const shouldShowNumberField = isInstrumentCardNumberRequiredProp(
+                selectedInstrument,
+                method,
+            );
 
             if (hideVerificationFields) {
                 return;

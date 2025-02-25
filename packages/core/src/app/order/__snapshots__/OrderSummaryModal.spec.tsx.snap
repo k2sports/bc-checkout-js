@@ -3,11 +3,93 @@
 exports[`OrderSummaryModal renders order summary 1`] = `
 <Modal
   additionalBodyClassName="cart-modal-body optimizedCheckout-orderSummary"
-  additionalHeaderClassName="cart-modal-header optimizedCheckout-orderSummary"
-  additionalModalClassName=""
+  additionalHeaderClassName="cart-modal-header optimizedCheckout-orderSummary with-continue-button"
+  additionalModalClassName="optimizedCheckout-cart-modal"
   footer={false}
   header={
     <React.Fragment>
+      <ModalHeader
+        additionalClassName="cart-modal-title"
+      >
+        <div>
+          <TranslatedString
+            id="cart.cart_heading"
+          />
+          <div
+            className="cart-heading-subheader"
+          >
+            <Memo(OrderModalSummarySubheader)
+              amountWithCurrency={
+                <WithCurrency(ShopperCurrency)
+                  amount={190}
+                />
+              }
+              items={
+                {
+                  "customItems": [],
+                  "digitalItems": [],
+                  "giftCertificates": [
+                    {
+                      "amount": 100,
+                      "id": "bd391ead-8c58-4105-b00e-d75d233b429a",
+                      "message": "message",
+                      "name": "$100 Gift Certificate",
+                      "recipient": {
+                        "email": "lu@is.com",
+                        "name": "luis",
+                      },
+                      "sender": {
+                        "email": "pa@blo.com",
+                        "name": "pablo",
+                      },
+                      "taxable": false,
+                      "theme": "General",
+                    },
+                  ],
+                  "physicalItems": [
+                    {
+                      "addedByPromotion": false,
+                      "brand": "OFS",
+                      "categoryNames": [
+                        "Cat 1",
+                      ],
+                      "comparisonPrice": 200,
+                      "couponAmount": 0,
+                      "discountAmount": 0,
+                      "discounts": [],
+                      "extendedComparisonPrice": 250,
+                      "extendedListPrice": 200,
+                      "extendedSalePrice": 200,
+                      "id": "666",
+                      "imageUrl": "/images/canvas-laundry-cart.jpg",
+                      "isShippingRequired": true,
+                      "isTaxable": true,
+                      "listPrice": 200,
+                      "name": "Canvas Laundry Cart",
+                      "options": [
+                        {
+                          "name": "n",
+                          "nameId": 1,
+                          "value": "v",
+                          "valueId": 3,
+                        },
+                      ],
+                      "productId": 103,
+                      "quantity": 1,
+                      "salePrice": 200,
+                      "sku": "CLC",
+                      "url": "/canvas-laundry-cart/",
+                      "variantId": 71,
+                    },
+                  ],
+                }
+              }
+              shopperCurrencyCode="USD"
+              storeCurrencyCode="USD"
+            />
+          </div>
+        </div>
+      </ModalHeader>
       <a
         className="cart-modal-close"
         href="#"
@@ -22,35 +104,28 @@ exports[`OrderSummaryModal renders order summary 1`] = `
         </span>
         <Memo />
       </a>
-      <ModalHeader
-        additionalClassName="cart-modal-title"
-      >
-        <TranslatedString
-          id="cart.cart_heading"
-        />
-      </ModalHeader>
     </React.Fragment>
   }
   isOpen={true}
 >
   <OrderSummarySection>
     <OrderSummaryItems
-      displayLineItemsCount={true}
+      displayLineItemsCount={false}
       items={
-        Object {
-          "customItems": Array [],
-          "digitalItems": Array [],
-          "giftCertificates": Array [
-            Object {
+        {
+          "customItems": [],
+          "digitalItems": [],
+          "giftCertificates": [
+            {
               "amount": 100,
               "id": "bd391ead-8c58-4105-b00e-d75d233b429a",
               "message": "message",
               "name": "$100 Gift Certificate",
-              "recipient": Object {
+              "recipient": {
                 "email": "lu@is.com",
                 "name": "luis",
               },
-              "sender": Object {
+              "sender": {
                 "email": "pa@blo.com",
                 "name": "pablo",
               },
@@ -58,17 +133,17 @@ exports[`OrderSummaryModal renders order summary 1`] = `
               "theme": "General",
             },
           ],
-          "physicalItems": Array [
-            Object {
+          "physicalItems": [
+            {
               "addedByPromotion": false,
               "brand": "OFS",
-              "categoryNames": Array [
+              "categoryNames": [
                 "Cat 1",
               ],
               "comparisonPrice": 200,
               "couponAmount": 0,
               "discountAmount": 0,
-              "discounts": Array [],
+              "discounts": [],
               "extendedComparisonPrice": 250,
               "extendedListPrice": 200,
               "extendedSalePrice": 200,
@@ -78,8 +153,8 @@ exports[`OrderSummaryModal renders order summary 1`] = `
               "isTaxable": true,
               "listPrice": 200,
               "name": "Canvas Laundry Cart",
-              "options": Array [
-                Object {
+              "options": [
+                {
                   "name": "n",
                   "nameId": 1,
                   "value": "v",
@@ -101,15 +176,15 @@ exports[`OrderSummaryModal renders order summary 1`] = `
   <OrderSummarySection>
     <Memo(OrderSummarySubtotals)
       coupons={
-        Array [
-          Object {
+        [
+          {
             "code": "savebig2015",
             "couponType": "percentage_discount",
             "discountedAmount": 5,
             "displayName": "20% off each item",
             "id": "1",
           },
-          Object {
+          {
             "code": "279F507D817E3E7",
             "couponType": "shipping_discount",
             "discountedAmount": 5,
@@ -119,10 +194,10 @@ exports[`OrderSummaryModal renders order summary 1`] = `
         ]
       }
       discountAmount={10}
-      fees={Array []}
+      fees={[]}
       giftCertificates={
-        Array [
-          Object {
+        [
+          {
             "balance": 10,
             "code": "gc",
             "purchaseDate": "",
@@ -138,8 +213,8 @@ exports[`OrderSummaryModal renders order summary 1`] = `
       storeCreditAmount={0}
       subtotalAmount={200}
       taxes={
-        Array [
-          Object {
+        [
+          {
             "amount": 3,
             "name": "Tax",
           },
@@ -161,11 +236,93 @@ exports[`OrderSummaryModal renders order summary 1`] = `
 exports[`OrderSummaryModal when taxes are inclusive displays tax as summary section 1`] = `
 <Modal
   additionalBodyClassName="cart-modal-body optimizedCheckout-orderSummary"
-  additionalHeaderClassName="cart-modal-header optimizedCheckout-orderSummary"
-  additionalModalClassName=""
+  additionalHeaderClassName="cart-modal-header optimizedCheckout-orderSummary with-continue-button"
+  additionalModalClassName="optimizedCheckout-cart-modal"
   footer={false}
   header={
     <React.Fragment>
+      <ModalHeader
+        additionalClassName="cart-modal-title"
+      >
+        <div>
+          <TranslatedString
+            id="cart.cart_heading"
+          />
+          <div
+            className="cart-heading-subheader"
+          >
+            <Memo(OrderModalSummarySubheader)
+              amountWithCurrency={
+                <WithCurrency(ShopperCurrency)
+                  amount={190}
+                />
+              }
+              items={
+                {
+                  "customItems": [],
+                  "digitalItems": [],
+                  "giftCertificates": [
+                    {
+                      "amount": 100,
+                      "id": "bd391ead-8c58-4105-b00e-d75d233b429a",
+                      "message": "message",
+                      "name": "$100 Gift Certificate",
+                      "recipient": {
+                        "email": "lu@is.com",
+                        "name": "luis",
+                      },
+                      "sender": {
+                        "email": "pa@blo.com",
+                        "name": "pablo",
+                      },
+                      "taxable": false,
+                      "theme": "General",
+                    },
+                  ],
+                  "physicalItems": [
+                    {
+                      "addedByPromotion": false,
+                      "brand": "OFS",
+                      "categoryNames": [
+                        "Cat 1",
+                      ],
+                      "comparisonPrice": 200,
+                      "couponAmount": 0,
+                      "discountAmount": 0,
+                      "discounts": [],
+                      "extendedComparisonPrice": 250,
+                      "extendedListPrice": 200,
+                      "extendedSalePrice": 200,
+                      "id": "666",
+                      "imageUrl": "/images/canvas-laundry-cart.jpg",
+                      "isShippingRequired": true,
+                      "isTaxable": true,
+                      "listPrice": 200,
+                      "name": "Canvas Laundry Cart",
+                      "options": [
+                        {
+                          "name": "n",
+                          "nameId": 1,
+                          "value": "v",
+                          "valueId": 3,
+                        },
+                      ],
+                      "productId": 103,
+                      "quantity": 1,
+                      "salePrice": 200,
+                      "sku": "CLC",
+                      "url": "/canvas-laundry-cart/",
+                      "variantId": 71,
+                    },
+                  ],
+                }
+              }
+              shopperCurrencyCode="USD"
+              storeCurrencyCode="USD"
+            />
+          </div>
+        </div>
+      </ModalHeader>
       <a
         className="cart-modal-close"
         href="#"
@@ -180,35 +337,28 @@ exports[`OrderSummaryModal when taxes are inclusive displays tax as summary sect
         </span>
         <Memo />
       </a>
-      <ModalHeader
-        additionalClassName="cart-modal-title"
-      >
-        <TranslatedString
-          id="cart.cart_heading"
-        />
-      </ModalHeader>
     </React.Fragment>
   }
   isOpen={true}
 >
   <OrderSummarySection>
     <OrderSummaryItems
-      displayLineItemsCount={true}
+      displayLineItemsCount={false}
       items={
-        Object {
-          "customItems": Array [],
-          "digitalItems": Array [],
-          "giftCertificates": Array [
-            Object {
+        {
+          "customItems": [],
+          "digitalItems": [],
+          "giftCertificates": [
+            {
               "amount": 100,
               "id": "bd391ead-8c58-4105-b00e-d75d233b429a",
               "message": "message",
               "name": "$100 Gift Certificate",
-              "recipient": Object {
+              "recipient": {
                 "email": "lu@is.com",
                 "name": "luis",
               },
-              "sender": Object {
+              "sender": {
                 "email": "pa@blo.com",
                 "name": "pablo",
               },
@@ -216,17 +366,17 @@ exports[`OrderSummaryModal when taxes are inclusive displays tax as summary sect
               "theme": "General",
             },
           ],
-          "physicalItems": Array [
-            Object {
+          "physicalItems": [
+            {
               "addedByPromotion": false,
               "brand": "OFS",
-              "categoryNames": Array [
+              "categoryNames": [
                 "Cat 1",
               ],
               "comparisonPrice": 200,
               "couponAmount": 0,
               "discountAmount": 0,
-              "discounts": Array [],
+              "discounts": [],
               "extendedComparisonPrice": 250,
               "extendedListPrice": 200,
               "extendedSalePrice": 200,
@@ -236,8 +386,8 @@ exports[`OrderSummaryModal when taxes are inclusive displays tax as summary sect
               "isTaxable": true,
               "listPrice": 200,
               "name": "Canvas Laundry Cart",
-              "options": Array [
-                Object {
+              "options": [
+                {
                   "name": "n",
                   "nameId": 1,
                   "value": "v",
@@ -259,15 +409,15 @@ exports[`OrderSummaryModal when taxes are inclusive displays tax as summary sect
   <OrderSummarySection>
     <Memo(OrderSummarySubtotals)
       coupons={
-        Array [
-          Object {
+        [
+          {
             "code": "savebig2015",
             "couponType": "percentage_discount",
             "discountedAmount": 5,
             "displayName": "20% off each item",
             "id": "1",
           },
-          Object {
+          {
             "code": "279F507D817E3E7",
             "couponType": "shipping_discount",
             "discountedAmount": 5,
@@ -277,10 +427,10 @@ exports[`OrderSummaryModal when taxes are inclusive displays tax as summary sect
         ]
       }
       discountAmount={10}
-      fees={Array []}
+      fees={[]}
       giftCertificates={
-        Array [
-          Object {
+        [
+          {
             "balance": 10,
             "code": "gc",
             "purchaseDate": "",
@@ -296,8 +446,8 @@ exports[`OrderSummaryModal when taxes are inclusive displays tax as summary sect
       storeCreditAmount={0}
       subtotalAmount={200}
       taxes={
-        Array [
-          Object {
+        [
+          {
             "amount": 3,
             "name": "Tax",
           },

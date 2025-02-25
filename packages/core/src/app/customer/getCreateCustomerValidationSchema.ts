@@ -26,6 +26,7 @@ export interface CreateCustomerValidationSchema {
     passwordRequirements: PasswordRequirements;
 }
 
+/* istanbul ignore next */ // Currently no limitation on new customer's name
 function getTranslateCreateCustomerError(
     language?: LanguageService,
 ): TranslateValidationErrorFunction {
@@ -72,7 +73,7 @@ export default memoize(function getCreateCustomerValidationSchema({
             )
             .min(
                 minLength,
-                language.translate('customer.password_under_minimum_length_error' || description),
+                language.translate('customer.password_under_minimum_length_error') || description,
             )
             .max(100, language.translate('customer.password_over_maximum_length_error')),
     })
