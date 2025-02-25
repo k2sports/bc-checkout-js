@@ -313,7 +313,7 @@
       "paypal_description_text": "Pay using your PayPal account",
       "paypal_name_text": "PayPal",
       "paypal_credit_name_text": "Pay Later",
-      "place_order_action": "Buy Now",
+      "place_order_action": "Place Order",
       "place_order_error": "There was an error placing your order. Please contact us.",
       "place_order_error_heading": "Failed to place order",
       "postal_code_label": "Postal Code",
