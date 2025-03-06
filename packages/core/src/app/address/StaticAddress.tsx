@@ -2,22 +2,17 @@ import {
     Address,
     CheckoutSelectors,
     Country,
-    FormField,
     ShippingInitializeOptions,
 } from '@bigcommerce/checkout-sdk';
-import classNames from 'classnames';
 import { isEmpty } from 'lodash';
 import React, { FunctionComponent, memo } from 'react';
 
+import { localizeAddress } from '@bigcommerce/checkout/locale';
 import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
-import { isPayPalConnectAddress, usePayPalConnectAddress } from '@bigcommerce/checkout/paypal-connect-integration';
-import { IconPayPalConnectSmall } from '@bigcommerce/checkout/ui';
 
 import { withCheckout } from '../checkout';
 
 import AddressType from './AddressType';
-import isValidAddress from './isValidAddress';
-import localizeAddress from './localizeAddress';
 
 import './StaticAddress.scss';
 
@@ -32,33 +27,19 @@ export interface StaticAddressEditableProps extends StaticAddressProps {
 
 interface WithCheckoutStaticAddressProps {
     countries?: Country[];
-    fields?: FormField[];
 }
 
 const StaticAddress: FunctionComponent<
     StaticAddressEditableProps & WithCheckoutStaticAddressProps
-> = ({ countries, fields, address: addressWithoutLocalization }) => {
-    const { isPayPalAxoEnabled, paypalConnectAddresses } = usePayPalConnectAddress();
+    > = ({
+        countries,
+        address: addressWithoutLocalization,
+    }) => {
     const address = localizeAddress(addressWithoutLocalization, countries);
-    const isValid = !fields
-        ? !isEmpty(address)
-        : isValidAddress(
-              address,
-              fields.filter((field) => !field.custom),
-          );
-    const shouldShowProviderIcon = isPayPalAxoEnabled && isPayPalConnectAddress(addressWithoutLocalization, paypalConnectAddresses);
+    const isValid = !isEmpty(address);
 
     return !isValid ? null : (
-        <div
-            className={classNames(
-                'vcard checkout-address--static',
-                {
-                    'checkout-address--with-provider-icon': shouldShowProviderIcon,
-                }
-            )}
-        >
-            {shouldShowProviderIcon && <IconPayPalConnectSmall />}
-
+        <div className="vcard checkout-address--static" data-test="static-address">
             {(address.firstName || address.lastName) && (
                 <p className="fn address-entry">
                     <span className="first-name">{`${address.firstName} `}</span>
@@ -100,11 +81,11 @@ const StaticAddress: FunctionComponent<
 
 export function mapToStaticAddressProps(
     context: CheckoutContextProps,
-    { address, type }: StaticAddressProps,
+    { type }: StaticAddressProps,
 ): WithCheckoutStaticAddressProps | null {
     const {
         checkoutState: {
-            data: { getBillingCountries, getShippingCountries, getBillingAddressFields, getShippingAddressFields },
+            data: { getBillingCountries, getShippingCountries },
         },
     } = context;
 
@@ -112,12 +93,6 @@ export function mapToStaticAddressProps(
         countries: type === AddressType.Billing
             ? getBillingCountries()
             : getShippingCountries(),
-        fields:
-            type === AddressType.Billing
-                ? getBillingAddressFields(address.countryCode)
-                : type === AddressType.Shipping
-                ? getShippingAddressFields(address.countryCode)
-                : undefined,
     };
 }
 

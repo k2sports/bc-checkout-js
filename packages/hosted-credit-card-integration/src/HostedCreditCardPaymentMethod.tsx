@@ -1,4 +1,4 @@
-import { CardInstrument, HostedFormOptions } from '@bigcommerce/checkout-sdk';
+import { CardInstrument, LegacyHostedFormOptions } from '@bigcommerce/checkout-sdk';
 import { compact, forIn } from 'lodash';
 import React, { FunctionComponent, ReactNode, useCallback, useState } from 'react';
 
@@ -55,20 +55,26 @@ const HostedCreditCardPaymentMethod: FunctionComponent<PaymentMethodProps> = ({
 
     const getHostedFormOptions: (
         selectedInstrument?: CardInstrument,
-    ) => Promise<HostedFormOptions> = useCallback(
+    ) => Promise<LegacyHostedFormOptions> = useCallback(
         async (selectedInstrument) => {
             const styleProps = ['color', 'fontFamily', 'fontSize', 'fontWeight'];
             const isInstrumentCardNumberRequired = selectedInstrument
-                ? isInstrumentCardNumberRequiredProp(selectedInstrument)
+                ? isInstrumentCardNumberRequiredProp(selectedInstrument, method)
                 : false;
             const isInstrumentCardCodeRequired = selectedInstrument
                 ? isInstrumentCardCodeRequiredProp(selectedInstrument, method)
                 : false;
-            const styleContainerId = selectedInstrument
-                ? isInstrumentCardCodeRequired
-                    ? getHostedFieldId('ccCvv')
-                    : undefined
-                : getHostedFieldId('ccNumber');
+            let styleContainerId = '';
+
+            if (selectedInstrument) {
+                if (isInstrumentCardCodeRequired) {
+                    styleContainerId = getHostedFieldId('ccCvv');
+                } else if (isInstrumentCardNumberRequired) {
+                    styleContainerId = getHostedFieldId('ccNumber');
+                }
+            } else {
+                styleContainerId = getHostedFieldId('ccNumber');
+            }
 
             return {
                 fields: selectedInstrument
@@ -207,7 +213,7 @@ const HostedCreditCardPaymentMethod: FunctionComponent<PaymentMethodProps> = ({
         useCallback(
             (selectedInstrument) => {
                 const isInstrumentCardNumberRequired = selectedInstrument
-                    ? isInstrumentCardNumberRequiredProp(selectedInstrument)
+                    ? isInstrumentCardNumberRequiredProp(selectedInstrument, method)
                     : false;
                 const isInstrumentCardCodeRequired = selectedInstrument
                     ? isInstrumentCardCodeRequiredProp(selectedInstrument, method)

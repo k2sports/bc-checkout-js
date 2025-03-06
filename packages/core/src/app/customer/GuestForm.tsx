@@ -4,6 +4,7 @@ import React, { FunctionComponent, memo, ReactNode, useCallback } from 'react';
 import { object, string } from 'yup';
 
 import { TranslatedString, withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
+import { PayPalFastlaneWatermark } from '@bigcommerce/checkout/paypal-fastlane-integration';
 
 import { getPrivacyPolicyValidationSchema, PrivacyPolicyField } from '../privacyPolicy';
 import { Button, ButtonVariant } from '../ui/button';
@@ -11,6 +12,15 @@ import { BasicFormField, Fieldset, Form, Legend } from '../ui/form';
 
 import EmailField from './EmailField';
 import SubscribeField from './SubscribeField';
+import { SubscribeSessionStorage } from './SubscribeSessionStorage';
+
+function getShouldSubscribeValue(requiresMarketingConsent: boolean, defaultShouldSubscribe: boolean) {
+    if (SubscribeSessionStorage.getSubscribeStatus()) {
+        return true;
+    }
+
+    return requiresMarketingConsent ? false : defaultShouldSubscribe
+}
 
 export interface GuestFormProps {
     canSubscribe: boolean;
@@ -23,6 +33,7 @@ export interface GuestFormProps {
     privacyPolicyUrl?: string;
     isExpressPrivacyPolicy: boolean;
     isFloatingLabelEnabled?: boolean;
+    shouldShowEmailWatermark: boolean;
     onChangeEmail(email: string): void;
     onContinueAsGuest(data: GuestFormValues): void;
     onShowLogin(): void;
@@ -46,6 +57,7 @@ const GuestForm: FunctionComponent<
     requiresMarketingConsent,
     isExpressPrivacyPolicy,
     isFloatingLabelEnabled,
+    shouldShowEmailWatermark,
 }) => {
     const renderField = useCallback(
         (fieldProps: FieldProps<boolean>) => (
@@ -70,6 +82,8 @@ const GuestForm: FunctionComponent<
                 <div className="customerEmail-container">
                     <div className="customerEmail-body">
                         <EmailField isFloatingLabelEnabled={isFloatingLabelEnabled} onChange={onChangeEmail}/>
+
+                        {shouldShowEmailWatermark && <PayPalFastlaneWatermark />}
 
                         {(canSubscribe || requiresMarketingConsent) && (
                             <BasicFormField name="shouldSubscribe" render={renderField} />
@@ -105,6 +119,8 @@ const GuestForm: FunctionComponent<
                             data-test="customer-continue-button"
                             id="checkout-customer-login"
                             onClick={onShowLogin}
+                            role="button"
+                            tabIndex={0}
                         >
                             <TranslatedString id="customer.login_action" />
                         </a>
@@ -125,7 +141,7 @@ export default withLanguage(
             requiresMarketingConsent,
         }) => ({
             email,
-            shouldSubscribe: requiresMarketingConsent ? false : defaultShouldSubscribe,
+            shouldSubscribe: getShouldSubscribeValue(requiresMarketingConsent, defaultShouldSubscribe),
             privacyPolicy: false,
         }),
         handleSubmit: (values, { props: { onContinueAsGuest } }) => {

@@ -1,3 +1,5 @@
+/* istanbul ignore file */ // Pending removal: Deprecated old multi-shipping UI
+
 import {
     Address,
     AddressRequestBody,
@@ -10,11 +12,10 @@ import {
     CustomerAddress,
     FormField,
 } from '@bigcommerce/checkout-sdk';
-import { FormikProps, withFormik } from 'formik';
+import { FormikProps } from 'formik';
 import React, { PureComponent, ReactNode } from 'react';
 
-import { preventDefault } from '@bigcommerce/checkout/dom-utils';
-import { TranslatedLink, TranslatedString, withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
+import { TranslatedString, withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
 
 import {
     AddressFormModal,
@@ -23,6 +24,7 @@ import {
     mapAddressFromFormValues,
 } from '../address';
 import { ErrorModal } from '../common/error';
+import { withFormikExtended } from '../common/form';
 import { Form } from '../ui/form';
 
 import { AssignItemFailedError, AssignItemInvalidAddressError } from './errors';
@@ -41,19 +43,16 @@ export interface MultiShippingFormProps {
     cartHasChanged: boolean;
     consignments: Consignment[];
     customerMessage: string;
-    isGuest: boolean;
     isLoading: boolean;
     shouldShowOrderComments: boolean;
     defaultCountryCode?: string;
     countries?: Country[];
     countriesWithAutocomplete: string[];
     googleMapsApiKey?: string;
-    shouldShowAddAddressInCheckout: boolean;
     isFloatingLabelEnabled?: boolean;
+    isInitialValueLoaded: boolean;
     assignItem(consignment: ConsignmentAssignmentRequestBody): Promise<CheckoutSelectors>;
-    onCreateAccount(): void;
     createCustomerAddress(address: AddressRequestBody): void;
-    onSignIn(): void;
     getFields(countryCode?: string): FormField[];
     onSubmit(values: MultiShippingFormValues): void;
     onUnhandledError(error: Error): void;
@@ -93,11 +92,9 @@ class MultiShippingForm extends PureComponent<
             addresses,
             consignments,
             cart,
-            isGuest,
-            onSignIn,
-            onCreateAccount,
             cartHasChanged,
             shouldShowOrderComments,
+            isInitialValueLoaded,
             isLoading,
             getFields,
             defaultCountryCode,
@@ -108,25 +105,6 @@ class MultiShippingForm extends PureComponent<
         } = this.props;
 
         const { items, itemAddingAddress, createCustomerAddressError } = this.state;
-
-        if (isGuest) {
-            return (
-                <div className="checkout-step-info">
-                    <TranslatedString id="shipping.multishipping_guest_intro" />{' '}
-                    <a
-                        data-test="shipping-sign-in-link"
-                        href="#"
-                        onClick={preventDefault(onSignIn)}
-                    >
-                        <TranslatedString id="shipping.multishipping_guest_sign_in" />
-                    </a>{' '}
-                    <TranslatedLink
-                        id="shipping.multishipping_guest_create"
-                        onClick={onCreateAccount}
-                    />
-                </div>
-            );
-        }
 
         return (
             <>
@@ -170,6 +148,7 @@ class MultiShippingForm extends PureComponent<
 
                     <ShippingFormFooter
                         cartHasChanged={cartHasChanged}
+                        isInitialValueLoaded={isInitialValueLoaded}
                         isLoading={isLoading}
                         isMultiShippingMode={true}
                         shouldDisableSubmit={this.shouldDisableSubmit()}
@@ -216,19 +195,10 @@ class MultiShippingForm extends PureComponent<
         });
     };
 
-    private handleUseNewAddress: (address: Address, itemId: string, itemKey: string) => void = (
-        address,
+    private handleUseNewAddress: (itemId: string, itemKey: string) => void = (
         itemId,
         itemKey,
     ) => {
-        const { onUseNewAddress, shouldShowAddAddressInCheckout } = this.props;
-
-        if (!shouldShowAddAddressInCheckout) {
-            onUseNewAddress(address, itemId);
-
-            return;
-        }
-
         this.setState({
             itemAddingAddress: {
                 key: itemKey,
@@ -308,7 +278,7 @@ export interface MultiShippingFormValues {
 }
 
 export default withLanguage(
-    withFormik<MultiShippingFormProps & WithLanguageProps, MultiShippingFormValues>({
+    withFormikExtended<MultiShippingFormProps & WithLanguageProps, MultiShippingFormValues>({
         handleSubmit: (values, { props: { onSubmit } }) => {
             onSubmit(values);
         },
