@@ -1,15 +1,18 @@
 import classNames from 'classnames';
-import React, { FC, ReactNode, useCallback, useEffect, useState } from 'react';
+import React, { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
 import { CSSTransition } from 'react-transition-group';
 
 import { preventDefault } from '@bigcommerce/checkout/dom-utils';
 import { useCheckout } from '@bigcommerce/checkout/payment-integration-api';
+import { useThemeContext } from '@bigcommerce/checkout/ui';
 
 import { ShopperCurrency } from '../currency';
 
 export interface OrderSummaryPriceProps {
+    children?: ReactNode;
     label: ReactNode;
     amount?: number | null;
+    amountBeforeDiscount?: number;
     zeroLabel?: ReactNode;
     className?: string;
     testId?: string;
@@ -17,6 +20,7 @@ export interface OrderSummaryPriceProps {
     superscript?: string;
     actionLabel?: ReactNode;
     onActionTriggered?(): void;
+    isOrderTotal?: boolean;
 }
 
 export interface OrderSummaryPriceState {
@@ -44,6 +48,7 @@ function isNumberValue(displayValue: number | ReactNode): displayValue is number
 
 const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
     amount,
+    amountBeforeDiscount,
     actionLabel,
     onActionTriggered,
     children,
@@ -53,6 +58,7 @@ const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
     superscript,
     testId,
     zeroLabel,
+    isOrderTotal = false,
 }) => {
     const [ highlight, setHighlight ] = useState<boolean>(false);
     const [ previousAmount, setPreviousAmount ] = useState<OrderSummaryPriceProps['amount']>(amount);
@@ -62,9 +68,10 @@ const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
         }
     } = useCheckout();
 
+    const { themeV2 } = useThemeContext();
     const displayValue = getDisplayValue(amount, zeroLabel);
     const isActionDisabled = isSubmittingOrder();
-    
+
     useEffect(() => {
         setHighlight(amount !== previousAmount);
         setPreviousAmount(amount);
@@ -103,7 +110,12 @@ const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
                         className,
                     )}
                 >
-                    <span className="cart-priceItem-label">
+                    <span className={classNames('cart-priceItem-label',
+                        {
+                            'body-regular': themeV2 && !isOrderTotal,
+                            'sub-header': themeV2 && isOrderTotal
+                        })}
+                    >
                         <span data-test="cart-price-label">
                             {label}
                             {'  '}
@@ -118,6 +130,7 @@ const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
                                 <a
                                     className={classNames({
                                         'link--disabled': isActionDisabled,
+                                        'body-cta': themeV2 && !isOrderTotal
                                     })}
                                     data-test="cart-price-callback"
                                     href="#"
@@ -129,7 +142,18 @@ const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
                         )}
                     </span>
 
-                    <span className="cart-priceItem-value">
+                    <span className={classNames('cart-priceItem-value',
+                        {
+                            'body-medium': themeV2 && !isOrderTotal,
+                            'header': themeV2 && isOrderTotal
+                        })}
+                    >
+                        {isNumberValue(amountBeforeDiscount) && amountBeforeDiscount !== amount && (
+                            <span className="cart-priceItem-before-value">
+                                <ShopperCurrency amount={amountBeforeDiscount} />
+                            </span>
+                        )}
+
                         <span data-test="cart-price-value">
                             {isNumberValue(displayValue) ? (
                                 <ShopperCurrency amount={displayValue} />

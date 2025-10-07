@@ -1,10 +1,10 @@
-import React, { FunctionComponent } from 'react';
+import React, { type FunctionComponent } from 'react';
 
 import { fireEvent, render, screen, waitFor } from '@bigcommerce/checkout/test-utils';
 
 import CheckoutStepType from '../checkout/CheckoutStepType';
 
-import StripeGuestForm, { StripeGuestFormProps } from './StripeGuestForm';
+import StripeGuestForm, { type StripeGuestFormProps } from './StripeGuestForm';
 
 describe('StripeGuestForm', () => {
     let defaultProps: StripeGuestFormProps;
@@ -63,9 +63,23 @@ describe('StripeGuestForm', () => {
                 onContinueAsGuest={jest.fn()}
             />
         );
+
         const button = screen.getByTestId('stripe-customer-continue-as-guest-button');
 
         expect(button).toBeDisabled();
+    });
+
+    it('selects `Subscribe to our newsletter` checkbox by default', async () => {
+        render(
+            <TestComponent
+                defaultShouldSubscribe={true}
+                isLoading={true}
+                onContinueAsGuest={jest.fn()}
+                requiresMarketingConsent={false}
+            />
+        );
+
+        expect(screen.getByTestId('should-subscribe-checkbox')).toBeChecked();
     });
 
     it('executes a function when the button is clicked', async () => {
@@ -74,12 +88,15 @@ describe('StripeGuestForm', () => {
         render(<TestComponent onContinueAsGuest={handleContinueAsGuest} privacyPolicyUrl="foo" />);
 
         const privacyCheckbox = screen.getByTestId('privacy-policy-checkbox');
+
         fireEvent.click(privacyCheckbox);
 
         const subscribeCheckbox = screen.getByTestId('should-subscribe-checkbox');
+
         fireEvent.click(subscribeCheckbox);
 
         const button = screen.getByTestId('stripe-customer-continue-as-guest-button');
+
         fireEvent.submit(button);
 
         await new Promise((resolve) => process.nextTick(resolve));
@@ -124,6 +141,7 @@ describe('StripeGuestForm', () => {
 
     it('notifies when user clicks on "sign in" button', () => {
         const handleShowLogin = jest.fn();
+
         render(
             <TestComponent
                 onShowLogin={handleShowLogin}
@@ -131,6 +149,7 @@ describe('StripeGuestForm', () => {
         );
 
         const customerContinueButton = screen.getByTestId('customer-continue-button');
+
         fireEvent.click(customerContinueButton);
 
         expect(handleShowLogin).toHaveBeenCalled();
@@ -159,13 +178,17 @@ describe('StripeGuestForm', () => {
 
     it('sets newsletter field with default value false', () => {
         render(<TestComponent canSubscribe={true} defaultShouldSubscribe={false} />);
+
         const shouldSubscribeCheckbox = screen.getByTestId('should-subscribe-checkbox');
+
         expect((shouldSubscribeCheckbox as HTMLOptionElement).value).toBe('false');
     });
 
     it('sets newsletter field with default value true', () => {
         render(<TestComponent canSubscribe={true} defaultShouldSubscribe={true} />);
+
         const shouldSubscribeCheckbox = screen.getByTestId('should-subscribe-checkbox');
+
         expect((shouldSubscribeCheckbox as HTMLOptionElement).value).toBe('true');
     });
 

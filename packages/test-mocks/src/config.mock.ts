@@ -1,4 +1,4 @@
-import { StoreConfig } from '@bigcommerce/checkout-sdk';
+import { type StoreConfig } from '@bigcommerce/checkout-sdk';
 
 export function getStoreConfig(): StoreConfig {
     return {
@@ -11,6 +11,7 @@ export function getStoreConfig(): StoreConfig {
             customerAccount: [],
         },
         checkoutSettings: {
+            orderTermsAndConditionsLocation: 'termsAndConditionsLocation',
             checkoutBillingSameAsShippingEnabled: true,
             checkoutUserExperienceSettings: {
                 walletButtonsOnTop: false,
@@ -44,9 +45,11 @@ export function getStoreConfig(): StoreConfig {
             requiresMarketingConsent: false,
             features: {},
             remoteCheckoutProviders: [],
+            shouldRedirectToStorefrontForAuth: false,
         },
         currency: {
             code: 'USD',
+            isTransactional: false,
             decimalPlaces: '2',
             decimalSeparator: '.',
             symbolLocation: 'left',
@@ -59,6 +62,7 @@ export function getStoreConfig(): StoreConfig {
             createAccountLink: 'https://store-k1drp8k8.bcapp.dev/login.php?action=create_account',
             forgotPasswordLink: 'https://store-k1drp8k8.bcapp.dev/login.php?action=reset_password',
             loginLink: 'https://store-k1drp8k8.bcapp.dev/login.php',
+            logoutLink: 'https://store-k1drp8k8.bcapp.dev/login.php?action=logout',
             siteLink: 'https://store-k1drp8k8.bcapp.dev',
             orderConfirmationLink: 'https://store-k1drp8k8.bcapp.dev/checkout/order-confirmation',
         },

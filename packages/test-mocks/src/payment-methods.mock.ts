@@ -1,4 +1,4 @@
-import { PaymentMethod } from '@bigcommerce/checkout-sdk';
+import { type PaymentMethod } from '@bigcommerce/checkout-sdk';
 
 export function getPaymentMethod(): PaymentMethod {
     return {
@@ -22,6 +22,7 @@ export function getPaymentMethod(): PaymentMethod {
             testMode: false,
         },
         type: 'PAYMENT_TYPE_API',
+        skipRedirectConfirmationAlert: false,
     };
 }
 
@@ -37,6 +38,7 @@ export function getPaypalCreditPaymentMethod(): PaymentMethod {
             payPalCreditProductBrandName: { credit: 'Pay in 3' },
         },
         type: 'PAYMENT_TYPE_API',
+        skipRedirectConfirmationAlert: false,
     };
 }
 
@@ -51,6 +53,7 @@ export function getBraintreeAchPaymentMethod(): PaymentMethod {
             isVaultingEnabled: false,
         },
         type: 'PAYMENT_TYPE_API',
+        skipRedirectConfirmationAlert: false,
     };
 }
 
@@ -76,5 +79,22 @@ export function getMobilePaymentMethod(): PaymentMethod {
             testMode: false,
         },
         type: 'PAYMENT_TYPE_API',
+        skipRedirectConfirmationAlert: false,
+    };
+}
+
+export function getBraintreePaypalPaymentMethod(): PaymentMethod {
+    return {
+        id: 'braintreepaypal',
+        gateway: undefined,
+        method: 'paypal',
+        supportedCards: [],
+        config: {},
+        type: 'PAYMENT_TYPE_API',
+        nonce: undefined,
+        initializationData: {},
+        clientToken: 'token',
+        returnUrl: undefined,
+        skipRedirectConfirmationAlert: false,
     };
 }

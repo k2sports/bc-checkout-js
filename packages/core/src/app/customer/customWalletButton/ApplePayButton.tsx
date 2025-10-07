@@ -1,11 +1,12 @@
-import { CustomerInitializeOptions } from '@bigcommerce/checkout-sdk';
+import { type CustomerInitializeOptions } from '@bigcommerce/checkout-sdk';
+import { createApplePayCustomerStrategy } from '@bigcommerce/checkout-sdk/integrations/apple-pay';
 import { noop } from 'lodash';
-import React, { FunctionComponent, useCallback, useContext } from 'react';
+import React, { type FunctionComponent, useCallback, useContext } from 'react';
 
 import { LocaleContext } from '@bigcommerce/checkout/locale';
+import { navigateToOrderConfirmation } from '@bigcommerce/checkout/utility';
 
-import { navigateToOrderConfirmation } from '../../checkout';
-import CheckoutButton, { CheckoutButtonProps } from '../CheckoutButton';
+import CheckoutButton, { type CheckoutButtonProps } from '../CheckoutButton';
 
 const ApplePayButton: FunctionComponent<CheckoutButtonProps> = ({
     initialize,
@@ -18,6 +19,7 @@ const ApplePayButton: FunctionComponent<CheckoutButtonProps> = ({
         (options: CustomerInitializeOptions) =>
             initialize({
                 ...options,
+                integrations: [createApplePayCustomerStrategy],
                 applepay: {
                     container: rest.containerId,
                     shippingLabel: localeContext?.language.translate('cart.shipping_text'),

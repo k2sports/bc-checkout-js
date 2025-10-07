@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import { noop } from 'lodash';
+import React, { type ReactNode } from 'react';
 
 import * as paymentIntegrationApi from '@bigcommerce/checkout/payment-integration-api';
 import { fireEvent, render, screen } from '@bigcommerce/checkout/test-utils';
@@ -11,13 +12,14 @@ jest.mock('../currency', () => ({
     ShopperCurrency: ({ amount }: {amount: number}) => <div data-test="ShopperCurrency">{amount}</div>
 }));
 
-import OrderSummaryPrice, { OrderSummaryPriceProps } from './OrderSummaryPrice';
+import OrderSummaryPrice, { type OrderSummaryPriceProps } from './OrderSummaryPrice';
 
 describe('OrderSummaryPrice', () => {
     const useCheckoutMock = (isSubmittingOrder: boolean) => {
         jest.spyOn(paymentIntegrationApi, 'useCheckout').mockImplementation(
             jest.fn().mockImplementation(() => ({
                 checkoutState: {
+                    data: { getConfig:noop },
                     statuses: {
                         isSubmittingOrder: () => isSubmittingOrder,
                     }

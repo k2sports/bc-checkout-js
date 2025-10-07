@@ -1,4 +1,4 @@
-import React, { FunctionComponent, ReactNode, Suspense } from 'react';
+import React, { type FunctionComponent, type ReactNode, Suspense } from 'react';
 
 import { ErrorBoundary } from '@bigcommerce/checkout/error-handling-utils';
 import { TranslatedString } from '@bigcommerce/checkout/locale';
@@ -8,7 +8,7 @@ import './LazyContainer.scss';
 import LoadingSpinner from './LoadingSpinner';
 
 export interface LazyContainerProps {
-    children: ReactNode;
+    children?: ReactNode;
     loadingSkeleton?: ReactNode;
 }
 

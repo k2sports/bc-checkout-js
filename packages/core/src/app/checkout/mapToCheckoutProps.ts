@@ -1,11 +1,11 @@
-import { CheckoutSelectors, CustomError } from '@bigcommerce/checkout-sdk';
+import { type CheckoutSelectors, type CustomError } from '@bigcommerce/checkout-sdk';
 import { createSelector } from 'reselect';
 
-import { CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
+import { type CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
 
-import { EMPTY_ARRAY } from '../common/utility';
+import { EMPTY_ARRAY, isExperimentEnabled } from '../common/utility';
 
-import { WithCheckoutProps } from './Checkout';
+import { type WithCheckoutProps } from './Checkout';
 import getCheckoutStepStatuses from './getCheckoutStepStatuses';
 
 export default function mapToCheckoutProps({
@@ -21,7 +21,7 @@ export default function mapToCheckoutProps({
             checkoutUserExperienceSettings = {
                 walletButtonsOnTop: false,
                 floatingLabelEnabled: false,
-            } ,
+            },
         } = {},
         links: {
             loginLink: loginUrl = '',
@@ -39,15 +39,21 @@ export default function mapToCheckoutProps({
     );
 
     const walletButtonsOnTopFlag = Boolean(checkoutUserExperienceSettings.walletButtonsOnTop);
+    const isShippingDiscountDisplayEnabled = isExperimentEnabled(
+        data.getConfig()?.checkoutSettings,
+        'PROJECT-6643.enable_shipping_discounts_in_orders',
+    );
 
     return {
         billingAddress: data.getBillingAddress(),
         cart: data.getCart(),
         clearError: checkoutService.clearError,
+        data,
         consignments: data.getConsignments(),
         hasCartChanged: submitOrderError && submitOrderError.type === 'cart_changed', // TODO: Need to clear the error once it's displayed
         isGuestEnabled,
         isLoadingCheckout: statuses.isLoadingCheckout(),
+        isShippingDiscountDisplayEnabled,
         isPending: statuses.isPending(),
         isPriceHiddenFromGuests,
         isShowingWalletButtonsOnTop: walletButtonsOnTopFlag,
@@ -61,6 +67,6 @@ export default function mapToCheckoutProps({
             checkoutService,
             checkoutState,
         }),
-        steps: data.getCheckout() ? getCheckoutStepStatuses(checkoutState) : EMPTY_ARRAY,
+        steps: getCheckoutStepStatuses(checkoutState),
     };
 }

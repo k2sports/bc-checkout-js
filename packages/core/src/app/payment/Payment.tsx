@@ -1,27 +1,27 @@
 import {
-    CartChangedError,
-    CheckoutSelectors,
-    CheckoutService,
-    CheckoutSettings,
-    OrderRequestBody,
-    PaymentMethod,
+    type CartChangedError,
+    type CheckoutSelectors,
+    type CheckoutService,
+    type CheckoutSettings,
+    type OrderRequestBody,
+    type PaymentMethod,
 } from '@bigcommerce/checkout-sdk';
 import { memoizeOne } from '@bigcommerce/memoize';
 import { compact, find, isEmpty, noop } from 'lodash';
-import React, { Component, ReactNode } from 'react';
-import { ObjectSchema } from 'yup';
+import React, { Component, type ReactNode } from 'react';
+import { type ObjectSchema } from 'yup';
 
-import { AnalyticsContextProps } from '@bigcommerce/checkout/analytics';
-import { ErrorLogger } from '@bigcommerce/checkout/error-handling-utils';
-import { withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
-import { CheckoutContextProps, PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
+import { type AnalyticsContextProps } from '@bigcommerce/checkout/analytics';
+import { type ErrorLogger } from '@bigcommerce/checkout/error-handling-utils';
+import { withLanguage, type WithLanguageProps } from '@bigcommerce/checkout/locale';
+import { type CheckoutContextProps, type PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
 import { ChecklistSkeleton } from '@bigcommerce/checkout/ui';
 
 import { withAnalytics } from '../analytics';
 import { withCheckout } from '../checkout';
 import {
     ErrorModal,
-    ErrorModalOnCloseProps,
+    type ErrorModalOnCloseProps,
     isCartChangedError,
     isErrorWithType,
 } from '../common/error';
@@ -121,7 +121,6 @@ class Payment extends Component<
             usableStoreCredit,
             checkoutServiceSubscribe,
         } = this.props;
-
 
         if (usableStoreCredit) {
             this.handleStoreCreditChange(true);
@@ -316,43 +315,16 @@ class Payment extends Component<
         });
     };
 
-    // tslint:disable:cyclomatic-complexity
     private handleBeforeUnload: (event: BeforeUnloadEvent) => string | undefined = (event) => {
         const { defaultMethod, isSubmittingOrder, language } = this.props;
         const { selectedMethod = defaultMethod } = this.state;
 
-        // TODO: Perhaps there is a better way to handle `adyen`, `afterpay`, `amazonpay`,
-        // `checkout.com`, `converge`, `sagepay`, `stripev3` and `sezzle`. They require
-        //  a redirection to another website during the payment flow but are not
-        //  categorised as hosted payment methods.
         if (
             !isSubmittingOrder ||
             !selectedMethod ||
             selectedMethod.type === PaymentMethodProviderType.Hosted ||
             selectedMethod.type === PaymentMethodProviderType.PPSDK ||
-            selectedMethod.gateway === PaymentMethodId.BlueSnapDirect ||
-            selectedMethod.id === PaymentMethodId.AmazonPay ||
-            selectedMethod.id === PaymentMethodId.CBAMPGS ||
-            selectedMethod.id === PaymentMethodId.Checkoutcom ||
-            selectedMethod.id === PaymentMethodId.CheckoutcomGooglePay ||
-            selectedMethod.id === PaymentMethodId.Converge ||
-            selectedMethod.id === PaymentMethodId.Humm ||
-            selectedMethod.id === PaymentMethodId.Laybuy ||
-            selectedMethod.id === PaymentMethodId.Opy ||
-            selectedMethod.id === PaymentMethodId.Quadpay ||
-            selectedMethod.id === PaymentMethodId.SagePay ||
-            selectedMethod.id === PaymentMethodId.Sezzle ||
-            selectedMethod.id === PaymentMethodId.WorldpayAccess ||
-            selectedMethod.id === PaymentMethodId.Zip ||
-            selectedMethod.gateway === PaymentMethodId.AdyenV2 ||
-            selectedMethod.gateway === PaymentMethodId.AdyenV2GooglePay ||
-            selectedMethod.gateway === PaymentMethodId.AdyenV3 ||
-            selectedMethod.gateway === PaymentMethodId.AdyenV3GooglePay ||
-            selectedMethod.gateway === PaymentMethodId.Afterpay ||
-            selectedMethod.gateway === PaymentMethodId.Clearpay ||
-            selectedMethod.gateway === PaymentMethodId.Checkoutcom ||
-            selectedMethod.gateway === PaymentMethodId.Mollie ||
-            selectedMethod.gateway === PaymentMethodId.StripeV3
+            selectedMethod.skipRedirectConfirmationAlert
         ) {
             return;
         }
@@ -452,7 +424,7 @@ class Payment extends Component<
 
         const { selectedMethod = defaultMethod, submitFunctions } = this.state;
 
-        analyticsTracker.clickPayButton({shouldCreateAccount: values.shouldCreateAccount});
+        analyticsTracker.clickPayButton({ shouldCreateAccount: values.shouldCreateAccount });
 
         const customSubmit =
             selectedMethod &&
@@ -644,6 +616,10 @@ export function mapToPaymentProps({
             return !!method.initializationData.showInCheckout;
         }
 
+        if (method.id === PaymentMethodId.BraintreeLocalPaymentMethod) {
+            return false;
+        }
+
         return true;
     });
 
@@ -653,7 +629,7 @@ export function mapToPaymentProps({
         ];
 
         filteredMethods = methods.filter((method: PaymentMethod) => {
-            return multiShippingIncompatibleMethodIds.indexOf(method.id) === -1;
+            return !multiShippingIncompatibleMethodIds.includes(method.id);
         });
     }
 

@@ -1,5 +1,5 @@
-import { ComponentType } from 'react';
-import { Omit } from 'utility-types';
+import { type ComponentType } from 'react';
+import { type Omit } from 'utility-types';
 
 export type MatchedProps<TInjectedProps, TProps> = {
     [P in keyof TProps]: P extends keyof TInjectedProps
@@ -9,7 +9,7 @@ export type MatchedProps<TInjectedProps, TProps> = {
         : TProps[P];
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 type InjectHoc<TInjectedProps, TOwnProps = {}> = <
     TProps extends MatchedProps<TInjectedProps, TProps> & TOwnProps,
 >(

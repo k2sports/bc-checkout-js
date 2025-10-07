@@ -1,7 +1,7 @@
-import { Address } from '@bigcommerce/checkout-sdk';
-import { Page } from '@playwright/test';
+import { type Address } from '@bigcommerce/checkout-sdk';
+import { type Page } from '@playwright/test';
 
-import { CheckoutPagePreset } from '../../';
+import { type CheckoutPagePreset } from '../../';
 
 import { PlaywrightHelper } from '.';
 
@@ -127,7 +127,7 @@ export class Checkout {
         address: Address;
         addressAppendText: string;
     }): Promise<void> {
-        await this.page.locator(`${formId}`).waitFor({ state: 'visible' });
+        await this.page.locator(formId).waitFor({ state: 'visible' });
         await this.page
             .locator(`${formId} [data-test="firstNameInput-text"]`)
             .fill(`${address.firstName} ${addressAppendText}`);
@@ -170,10 +170,6 @@ export class Checkout {
             addressAppendText,
         });
 
-        if (!isBillingAddressSame) await this.page.locator('label[for="sameAsBilling"]').click();
-        if (!shouldSaveAddress)
-            await this.page.locator('label[for="shippingAddress.shouldSaveAddress"]').click();
-
         await this.page.locator('#checkout-shipping-options').waitFor({ state: 'visible' });
 
         const firstShippingMethod = this.page
@@ -181,6 +177,11 @@ export class Checkout {
             .nth(0);
 
         await firstShippingMethod.click();
+
+        if (!isBillingAddressSame) await this.page.locator('label[for="sameAsBilling"]').click();
+        if (!shouldSaveAddress)
+            await this.page.locator('label[for="shippingAddress.shouldSaveAddress"]').click();
+
         await this.page.locator('#checkout-shipping-continue').click();
     }
 

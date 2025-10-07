@@ -1,65 +1,48 @@
-import { CheckoutSelectors, CheckoutService } from '@bigcommerce/checkout-sdk';
-import { memoizeOne } from '@bigcommerce/memoize';
-import React, { Component, ReactNode } from 'react';
+import { type CheckoutSelectors, type CheckoutService } from '@bigcommerce/checkout-sdk';
+import React, {
+    type ReactElement,
+    type ReactNode,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 
 import CheckoutContext from './CheckoutContext';
 
 export interface CheckoutProviderProps {
     checkoutService: CheckoutService;
+    children: ReactNode;
 }
 
-export interface CheckoutProviderState {
-    checkoutState: CheckoutSelectors;
-}
+const CheckoutProvider = ({ checkoutService, children }: CheckoutProviderProps): ReactElement => {
+    const [checkoutState, setCheckoutState] = useState<CheckoutSelectors>(() =>
+        checkoutService.getState(),
+    );
+    const unsubscribeRef = useRef<(() => void) | undefined>();
 
-export default class CheckoutProvider extends Component<
-    CheckoutProviderProps,
-    CheckoutProviderState
-> {
-    state: Readonly<CheckoutProviderState>;
-
-    private unsubscribe?: () => void;
-
-    private getContextValue = memoizeOne(
-        (checkoutService: CheckoutService, checkoutState: CheckoutSelectors) => {
-            return {
-                checkoutService,
-                checkoutState,
-            };
-        },
+    const contextValue = useMemo(
+        () => ({
+            checkoutService,
+            checkoutState,
+        }),
+        [checkoutService, checkoutState],
     );
 
-    constructor(props: Readonly<CheckoutProviderProps>) {
-        super(props);
+    useEffect(() => {
+        unsubscribeRef.current = checkoutService.subscribe((newCheckoutState) =>
+            setCheckoutState(newCheckoutState),
+        );
 
-        this.state = {
-            checkoutState: props.checkoutService.getState(),
+        return () => {
+            if (unsubscribeRef.current) {
+                unsubscribeRef.current();
+                unsubscribeRef.current = undefined;
+            }
         };
-    }
+    }, [checkoutService]);
 
-    componentDidMount(): void {
-        const { checkoutService } = this.props;
+    return <CheckoutContext.Provider value={contextValue}>{children}</CheckoutContext.Provider>;
+};
 
-        this.unsubscribe = checkoutService.subscribe((checkoutState) =>
-            this.setState({ checkoutState }),
-        );
-    }
-
-    componentWillUnmount(): void {
-        if (this.unsubscribe) {
-            this.unsubscribe();
-            this.unsubscribe = undefined;
-        }
-    }
-
-    render(): ReactNode {
-        const { checkoutService, children } = this.props;
-        const { checkoutState } = this.state;
-
-        return (
-            <CheckoutContext.Provider value={this.getContextValue(checkoutService, checkoutState)}>
-                {children}
-            </CheckoutContext.Provider>
-        );
-    }
-}
+export default CheckoutProvider;

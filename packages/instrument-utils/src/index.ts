@@ -22,21 +22,16 @@ export {
     CreditCardExpiryField,
     CreditCardFieldset,
     CreditCardFieldsetValues,
-    CreditCardIcon,
-    CreditCardIconProps,
     CreditCardInputStylesType,
     CreditCardNameField,
     CreditCardNameFieldProps,
     CreditCardNumberField,
     CreditCardValidation,
     CreditCardValidationSchemaOptions,
-    filterInstrumentTypes,
     formatCreditCardExpiryDate,
     formatCreditCardNumber,
     getCreditCardInputStyles,
     getCreditCardValidationSchema,
-    getPaymentMethodIconComponent,
-    mapFromPaymentMethodCardType,
     unformatCreditCardNumber,
 } from './creditCard';
 export {
@@ -54,4 +49,5 @@ export {
     IsInstrumentCardNumberRequiredState,
     isInstrumentFeatureAvailable,
     shouldUseStripeLinkByMinimumAmount,
+    isHTMLElement,
 } from './guards';

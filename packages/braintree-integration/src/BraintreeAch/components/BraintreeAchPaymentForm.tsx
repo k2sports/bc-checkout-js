@@ -1,5 +1,5 @@
-import { PaymentMethod } from '@bigcommerce/checkout-sdk';
-import React, { FunctionComponent, useEffect, useState } from 'react';
+import { type PaymentMethod } from '@bigcommerce/checkout-sdk';
+import React, { type FunctionComponent, useEffect, useState } from 'react';
 
 import {
     AccountInstrumentFieldset,
@@ -38,7 +38,7 @@ const BraintreeAchPaymentForm: FunctionComponent<BraintreeAchPaymentFormProps> =
         shouldCreateNewInstrument,
         shouldConfirmInstrument,
     } = useBraintreeAchInstruments(method);
-    const { validateBraintreeAchForm } = useBraintreeAchValidation();
+    const { validateBraintreeAchForm, resetFormValidation } = useBraintreeAchValidation(method);
 
     const resetFormValues = () => {
         const { firstName, lastName } = checkoutState.data.getBillingAddress() || {};
@@ -76,7 +76,7 @@ const BraintreeAchPaymentForm: FunctionComponent<BraintreeAchPaymentFormProps> =
                 const braintreeAchFormValues = getFormValues();
                 const isValid = await validateBraintreeAchForm(braintreeAchFormValues);
 
-                if (!isValid) {
+                if (!isValid && getFieldValue('orderConsent')) {
                     setFieldValue('orderConsent', false);
                 }
 
@@ -84,8 +84,17 @@ const BraintreeAchPaymentForm: FunctionComponent<BraintreeAchPaymentFormProps> =
             };
 
             void validate();
+        } else {
+            resetFormValidation();
         }
-    }, [getFormValues, setFieldValue, setIsValidForm, shouldShowForm, validateBraintreeAchForm]);
+    }, [
+        getFormValues,
+        setFieldValue,
+        setIsValidForm,
+        shouldShowForm,
+        validateBraintreeAchForm,
+        resetFormValidation,
+    ]);
 
     useEffect(() => {
         const mandateTextConfirmationCheckboxValue = getFieldValue('orderConsent');
@@ -131,6 +140,7 @@ const BraintreeAchPaymentForm: FunctionComponent<BraintreeAchPaymentFormProps> =
             {isInstrumentFeatureAvailable && (
                 <StoreInstrumentFieldset
                     instrumentId={currentInstrument?.bigpayToken}
+                    instruments={accountInstruments}
                     isAccountInstrument
                 />
             )}

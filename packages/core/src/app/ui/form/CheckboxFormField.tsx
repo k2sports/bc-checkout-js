@@ -1,6 +1,6 @@
-import { FieldProps } from 'formik';
+import { type FieldProps } from 'formik';
 import { kebabCase } from 'lodash';
-import React, { FunctionComponent, memo, ReactNode, useCallback } from 'react';
+import React, { type FunctionComponent, memo, type ReactNode, useCallback } from 'react';
 
 import BasicFormField from './BasicFormField';
 import CheckboxInput from './CheckboxInput';
@@ -14,6 +14,7 @@ export interface CheckboxFormFieldProps {
     labelContent: ReactNode;
     onChange?(isChecked: boolean): void;
     testId?: string;
+    themeV2?: boolean;
 }
 
 const CheckboxFormField: FunctionComponent<CheckboxFormFieldProps> = ({
@@ -24,6 +25,7 @@ const CheckboxFormField: FunctionComponent<CheckboxFormFieldProps> = ({
     name,
     id,
     testId,
+    themeV2 = false,
 }) => {
     const renderField = useCallback(
         ({ field }: FieldProps) => (
@@ -35,6 +37,7 @@ const CheckboxFormField: FunctionComponent<CheckboxFormFieldProps> = ({
                     id={id || field.name}
                     label={labelContent}
                     testId={testId}
+                    themeV2={themeV2}
                 />
 
                 <FormFieldError

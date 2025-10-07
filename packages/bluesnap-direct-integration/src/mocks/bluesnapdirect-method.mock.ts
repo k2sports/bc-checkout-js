@@ -1,9 +1,10 @@
-import { PaymentMethod } from '@bigcommerce/checkout-sdk';
+import { type PaymentMethod } from '@bigcommerce/checkout-sdk';
 
 const DISPLAY_NAME_MAP = {
     credit_card: 'Credit Card',
     ecp: 'Electronic Check Presentment',
     sepa_direct_debit: 'SEPA',
+    pay_by_bank: 'Pay by Bank',
 };
 
 export function getBlueSnapDirect(

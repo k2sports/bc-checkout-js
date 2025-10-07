@@ -1,11 +1,11 @@
 import {
-    CardInstrument,
-    CheckoutSelectors,
-    CheckoutService,
-    PaymentMethod,
+    type CardInstrument,
+    type CheckoutSelectors,
+    type CheckoutService,
+    type PaymentMethod,
 } from '@bigcommerce/checkout-sdk';
 import classNames from 'classnames';
-import React, { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
     CardInstrumentFieldset,
@@ -152,7 +152,10 @@ const SquareV2Form: FunctionComponent<SquareV2FormProps> = ({
                 </div>
 
                 {isInstrumentFeatureAvailable && (
-                    <StoreInstrumentFieldset instrumentId={selectedInstrumentId} />
+                    <StoreInstrumentFieldset
+                        instrumentId={selectedInstrumentId}
+                        instruments={instruments}
+                    />
                 )}
             </div>
         </LoadingOverlay>

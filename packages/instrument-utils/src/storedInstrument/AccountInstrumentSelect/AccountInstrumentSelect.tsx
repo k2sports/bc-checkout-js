@@ -1,13 +1,13 @@
 import {
-    AccountInstrument,
-    AchInstrument,
-    BankInstrument,
-    PayPalInstrument,
+    type AccountInstrument,
+    type AchInstrument,
+    type BankInstrument,
+    type PayPalInstrument,
 } from '@bigcommerce/checkout-sdk';
 import classNames from 'classnames';
-import { FieldProps } from 'formik';
+import { type FieldProps } from 'formik';
 import { find, noop } from 'lodash';
-import React, { FunctionComponent, PureComponent, ReactNode, useCallback } from 'react';
+import React, { type FunctionComponent, useCallback, useEffect, useRef } from 'react';
 
 import { TranslatedString } from '@bigcommerce/checkout/locale';
 import {
@@ -86,17 +86,22 @@ const AchInstrumentMenuItem: FunctionComponent<AchInstrumentMenuItemProps> = ({
     testId,
     onClick,
 }) => {
-    const issuerName = `Routing Number: ${instrument.issuer}`;
-    const accountNumber = `Account number ending in: ${instrument.accountNumber}`;
-
     return (
         <button className={className} data-test={testId} onClick={onClick} type="button">
             <div className="instrumentSelect-details">
                 <IconAch size={IconSize.Medium} />
 
                 <div className="instrumentSelect-bank">
-                    <div>{accountNumber}</div>
-                    <div>{issuerName}</div>
+                    <div>
+                        <TranslatedString
+                            data={{ accountNumber: instrument.accountNumber }}
+                            id="payment.instrument_account_number_ending"
+                        />
+                    </div>
+                    <div>
+                        <TranslatedString id="payment.instrument_manage_table_header_routing_number_text" />
+                        : {instrument.issuer}
+                    </div>
                 </div>
             </div>
         </button>
@@ -137,9 +142,6 @@ const BankInstrumentMenuItem: FunctionComponent<BankInstrumentMenuItemProps> = (
     testId,
     onClick,
 }) => {
-    const issuerName = `Issuer: ${instrument.issuer}`;
-    const accountNumber = `Account number ending in: ${instrument.accountNumber}`;
-
     return (
         <button className={className} data-test={testId} onClick={onClick} type="button">
             <div className="instrumentSelect-details">
@@ -147,8 +149,15 @@ const BankInstrumentMenuItem: FunctionComponent<BankInstrumentMenuItemProps> = (
                     // TODO: When we include new account instrument types we can
                     // abstract these icons in a similar way we did for credit cards.
                 }
-                <div className="instrumentSelect-card">{accountNumber}</div>
-                <div className="instrumentSelect-issuer">{issuerName}</div>
+                <div className="instrumentSelect-card">
+                    <TranslatedString
+                        data={{ accountNumber: instrument.accountNumber }}
+                        id="payment.instrument_account_number_ending"
+                    />
+                </div>
+                <div className="instrumentSelect-issuer">
+                    <TranslatedString id="payment.instrument_issuer" />: {instrument.issuer}
+                </div>
             </div>
         </button>
     );
@@ -317,72 +326,72 @@ export interface AccountInstrumentSelectProps extends FieldProps<string> {
     onUseNewInstrument(): void;
 }
 
-class AccountInstrumentSelect extends PureComponent<AccountInstrumentSelectProps> {
-    componentDidMount() {
-        const { selectedInstrumentId } = this.props;
+const AccountInstrumentSelect: FunctionComponent<AccountInstrumentSelectProps> = ({
+    field,
+    form,
+    instruments,
+    onSelectInstrument,
+    onUseNewInstrument,
+    selectedInstrumentId,
+}) => {
+    const prevSelectedInstrumentIdRef = useRef(selectedInstrumentId);
 
+    const updateFieldValue = useCallback(
+        (instrumentId = '') => {
+            void form.setFieldValue(field.name, instrumentId);
+        },
+        [form, field.name],
+    );
+
+    useEffect(() => {
         // FIXME: Used setTimeout here because setFieldValue call doesnot set value if called before formik is properly mounted.
         //        This ensures that update Field value is called after formik has mounted.
         // See GitHub issue: https://github.com/jaredpalmer/formik/issues/930
-        setTimeout(() => this.updateFieldValue(selectedInstrumentId));
-    }
+        setTimeout(() => updateFieldValue(selectedInstrumentId));
 
-    componentDidUpdate(prevProps: Readonly<AccountInstrumentSelectProps>) {
-        const { selectedInstrumentId: prevSelectedInstrumentId } = prevProps;
-        const { selectedInstrumentId } = this.props;
+        return () => {
+            if (field.value === '' && selectedInstrumentId !== undefined) {
+                updateFieldValue();
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-        if (prevSelectedInstrumentId !== selectedInstrumentId) {
+    useEffect(() => {
+        if (prevSelectedInstrumentIdRef.current !== selectedInstrumentId) {
             // FIXME: Used setTimeout here because setFieldValue call doesnot set value if called before formik is properly mounted.
             //        This ensures that update Field value is called after formik has mounted.
             // See GitHub issue: https://github.com/jaredpalmer/formik/issues/930
-            setTimeout(() => this.updateFieldValue(selectedInstrumentId));
+            setTimeout(() => updateFieldValue(selectedInstrumentId));
         }
-    }
 
-    componentWillUnmount() {
-        const { selectedInstrumentId, field } = this.props;
+        prevSelectedInstrumentIdRef.current = selectedInstrumentId;
+    }, [selectedInstrumentId, updateFieldValue]);
 
-        if (field.value === '' && selectedInstrumentId !== undefined) {
-            this.updateFieldValue();
-        }
-    }
+    const selectedInstrument = find(instruments, { bigpayToken: selectedInstrumentId });
+    const { value, ...otherFieldProps } = field;
 
-    render(): ReactNode {
-        const { field, instruments, onSelectInstrument, onUseNewInstrument, selectedInstrumentId } =
-            this.props;
-
-        const selectedInstrument = find(instruments, { bigpayToken: selectedInstrumentId });
-
-        const { value, ...otherFieldProps } = field;
-
-        return (
-            <div className="instrumentSelect" data-test="account-instrument-select">
-                <DropdownTrigger
-                    dropdown={
-                        <AccountInstrumentMenu
-                            instruments={instruments}
-                            onSelectInstrument={onSelectInstrument}
-                            onUseNewInstrument={onUseNewInstrument}
-                            selectedInstrumentId={selectedInstrumentId}
-                        />
-                    }
-                >
-                    <AccountInstrumentSelectButton
-                        instrument={selectedInstrument}
-                        testId="instrument-select"
+    return (
+        <div className="instrumentSelect" data-test="account-instrument-select">
+            <DropdownTrigger
+                dropdown={
+                    <AccountInstrumentMenu
+                        instruments={instruments}
+                        onSelectInstrument={onSelectInstrument}
+                        onUseNewInstrument={onUseNewInstrument}
+                        selectedInstrumentId={selectedInstrumentId}
                     />
+                }
+            >
+                <AccountInstrumentSelectButton
+                    instrument={selectedInstrument}
+                    testId="instrument-select"
+                />
 
-                    <input type="hidden" value={value || ''} {...otherFieldProps} />
-                </DropdownTrigger>
-            </div>
-        );
-    }
-
-    private updateFieldValue(instrumentId = ''): void {
-        const { form, field } = this.props;
-
-        form.setFieldValue(field.name, instrumentId);
-    }
-}
+                <input type="hidden" value={value || ''} {...otherFieldProps} />
+            </DropdownTrigger>
+        </div>
+    );
+};
 
 export default AccountInstrumentSelect;

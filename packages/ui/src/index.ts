@@ -1,16 +1,28 @@
 /* istanbul ignore file */
 export { Alert, AlertType } from './alert';
+export {
+    Accordion,
+    AccordionProps,
+    AccordionItem,
+    AccordionItemHeaderProps,
+    AccordionItemProps,
+    AccordionContext,
+    AccordionContextProps,
+} from './accordion';
+export { Autocomplete, AutocompleteItem } from './autocomplete';
 export { Button, ButtonSize, ButtonVariant } from './button';
 export { DropdownTrigger } from './dropdown';
 export {
     AddressFormSkeleton,
     BasicFormField,
+    CartSummarySkeleton,
+    CheckoutPageSkeleton,
     DynamicFormField,
     DynamicFormFieldType,
     DynamicInput,
     CheckboxFormField,
     ChecklistSkeleton,
-    CustomerSkeleton,
+    OrderConfirmationPageSkeleton,
     Fieldset,
     FormField,
     FormContext,
@@ -23,13 +35,17 @@ export {
     TextInput,
     TextInputIframeContainer,
     WalletButtonsContainerSkeleton,
+    RadioInput,
 } from './form';
 export {
     CreditCardIcon,
+    CreditCardIconList,
+    mapFromPaymentMethodCardType,
+    getPaymentMethodIconComponent,
+    filterInstrumentTypes,
     IconNewAccount,
     IconPaypal,
-    IconPayPalConnect,
-    IconPayPalConnectSmall,
+    IconPayPalFastlane,
     IconSize,
     IconHelp,
     IconLock,
@@ -42,6 +58,7 @@ export {
     IconCardDankort,
     IconCardDinersClub,
     IconCardDiscover,
+    IconEdit,
     IconCardElectron,
     IconCardElo,
     IconCardHipercard,
@@ -64,6 +81,13 @@ export {
     IconUsdCoin,
     IconAch,
 } from './icon';
-export { LoadingOverlay, LoadingSpinner } from './loading';
-export { Modal, ModalHeader, ModalTrigger, ModalTriggerModalProps } from './modal';
+export { LazyContainer, LoadingNotification, LoadingOverlay, LoadingSpinner } from './loading';
+export {
+    ConfirmationModal,
+    Modal,
+    ModalHeader,
+    ModalTrigger,
+    ModalTriggerModalProps,
+} from './modal';
 export { TooltipTrigger } from './tooltip';
+export { useThemeContext, ThemeContext, ThemeProvider } from './context';

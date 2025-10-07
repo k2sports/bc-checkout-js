@@ -1,10 +1,10 @@
 import {
-    LineItemMap,
-    ShopperCurrency as ShopperCurrencyType,
-    StoreCurrency,
+    type LineItemMap,
+    type ShopperCurrency as ShopperCurrencyType,
+    type StoreCurrency,
 } from '@bigcommerce/checkout-sdk';
 import classNames from 'classnames';
-import React, { FunctionComponent, memo, ReactNode, useCallback } from 'react';
+import React, { type FunctionComponent, memo, type ReactNode, useCallback, useMemo } from 'react';
 
 import { TranslatedString } from '@bigcommerce/checkout/locale';
 
@@ -15,13 +15,13 @@ import { ModalTrigger } from '../ui/modal';
 import getItemsCount from './getItemsCount';
 import getLineItemsCount from './getLineItemsCount';
 import OrderSummaryModal from './OrderSummaryModal';
-import { OrderSummarySubtotalsProps } from './OrderSummarySubtotals';
+import { type OrderSummarySubtotalsProps } from './OrderSummarySubtotals';
+import removeBundledItems from './removeBundledItems';
 
 export interface OrderSummaryDrawerProps {
     lineItems: LineItemMap;
     total: number;
     headerLink: ReactNode;
-    isUpdatedCartSummayModal?: boolean,
     storeCurrency: StoreCurrency;
     shopperCurrency: ShopperCurrencyType;
     additionalLineItems?: ReactNode;
@@ -37,11 +37,11 @@ const OrderSummaryDrawer: FunctionComponent<
     handlingAmount,
     headerLink,
     isTaxIncluded,
-    isUpdatedCartSummayModal,
     lineItems,
     onRemovedCoupon,
     onRemovedGiftCertificate,
     shippingAmount,
+    shippingAmountBeforeDiscount,
     shopperCurrency,
     storeCreditAmount,
     giftWrappingAmount,
@@ -51,8 +51,10 @@ const OrderSummaryDrawer: FunctionComponent<
     total,
     fees,
 }) => {
+    const nonBundledLineItems = useMemo(() => removeBundledItems(lineItems), [lineItems]);
+
     const renderModal = useCallback(
-        (props) => (
+        (props: any) => (
             <OrderSummaryModal
                 {...props}
                 additionalLineItems={additionalLineItems}
@@ -64,11 +66,11 @@ const OrderSummaryDrawer: FunctionComponent<
                 handlingAmount={handlingAmount}
                 headerLink={headerLink}
                 isTaxIncluded={isTaxIncluded}
-                isUpdatedCartSummayModal={isUpdatedCartSummayModal}
-                lineItems={lineItems}
+                items={nonBundledLineItems}
                 onRemovedCoupon={onRemovedCoupon}
                 onRemovedGiftCertificate={onRemovedGiftCertificate}
                 shippingAmount={shippingAmount}
+                shippingAmountBeforeDiscount={shippingAmountBeforeDiscount}
                 shopperCurrency={shopperCurrency}
                 storeCreditAmount={storeCreditAmount}
                 storeCurrency={storeCurrency}
@@ -85,11 +87,12 @@ const OrderSummaryDrawer: FunctionComponent<
             handlingAmount,
             headerLink,
             isTaxIncluded,
-            lineItems,
+            nonBundledLineItems,
             onRemovedCoupon,
             onRemovedGiftCertificate,
             giftWrappingAmount,
             shippingAmount,
+            shippingAmountBeforeDiscount,
             shopperCurrency,
             storeCreditAmount,
             storeCurrency,
@@ -111,15 +114,15 @@ const OrderSummaryDrawer: FunctionComponent<
                 >
                     <figure
                         className={classNames('cartDrawer-figure', {
-                            'cartDrawer-figure--stack': getLineItemsCount(lineItems) > 1,
+                            'cartDrawer-figure--stack': getLineItemsCount(nonBundledLineItems) > 1,
                         })}
                     >
-                        <div className="cartDrawer-imageWrapper">{getImage(lineItems)}</div>
+                        <div className="cartDrawer-imageWrapper">{getImage(nonBundledLineItems)}</div>
                     </figure>
                     <div className="cartDrawer-body">
                         <h3 className="cartDrawer-items optimizedCheckout-headingPrimary">
                             <TranslatedString
-                                data={{ count: getItemsCount(lineItems) }}
+                                data={{ count: getItemsCount(nonBundledLineItems) }}
                                 id="cart.item_count_text"
                             />
                         </h3>

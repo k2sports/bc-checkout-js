@@ -6,9 +6,9 @@
     {
       "files": ["*.ts", "*.tsx"],
       "rules": {
+        "react-hooks/exhaustive-deps": "off",
         "@typescript-eslint/no-unsafe-assignment": "off",
-        "react/jsx-no-useless-fragment": "off",
-        "react-hooks/exhaustive-deps": "off"
+        "react/jsx-no-useless-fragment": "off"
       }
     }
   ]

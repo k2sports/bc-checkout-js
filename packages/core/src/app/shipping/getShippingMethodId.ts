@@ -1,4 +1,4 @@
-import { Checkout, StoreConfig } from '@bigcommerce/checkout-sdk';
+import { type Checkout, type StoreConfig } from '@bigcommerce/checkout-sdk';
 
 import { getPreselectedPayment } from '../payment';
 import getProviderWithCustomCheckout from '../payment/getProviderWithCustomCheckout';
@@ -15,11 +15,11 @@ export default function getShippingMethodId(checkout: Checkout, config: StoreCon
     );
     const preselectedPayment = getPreselectedPayment(checkout);
 
-    if (preselectedPayment && SHIPPING_METHOD_IDS.indexOf(preselectedPayment.providerId) > -1) {
+    if (preselectedPayment && SHIPPING_METHOD_IDS.includes(preselectedPayment.providerId)) {
         return preselectedPayment.providerId;
     }
 
-    return providerWithCustomCheckout && SHIPPING_METHOD_IDS.indexOf(providerWithCustomCheckout) > -1
+    return providerWithCustomCheckout && SHIPPING_METHOD_IDS.includes(providerWithCustomCheckout)
         ? providerWithCustomCheckout
         : undefined;
 }

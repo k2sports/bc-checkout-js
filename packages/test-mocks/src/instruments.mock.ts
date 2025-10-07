@@ -1,10 +1,12 @@
 import {
-    AccountInstrument,
-    AchInstrument,
-    BankInstrument,
-    CardInstrument,
-    PaymentInstrument,
+    type AccountInstrument,
+    type AchInstrument,
+    type BankInstrument,
+    type CardInstrument,
+    type PaymentInstrument,
 } from '@bigcommerce/checkout-sdk';
+
+import { getYear } from './getYear';
 
 export enum UntrustedShippingCardVerificationType {
     CVV = 'cvv',
@@ -19,7 +21,7 @@ export function getInstruments(): PaymentInstrument[] {
             iin: '11111111',
             last4: '4321',
             expiryMonth: '02',
-            expiryYear: '2025',
+            expiryYear: getYear(1),
             brand: 'visa',
             trustedShippingAddress: true,
             defaultInstrument: true,
@@ -33,7 +35,7 @@ export function getInstruments(): PaymentInstrument[] {
             iin: '11222333',
             last4: '4444',
             expiryMonth: '10',
-            expiryYear: '2024',
+            expiryYear: getYear(-1),
             brand: 'american_express',
             trustedShippingAddress: false,
             defaultInstrument: false,
@@ -122,7 +124,7 @@ export function getCardInstrument(): CardInstrument {
         iin: '11111111',
         last4: '4321',
         expiryMonth: '02',
-        expiryYear: '2025',
+        expiryYear: getYear(1),
         brand: 'test',
         trustedShippingAddress: true,
         defaultInstrument: true,

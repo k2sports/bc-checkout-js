@@ -6,6 +6,7 @@ export { default as BasicFormField, BasicFormFieldProps } from './BasicFormField
 export { default as CheckboxFormField, CheckboxFormFieldProps } from './CheckboxFormField';
 export { default as Checklist, ChecklistProps } from './Checklist';
 export { default as ChecklistItem, ChecklistItemProps } from './ChecklistItem';
+export { default as CustomChecklistItem } from './CustomChecklistItem';
 export { default as FormFieldError, FormFieldErrorProps } from './FormFieldError';
 export { default as FormFieldContainer } from './FormFieldContainer';
 export { default as Input, InputProps } from './Input';
@@ -17,5 +18,3 @@ export { default as CheckboxInput } from './CheckboxInput';
 export { default as Label, LabelProps } from './Label';
 export { default as Legend, LegendProps } from './Legend';
 export { default as ChecklistItemInput, ChecklistItemInputProps } from './ChecklistItemInput';
-export { default as DynamicFormField } from './DynamicFormField';
-export { default as DynamicFormFieldType } from './DynamicFormFieldType';

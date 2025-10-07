@@ -1,4 +1,4 @@
-import { Consignment } from '@bigcommerce/checkout-sdk';
+import { type Consignment } from '@bigcommerce/checkout-sdk';
 
 import { getAddress } from './address.mock';
 import { getShippingOption } from './shippingMethod.mock';
@@ -13,5 +13,6 @@ export function getConsignment(): Consignment {
         shippingAddress: getAddress(),
         address: getAddress(),
         availableShippingOptions: [getShippingOption()],
+        discounts: [],
     };
 }

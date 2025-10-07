@@ -1,11 +1,12 @@
 import {
-    CheckoutSelectors,
-    CustomerInitializeOptions,
-    CustomerRequestOptions,
-    ExecutePaymentMethodCheckoutOptions,
+    type CheckoutSelectors,
+    type CustomerInitializeOptions,
+    type CustomerRequestOptions,
+    type ExecutePaymentMethodCheckoutOptions,
 } from '@bigcommerce/checkout-sdk';
+import { createBoltCustomerStrategy } from '@bigcommerce/checkout-sdk/integrations/bolt';
 import { noop } from 'lodash';
-import React, { FunctionComponent, memo, useEffect, useState } from 'react';
+import React, { type FunctionComponent, memo, useEffect, useState } from 'react';
 
 import { useAnalytics } from '@bigcommerce/checkout/analytics';
 import { stopPropagation } from '@bigcommerce/checkout/dom-utils';
@@ -42,12 +43,13 @@ const BoltCheckoutSuggestion: FunctionComponent<BoltCheckoutSuggestionProps> = (
         try {
             initializeCustomer({
                 methodId,
+                integrations: [createBoltCustomerStrategy],
                 bolt: {
                     onInit: (hasBoltAccount, email) => {
                         setShowSuggestion(hasBoltAccount);
 
                         if (email) {
-                            analyticsTracker.customerSuggestionInit({hasBoltAccount});
+                            analyticsTracker.customerSuggestionInit({ hasBoltAccount });
                         }
                     },
                 },

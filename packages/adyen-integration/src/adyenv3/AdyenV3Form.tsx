@@ -1,9 +1,9 @@
-import { CardInstrument } from '@bigcommerce/checkout-sdk';
-import React, { FunctionComponent } from 'react';
-import { Omit } from 'utility-types';
+import { type CardInstrument } from '@bigcommerce/checkout-sdk';
+import React, { type FunctionComponent, type ReactNode } from 'react';
+import { type Omit } from 'utility-types';
 
 import {
-    HostedWidgetComponentProps,
+    type HostedWidgetComponentProps,
     HostedWidgetPaymentComponent,
 } from '@bigcommerce/checkout/hosted-widget-integration';
 import {
@@ -11,7 +11,7 @@ import {
     isInstrumentCardNumberRequiredSelector,
 } from '@bigcommerce/checkout/instrument-utils';
 import {
-    PaymentMethodProps,
+    type PaymentMethodProps,
     usePaymentFormContext,
 } from '@bigcommerce/checkout/payment-integration-api';
 import { Modal } from '@bigcommerce/checkout/ui';
@@ -41,8 +41,9 @@ export type AdyenV3FormProps = Omit<
     validateInstrument: (
         shouldShowNumberField: boolean,
         selectedInstrument: CardInstrument,
-    ) => React.JSX.Element;
-    showAdditionalActionContent: boolean;
+    ) => ReactNode;
+    shouldRenderAdditionalActionContentModal: boolean;
+    isModalVisible: boolean;
     cancelAdditionalActionModalFlow: () => void;
     additionalActionContainerId: string;
 };
@@ -55,7 +56,8 @@ const AdyenV3Form: FunctionComponent<AdyenV3FormProps & PaymentMethodProps> = ({
     shouldHideInstrumentExpiryDate,
     validateInstrument,
     language,
-    showAdditionalActionContent,
+    shouldRenderAdditionalActionContentModal,
+    isModalVisible,
     cancelAdditionalActionModalFlow,
     additionalActionContainerId,
     checkoutState,
@@ -113,15 +115,22 @@ const AdyenV3Form: FunctionComponent<AdyenV3FormProps & PaymentMethodProps> = ({
             <Modal
                 additionalBodyClassName="modal-body--center"
                 closeButtonLabel={language.translate('common.close_action')}
-                isOpen={showAdditionalActionContent}
+                isOpen={shouldRenderAdditionalActionContentModal}
                 onRequestClose={cancelAdditionalActionModalFlow}
                 shouldShowCloseButton={true}
+                style={
+                    !isModalVisible && method.id === 'scheme'
+                        ? {
+                              overlay: {
+                                  display: 'none',
+                              },
+                          }
+                        : {}
+                }
             >
                 <div id={additionalActionContainerId} style={{ width: '100%' }} />
             </Modal>
-            {!showAdditionalActionContent && (
-                <div id={additionalActionContainerId} style={{ display: 'none' }} />
-            )}
+            {!shouldRenderAdditionalActionContentModal && <div id={additionalActionContainerId} />}
         </>
     );
 };

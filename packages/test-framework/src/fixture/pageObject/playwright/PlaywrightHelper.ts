@@ -1,8 +1,8 @@
-import { Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
 import { includes } from 'lodash';
 
 import { getStoreUrl } from '../../';
-import { CheckoutPagePreset } from '../../../';
+import { type CheckoutPagePreset } from '../../../';
 
 import { PollyObject } from './PollyObject';
 import { ServerSideRender } from './ServerSideRender';
@@ -67,6 +67,7 @@ export class PlaywrightHelper {
                     },
                 ],
             };
+
             void route.fulfill({
                 status: 200,
                 contentType: 'application/json',

@@ -1,15 +1,18 @@
-import { CardInstrument } from '@bigcommerce/checkout-sdk';
-import React, { FunctionComponent } from 'react';
+import { type CardInstrument } from '@bigcommerce/checkout-sdk';
+import React, { type FunctionComponent, type ReactNode } from 'react';
 
 import {
-    HostedWidgetComponentProps,
+    type HostedWidgetComponentProps,
     HostedWidgetPaymentComponent,
 } from '@bigcommerce/checkout/hosted-widget-integration';
 import {
     isInstrumentCardCodeRequiredSelector,
     isInstrumentCardNumberRequiredSelector,
 } from '@bigcommerce/checkout/instrument-utils';
-import { PaymentMethodProps, useCheckout } from '@bigcommerce/checkout/payment-integration-api';
+import {
+    type PaymentMethodProps,
+    useCheckout,
+} from '@bigcommerce/checkout/payment-integration-api';
 import { Modal } from '@bigcommerce/checkout/ui';
 
 export type AdyenV2FormProps = Omit<
@@ -32,7 +35,7 @@ export type AdyenV2FormProps = Omit<
     validateInstrument: (
         shouldShowNumberField: boolean,
         selectedInstrument: CardInstrument,
-    ) => React.JSX.Element;
+    ) => ReactNode;
     showAdditionalActionContent: boolean;
     cancelAdditionalActionModalFlow: () => void;
     additionalActionContainerId: string;

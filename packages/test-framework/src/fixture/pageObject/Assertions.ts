@@ -1,4 +1,4 @@
-import { expect, Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 // TODO: more assertions
 export class Assertions {
@@ -14,6 +14,12 @@ export class Assertions {
         await page.locator('id=checkout-payment-continue').waitFor({ state: 'visible' });
         await expect(page.locator('id=checkout-payment-continue')).toBeVisible();
         await expect(page.locator('.checkout-step--payment')).toContainText('Payment');
+    }
+
+    async shouldSeeElement(element: string): Promise<void> {
+        const page = this.page;
+
+        await expect(page.locator(element)).toBeVisible();
     }
 
     async shouldSeeOrderConfirmation(): Promise<void> {

@@ -1,9 +1,10 @@
+import { type PaymentMethod } from '@bigcommerce/checkout-sdk';
 import { useCallback } from 'react';
-import { object, string, StringSchema } from 'yup';
+import { object, string, type StringSchema } from 'yup';
 
 import { useLocale } from '@bigcommerce/checkout/locale';
 import {
-    PaymentFormValues,
+    type PaymentFormValues,
     usePaymentFormContext,
 } from '@bigcommerce/checkout/payment-integration-api';
 
@@ -14,7 +15,7 @@ import {
     personalBraintreeAchFormFields,
 } from '../constants';
 
-const useBraintreeAchValidation = () => {
+const useBraintreeAchValidation = (method: PaymentMethod) => {
     const { paymentForm } = usePaymentFormContext();
     const { language } = useLocale();
 
@@ -34,52 +35,62 @@ const useBraintreeAchValidation = () => {
         };
 
         return object(
-            formFields.reduce((schema, { id, required }) => {
-                if (required) {
-                    if (requiredFieldErrorTranslationIds[id]) {
-                        schema[id] = string().required(
-                            language.translate(
-                                `${requiredFieldErrorTranslationIds[id]}_required_error`,
-                            ),
-                        );
-
-                        if (id === BraintreeAchFieldType.AccountNumber) {
-                            schema[id] = schema[id].matches(
-                                /^\d+$/,
-                                language.translate('payment.errors.only_numbers_error', {
-                                    label: language.translate('payment.account_number_label'),
-                                }),
+            formFields.reduce(
+                (schema, { id, required }) => {
+                    if (required) {
+                        if (requiredFieldErrorTranslationIds[id]) {
+                            schema[id] = string().required(
+                                language.translate(
+                                    `${requiredFieldErrorTranslationIds[id]}_required_error`,
+                                ),
                             );
-                        }
 
-                        if (id === BraintreeAchFieldType.RoutingNumber) {
-                            schema[id] = schema[id]
-                                .matches(
+                            if (id === BraintreeAchFieldType.AccountNumber) {
+                                schema[id] = schema[id].matches(
                                     /^\d+$/,
                                     language.translate('payment.errors.only_numbers_error', {
-                                        label: language.translate('payment.account_routing_label'),
-                                    }),
-                                )
-                                .min(
-                                    8,
-                                    language.translate('customer.min_error', {
-                                        label: language.translate('payment.account_routing_label'),
-                                        min: 8,
-                                    }),
-                                )
-                                .max(
-                                    9,
-                                    language.translate('customer.max_error', {
-                                        label: language.translate('payment.account_routing_label'),
-                                        max: 9,
+                                        label: language.translate('payment.account_number_label'),
                                     }),
                                 );
+                            }
+
+                            if (id === BraintreeAchFieldType.RoutingNumber) {
+                                schema[id] = schema[id]
+                                    .matches(
+                                        /^\d+$/,
+                                        language.translate('payment.errors.only_numbers_error', {
+                                            label: language.translate(
+                                                'payment.account_routing_label',
+                                            ),
+                                        }),
+                                    )
+                                    .min(
+                                        8,
+                                        language.translate('customer.min_error', {
+                                            label: language.translate(
+                                                'payment.account_routing_label',
+                                            ),
+                                            min: 8,
+                                        }),
+                                    )
+                                    .max(
+                                        9,
+                                        language.translate('customer.max_error', {
+                                            label: language.translate(
+                                                'payment.account_routing_label',
+                                            ),
+                                            max: 9,
+                                        }),
+                                    );
+                            }
                         }
                     }
-                }
 
-                return schema;
-            }, {} as { [key: string]: StringSchema }),
+                    return schema;
+                },
+                // eslint-disable-next-line @typescript-eslint/prefer-reduce-type-parameter
+                {} as { [key: string]: StringSchema },
+            ),
         );
     };
 
@@ -95,6 +106,8 @@ const useBraintreeAchValidation = () => {
             } = braintreeAchFormValues;
 
             const validationSchema = getValidationSchema();
+
+            paymentForm.setValidationSchema(method, validationSchema);
 
             const [
                 isValidAccountNumber,
@@ -120,8 +133,13 @@ const useBraintreeAchValidation = () => {
         [getValidationSchema],
     );
 
+    const resetFormValidation = useCallback(() => {
+        paymentForm.setValidationSchema(method, null);
+    }, [paymentForm, method]);
+
     return {
         validateBraintreeAchForm,
+        resetFormValidation,
     };
 };
 

@@ -1,8 +1,8 @@
 import {
   ErrorLevelType,
-  ErrorLogger,
-  ErrorMeta,
-  ErrorTags,
+  type ErrorLogger,
+  type ErrorMeta,
+  type ErrorTags,
 } from '@bigcommerce/checkout/error-handling-utils';
 
 export interface ConsoleErrorLoggerOptions {
@@ -10,7 +10,6 @@ export interface ConsoleErrorLoggerOptions {
     errorTypes?: string[];
 }
 
-// tslint:disable:no-console
 export default class ConsoleErrorLogger implements ErrorLogger {
     private console: Console;
 

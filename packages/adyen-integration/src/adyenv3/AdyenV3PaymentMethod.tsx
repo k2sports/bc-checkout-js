@@ -1,18 +1,18 @@
 import {
-    AdyenV3CreditCardComponentOptions,
-    AdyenV3ValidationState,
-    CardInstrument,
-    PaymentInitializeOptions,
+    type AdyenCreditCardComponentOptions,
+    type AdyenValidationState,
+    type CardInstrument,
+    type PaymentInitializeOptions,
 } from '@bigcommerce/checkout-sdk';
-import React, { FunctionComponent, useCallback, useRef, useState } from 'react';
+import React, { type FunctionComponent, useCallback, useRef, useState } from 'react';
 
-import { HostedWidgetComponentProps } from '@bigcommerce/checkout/hosted-widget-integration';
+import { type HostedWidgetComponentProps } from '@bigcommerce/checkout/hosted-widget-integration';
 import { LocaleProvider } from '@bigcommerce/checkout/locale';
 import {
     CheckoutContext,
     PaymentFormContext,
-    PaymentMethodProps,
-    PaymentMethodResolveId,
+    type PaymentMethodProps,
+    type PaymentMethodResolveId,
     toResolvableComponent,
 } from '@bigcommerce/checkout/payment-integration-api';
 import { FormContext, LoadingOverlay } from '@bigcommerce/checkout/ui';
@@ -21,7 +21,7 @@ import AdyenV3CardValidation from './AdyenV3CardValidation';
 import AdyenV3Form from './AdyenV3Form';
 
 export interface AdyenOptions {
-    [key: string]: AdyenV3CreditCardComponentOptions;
+    [key: string]: AdyenCreditCardComponentOptions;
 }
 
 export enum AdyenV3PaymentMethodType {
@@ -50,8 +50,11 @@ const AdyenV3PaymentMethod: FunctionComponent<PaymentMethodProps> = ({
         shouldShowModal: true,
     });
 
-    const [showAdditionalActionContent, setShowAdditionalActionContent] = useState<boolean>(false);
-    const [cardValidationState, setCardValidationState] = useState<AdyenV3ValidationState>();
+    const [shouldRenderAdditionalActionContentModal, setShouldRenderAdditionalActionContentModal] =
+        useState<boolean>(false);
+    const [isAdditionalActionContentModalVisible, setIsAdditionalActionContentModalVisible] =
+        useState<boolean>(false);
+    const [cardValidationState, setCardValidationState] = useState<AdyenValidationState>();
     const containerId = `adyen-${method.id}-component-field`;
     const additionalActionContainerId = `adyen-${method.id}-additional-action-component-field`;
     const cardVerificationContainerId = `adyen-${method.id}-tsv-component-field`;
@@ -61,21 +64,27 @@ const AdyenV3PaymentMethod: FunctionComponent<PaymentMethodProps> = ({
     const onBeforeLoad = useCallback((shopperInteraction: boolean) => {
         ref.current.shouldShowModal = shopperInteraction;
 
-        setShowAdditionalActionContent(ref.current.shouldShowModal);
+        setShouldRenderAdditionalActionContentModal(ref.current.shouldShowModal);
     }, []);
 
     const onComplete = useCallback(() => {
-        setShowAdditionalActionContent(false);
+        setIsAdditionalActionContentModalVisible(false);
+        setShouldRenderAdditionalActionContentModal(false);
         ref.current.cancelAdditionalAction = undefined;
     }, []);
 
-    const onLoad = useCallback((cancel?) => {
+    const onActionHandled = useCallback(() => {
+        setIsAdditionalActionContentModalVisible(true);
+    }, []);
+
+    const onLoad = useCallback((cancel?: any) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         ref.current.cancelAdditionalAction = cancel;
     }, []);
 
     const cancelAdditionalActionModalFlow = useCallback(() => {
-        setShowAdditionalActionContent(false);
+        setIsAdditionalActionContentModalVisible(false);
+        setShouldRenderAdditionalActionContentModal(false);
 
         if (ref.current.cancelAdditionalAction) {
             ref.current.cancelAdditionalAction();
@@ -108,9 +117,10 @@ const AdyenV3PaymentMethod: FunctionComponent<PaymentMethodProps> = ({
                         onBeforeLoad,
                         onComplete,
                         onLoad,
+                        onActionHandled,
                     },
                     shouldShowNumberField: ref.current.shouldShowNumberField,
-                    validateCardFields: (state: AdyenV3ValidationState) => {
+                    validateCardFields: (state: AdyenValidationState) => {
                         setCardValidationState(state);
                     },
                 },
@@ -124,6 +134,7 @@ const AdyenV3PaymentMethod: FunctionComponent<PaymentMethodProps> = ({
             onBeforeLoad,
             onComplete,
             onLoad,
+            onActionHandled,
             checkoutService,
         ],
     );
@@ -183,12 +194,15 @@ const AdyenV3PaymentMethod: FunctionComponent<PaymentMethodProps> = ({
                                 hideContentWhenSignedOut
                                 initializePayment={initializeAdyenPayment}
                                 isAccountInstrument={isAccountInstrument()}
+                                isModalVisible={isAdditionalActionContentModalVisible}
                                 language={language}
                                 method={method}
                                 onUnhandledError={onUnhandledError}
                                 paymentForm={paymentForm}
                                 shouldHideInstrumentExpiryDate={shouldHideInstrumentExpiryDate}
-                                showAdditionalActionContent={showAdditionalActionContent}
+                                shouldRenderAdditionalActionContentModal={
+                                    shouldRenderAdditionalActionContentModal
+                                }
                                 validateInstrument={validateInstrument}
                             />
                         </LoadingOverlay>

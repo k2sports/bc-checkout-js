@@ -1,7 +1,9 @@
-import React, { FunctionComponent } from 'react';
+import { type GatewayOrderPayment } from '@bigcommerce/checkout-sdk';
+import React, { type FunctionComponent } from 'react';
+
 import { TranslatedString } from '@bigcommerce/checkout/locale';
+
 import { MandateTextComponent } from './MandateTextComponent';
-import { GatewayOrderPayment } from '@bigcommerce/checkout-sdk';
 
 export interface PaymentsWithMandatesProps {
     paymentsWithMandates: GatewayOrderPayment[];

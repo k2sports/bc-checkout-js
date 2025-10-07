@@ -1,59 +1,56 @@
 import {
-    Address,
-    CheckoutParams,
-    CheckoutSelectors,
-    Consignment,
-    Country,
-    CustomerAddress,
-    CustomerRequestOptions,
-    FormField,
-    RequestOptions,
-    ShippingInitializeOptions,
-    ShippingRequestOptions,
+    type Address,
+    type CheckoutParams,
+    type CheckoutSelectors,
+    type Consignment,
+    type CustomerRequestOptions,
+    type FormField,
+    type RequestOptions,
+    type ShippingInitializeOptions,
+    type ShippingRequestOptions,
 } from '@bigcommerce/checkout-sdk';
-import { FormikProps, withFormik } from 'formik';
+import { type FormikProps } from 'formik';
 import { debounce, isEqual, noop } from 'lodash';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { PureComponent, type ReactNode } from 'react';
 import { lazy, object } from 'yup';
 
-import { withLanguage, WithLanguageProps } from '@bigcommerce/checkout/locale';
+import { withLanguage, type WithLanguageProps } from '@bigcommerce/checkout/locale';
 import { FormContext } from '@bigcommerce/checkout/ui';
 
 import {
-    AddressFormValues,
+    type AddressFormValues,
     getAddressFormFieldsValidationSchema,
     getTranslateAddressError,
     isEqualAddress,
     mapAddressFromFormValues,
     mapAddressToFormValues,
 } from '../address';
+import { withFormikExtended } from '../common/form';
 import { getCustomFormFieldsValidationSchema } from '../formFields';
 import { PaymentMethodId } from '../payment/paymentMethod';
 import { Fieldset, Form } from '../ui/form';
 
 import BillingSameAsShippingField from './BillingSameAsShippingField';
 import hasSelectedShippingOptions from './hasSelectedShippingOptions';
+import isSelectedShippingOptionValid from './isSelectedShippingOptionValid';
 import ShippingAddress from './ShippingAddress';
 import { SHIPPING_ADDRESS_FIELDS } from './ShippingAddressFields';
 import ShippingFormFooter from './ShippingFormFooter';
 
 export interface SingleShippingFormProps {
-    addresses: CustomerAddress[];
     isBillingSameAsShipping: boolean;
     cartHasChanged: boolean;
     consignments: Consignment[];
-    countries: Country[];
-    countriesWithAutocomplete: string[];
     customerMessage: string;
-    googleMapsApiKey?: string;
     isLoading: boolean;
     isShippingStepPending: boolean;
     isMultiShippingMode: boolean;
     methodId?: string;
     shippingAddress?: Address;
-    shouldShowSaveAddress?: boolean;
+    shippingAutosaveDelay?: number;
     shouldShowOrderComments: boolean;
-    isFloatingLabelEnabled?: boolean;
+    isInitialValueLoaded: boolean;
+    shippingFormRenderTimestamp?: number;
     deinitialize(options: ShippingRequestOptions): Promise<CheckoutSelectors>;
     deleteConsignments(): Promise<Address | undefined>;
     getFields(countryCode?: string): FormField[];
@@ -82,7 +79,7 @@ interface SingleShippingFormState {
 function shouldHaveCustomValidation(methodId?: string): boolean {
     const methodIdsWithoutCustomValidation: string[] = [
         PaymentMethodId.BraintreeAcceleratedCheckout,
-        PaymentMethodId.PayPalCommerceAcceleratedCheckout
+        PaymentMethodId.PayPalCommerceAcceleratedCheckout,
     ];
 
     return Boolean(methodId && !methodIdsWithoutCustomValidation.includes(methodId));
@@ -128,21 +125,58 @@ class SingleShippingForm extends PureComponent<
                     this.setState({ isUpdatingShippingData: false });
                 }
             },
-            SHIPPING_AUTOSAVE_DELAY,
+            props.shippingAutosaveDelay ?? SHIPPING_AUTOSAVE_DELAY,
         );
+    }
+
+    componentDidUpdate({ shippingFormRenderTimestamp }: SingleShippingFormProps) {
+        const {
+            shippingFormRenderTimestamp: newShippingFormRenderTimestamp,
+            setValues,
+            getFields,
+            shippingAddress,
+            isBillingSameAsShipping,
+            customerMessage,
+            values,
+            setFieldValue,
+        } = this.props;
+
+        const stateOrProvinceCodeFormField = getFields(values && values.shippingAddress?.countryCode).find(
+            ({ name }) => name === 'stateOrProvinceCode',
+        );
+
+        // Workaround for a bug found during manual testing:
+        // When the shipping step first loads, the `stateOrProvinceCode` field may not be there.
+        // It later appears with an empty value if the selected country has states/provinces.
+        // To address this, we manually set `stateOrProvinceCode` in Formik.
+        if (
+            stateOrProvinceCodeFormField &&
+            shippingAddress?.stateOrProvinceCode &&
+            !values.shippingAddress?.stateOrProvinceCode
+        ) {
+            setFieldValue('shippingAddress.stateOrProvinceCode', shippingAddress.stateOrProvinceCode);
+        }
+
+        // This is for executing extension command, `ReRenderShippingForm`.
+        if (newShippingFormRenderTimestamp !== shippingFormRenderTimestamp) {
+            setValues({
+                billingSameAsShipping: isBillingSameAsShipping,
+                orderComment: customerMessage,
+                shippingAddress: mapAddressToFormValues(
+                    getFields(shippingAddress && shippingAddress.countryCode),
+                    shippingAddress,
+                ),
+            });
+        }
     }
 
     render(): ReactNode {
         const {
-            addresses,
             cartHasChanged,
+            isInitialValueLoaded,
             isLoading,
             onUnhandledError,
             methodId,
-            shouldShowSaveAddress,
-            countries,
-            countriesWithAutocomplete,
-            googleMapsApiKey,
             shippingAddress,
             consignments,
             shouldShowOrderComments,
@@ -151,7 +185,7 @@ class SingleShippingForm extends PureComponent<
             deinitialize,
             values: { shippingAddress: addressForm },
             isShippingStepPending,
-            isFloatingLabelEnabled,
+            shippingFormRenderTimestamp,
         } = this.props;
 
         const { isResettingAddress, isUpdatingShippingData, hasRequestedShippingOptions } =
@@ -166,16 +200,11 @@ class SingleShippingForm extends PureComponent<
             <Form autoComplete="on">
                 <Fieldset>
                     <ShippingAddress
-                        addresses={addresses}
                         consignments={consignments}
-                        countries={countries}
-                        countriesWithAutocomplete={countriesWithAutocomplete}
                         deinitialize={deinitialize}
                         formFields={this.getFields(addressForm && addressForm.countryCode)}
-                        googleMapsApiKey={googleMapsApiKey}
                         hasRequestedShippingOptions={hasRequestedShippingOptions}
                         initialize={initialize}
-                        isFloatingLabelEnabled={isFloatingLabelEnabled}
                         isLoading={isResettingAddress}
                         isShippingStepPending={isShippingStepPending}
                         methodId={methodId}
@@ -184,7 +213,6 @@ class SingleShippingForm extends PureComponent<
                         onUnhandledError={onUnhandledError}
                         onUseNewAddress={this.onUseNewAddress}
                         shippingAddress={shippingAddress}
-                        shouldShowSaveAddress={shouldShowSaveAddress}
                     />
                     {shouldShowBillingSameAsShipping && (
                         <div className="form-body">
@@ -195,8 +223,10 @@ class SingleShippingForm extends PureComponent<
 
                 <ShippingFormFooter
                     cartHasChanged={cartHasChanged}
+                    isInitialValueLoaded={isInitialValueLoaded}
                     isLoading={isLoading || isUpdatingShippingData}
                     isMultiShippingMode={false}
+                    shippingFormRenderTimestamp={shippingFormRenderTimestamp}
                     shouldDisableSubmit={this.shouldDisableSubmit()}
                     shouldShowOrderComments={shouldShowOrderComments}
                     shouldShowShippingOptions={isValid}
@@ -214,7 +244,7 @@ class SingleShippingForm extends PureComponent<
             return false;
         }
 
-        return isLoading || isUpdatingShippingData || !hasSelectedShippingOptions(consignments);
+        return isLoading || isUpdatingShippingData || !hasSelectedShippingOptions(consignments) || !isSelectedShippingOptionValid(consignments);
     };
 
     private handleFieldChange: (name: string) => void = async (name) => {
@@ -316,7 +346,7 @@ class SingleShippingForm extends PureComponent<
 }
 
 export default withLanguage(
-    withFormik<SingleShippingFormProps & WithLanguageProps, SingleShippingFormValues>({
+    withFormikExtended<SingleShippingFormProps & WithLanguageProps, SingleShippingFormValues>({
         handleSubmit: (values, { props: { onSubmit } }) => {
             onSubmit(values);
         },
@@ -361,6 +391,6 @@ export default withLanguage(
                           }),
                       ),
                   }),
-        enableReinitialize: false,
+        enableReinitialize: false, // This is false due to the concern that a shopper may lose typed details if somehow checkout state changes in the middle.
     })(SingleShippingForm),
 );
