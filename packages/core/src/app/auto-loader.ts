@@ -29,7 +29,7 @@ function isCustomCheckoutWindow(window: Window): window is CustomCheckoutWindow 
     throw new Error('Checkout config is missing.');
   }
 
-  console.log('Manage Shipping Methods v1.0.0');
+  console.log('Manage Shipping Methods v1.0.1');
 
   const { renderOrderConfirmation, renderCheckout } = await loadFiles();
 
