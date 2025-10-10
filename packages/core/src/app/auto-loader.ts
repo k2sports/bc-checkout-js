@@ -6,6 +6,7 @@ export interface ManageShippingMethods {
   isEnabled: boolean;
   showRecommendedMethod?: boolean;
   hideFreeShippingGroups?: number[];
+  withdrawalTermsUrl?: string;
 }
 export interface CustomCheckoutWindow extends Window {
   checkoutConfig: {
@@ -29,7 +30,7 @@ function isCustomCheckoutWindow(window: Window): window is CustomCheckoutWindow 
     throw new Error('Checkout config is missing.');
   }
 
-  console.log('Manage Shipping Methods v1.0.1');
+  console.log('Manage Shipping Methods v2.0.1-beta.4', window.checkoutConfig);
 
   const { renderOrderConfirmation, renderCheckout } = await loadFiles();
 
