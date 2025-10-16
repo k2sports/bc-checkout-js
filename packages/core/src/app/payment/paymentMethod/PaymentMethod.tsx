@@ -6,9 +6,14 @@ import {
     type PaymentMethod,
     type PaymentRequestOptions,
 } from '@bigcommerce/checkout-sdk';
+import { createNoPaymentStrategy, } from '@bigcommerce/checkout-sdk/integrations/no-payment';
+import { createPayPalProPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/paypal-pro';
+import { createSezzlePaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/sezzle';
+import { createTDOnlineMartPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/td-bank';
+import { createZipPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/zip';
 import React, { type FunctionComponent, lazy, memo, Suspense } from 'react';
 
-import { type CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
+import { CaptureMessageComponent, type CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
 
 import { withCheckout } from '../../checkout';
 
@@ -71,7 +76,38 @@ const PaymentMethodComponent: FunctionComponent<
         method.method === PaymentMethodType.CreditCard ||
         method.type === PaymentMethodProviderType.Api
     ) {
-        return <Suspense><HostedCreditCardPaymentMethod {...props} /></Suspense>;
+        const knownMethods = [
+            { id: 'authorizenet', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'clover', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'cba_mpgs', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'cybersourcev2', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'ewayrapid', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'hps', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'nmi', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'quickbooks', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'sagepay', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'stripe', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'usaepay', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+            { id: 'vantiv', gateway: null, method: PaymentMethodType.CreditCard, type: PaymentMethodProviderType.Api },
+        ];
+
+        let sentryMessage: string;
+
+        if (knownMethods.some(knownMethod =>
+            knownMethod.id === method.id &&
+            knownMethod.gateway === method.gateway &&
+            knownMethod.method === method.method &&
+            knownMethod.type === method.type
+        )) {
+            sentryMessage = '';
+        }else {
+            sentryMessage = `DataHostedCreditCardPaymentMethodUpdated ${JSON.stringify(method)}`;
+        }
+
+        return <>
+                <CaptureMessageComponent message={sentryMessage} />
+                <Suspense><HostedCreditCardPaymentMethod {...props} /></Suspense>
+            </>;
     }
 
     return null;
@@ -89,7 +125,21 @@ function mapToWithCheckoutPaymentMethodProps(
         deinitializeCustomer: checkoutService.deinitializeCustomer,
         deinitializePayment: checkoutService.deinitializePayment,
         initializeCustomer: checkoutService.initializeCustomer,
-        initializePayment: checkoutService.initializePayment,
+        initializePayment: (options) => {
+            return checkoutService.initializePayment({
+                ...options,
+                integrations: [
+                    ...options.integrations ?? [],
+                    // The strategies below don’t appear to correspond to any existing component,
+                    // so they are initialized globally at the root level.
+                    createNoPaymentStrategy,
+                    createPayPalProPaymentStrategy,
+                    createSezzlePaymentStrategy,
+                    createTDOnlineMartPaymentStrategy,
+                    createZipPaymentStrategy,
+                ],
+            });
+        },
         isInitializing: isInitializingPayment(method.id),
     };
 }
