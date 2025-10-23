@@ -589,6 +589,9 @@
       "agreement_with_link_text": "Ja, ich stimme den <a href=\"{url}\" target=\"_blank\">Allgemeinen Geschäftsbedingungen</a> zu.",
       "terms_and_conditions_heading": "Allgemeine Geschäftsbedingungen"
     },
+    "withdrawal_terms": {
+      "notice_with_link_text": "Bitte beachten Sie und unsere <a href=\"{url}\" target=\"_blank\">Widerrufsbelehrung</a>."
+    },
     "order_confirmation": {
       "mandate": {
         "adyenv3": {
