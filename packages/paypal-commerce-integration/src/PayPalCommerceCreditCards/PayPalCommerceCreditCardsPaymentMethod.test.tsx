@@ -6,6 +6,7 @@ import {
     createLanguageService,
     type PaymentMethod,
 } from '@bigcommerce/checkout-sdk';
+import { createPayPalCommerceCreditCardsPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/paypal-commerce';
 import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React, { type FunctionComponent } from 'react';
@@ -31,7 +32,7 @@ import {
     getPaymentMethod,
     getStoreConfig,
 } from '@bigcommerce/checkout/test-mocks';
-import { render, screen } from '@bigcommerce/checkout/test-utils';
+import { render, screen, waitFor } from '@bigcommerce/checkout/test-utils';
 
 import PayPalCommerceCreditCardsPaymentMethod from './PayPalCommerceCreditCardsPaymentMethod';
 
@@ -109,7 +110,11 @@ describe('PayPalCommerceCreditCardPaymentMethod', () => {
 
         await new Promise((resolve) => process.nextTick(resolve));
 
-        expect(checkoutService.initializePayment).toHaveBeenCalled();
+        expect(checkoutService.initializePayment).toHaveBeenCalledWith(
+            expect.objectContaining({
+                integrations: [createPayPalCommerceCreditCardsPaymentStrategy],
+            }),
+        );
     });
 
     it('calls initializePayment with correct arguments', async () => {
@@ -400,7 +405,7 @@ describe('PayPalCommerceCreditCardPaymentMethod', () => {
         expect(screen.getByText('Customer Code')).toBeInTheDocument();
     });
 
-    it('renders save card checkbox if vaulting is enabled', () => {
+    it('renders save card checkbox if vaulting is enabled', async () => {
         defaultProps.method.config.isVaultingEnabled = true;
 
         jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue(getCustomer());
@@ -408,7 +413,9 @@ describe('PayPalCommerceCreditCardPaymentMethod', () => {
 
         render(<PaymentMethodTest {...defaultProps} />);
 
-        expect(screen.getByText('Save this card for future transactions')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Save this card for future transactions')).toBeInTheDocument();
+        });
     });
 
     it('uses PaymentMethod to retrieve instruments', () => {
@@ -417,14 +424,16 @@ describe('PayPalCommerceCreditCardPaymentMethod', () => {
         expect(checkoutState.data.getInstruments).toHaveBeenCalledWith(defaultProps.method);
     });
 
-    it('renders with save card checkbox if vaulting is enabled and no instruments', () => {
+    it('renders with save card checkbox if vaulting is enabled and no instruments', async () => {
         defaultProps.method.config.isVaultingEnabled = true;
         jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue(getCustomer());
         jest.spyOn(checkoutState.data, 'getInstruments').mockReturnValue([]);
 
         render(<PaymentMethodTest {...defaultProps} />);
 
-        expect(screen.getByText('Save this card for future transactions')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Save this card for future transactions')).toBeInTheDocument();
+        });
     });
 
     it('does not render save card checkbox if vaulting is disabled', () => {
