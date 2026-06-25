@@ -9,6 +9,7 @@ import {
     createBigCommercePaymentsAlternativeMethodsPaymentStrategy,
     createBigCommercePaymentsPayLaterPaymentStrategy,
     createBigCommercePaymentsVenmoPaymentStrategy,
+    createBigCommercePaymentsRedirectAlternativeMethodsPaymentStrategy,
 } from '@bigcommerce/checkout-sdk/integrations/bigcommerce-payments';
 import { render } from '@testing-library/react';
 import { EventEmitter } from 'events';
@@ -81,6 +82,7 @@ describe('BigCommercePaymentsPaymentMethodComponent', () => {
                 createBigCommercePaymentsAlternativeMethodsPaymentStrategy,
                 createBigCommercePaymentsPayLaterPaymentStrategy,
                 createBigCommercePaymentsVenmoPaymentStrategy,
+                createBigCommercePaymentsRedirectAlternativeMethodsPaymentStrategy,
             ],
             bigcommerce_payments: {
                 container: '#checkout-payment-continue',
@@ -123,6 +125,7 @@ describe('BigCommercePaymentsPaymentMethodComponent', () => {
                 createBigCommercePaymentsAlternativeMethodsPaymentStrategy,
                 createBigCommercePaymentsPayLaterPaymentStrategy,
                 createBigCommercePaymentsVenmoPaymentStrategy,
+                createBigCommercePaymentsRedirectAlternativeMethodsPaymentStrategy,
             ],
             bigcommerce_payments_apms: {
                 container: '#checkout-payment-continue',

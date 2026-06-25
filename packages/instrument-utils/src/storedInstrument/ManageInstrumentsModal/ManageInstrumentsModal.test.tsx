@@ -10,11 +10,11 @@ import userEvent from '@testing-library/user-event';
 import React, { type FunctionComponent } from 'react';
 
 import {
-    createLocaleContext,
+    CheckoutContext,
     LocaleContext,
     type LocaleContextType,
-} from '@bigcommerce/checkout/locale';
-import { CheckoutContext } from '@bigcommerce/checkout/payment-integration-api';
+} from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { getInstruments, getStoreConfig } from '@bigcommerce/checkout/test-mocks';
 
 import { isAccountInstrument, isBankAccountInstrument, isCardInstrument } from '../../guards';

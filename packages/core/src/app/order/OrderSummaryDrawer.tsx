@@ -7,16 +7,15 @@ import classNames from 'classnames';
 import React, { type FunctionComponent, memo, type ReactNode, useCallback, useMemo } from 'react';
 
 import { TranslatedString } from '@bigcommerce/checkout/locale';
+import { IconGiftCertificate, ModalTrigger } from '@bigcommerce/checkout/ui';
 
 import { ShopperCurrency } from '../currency';
-import { IconGiftCertificate } from '../ui/icon';
-import { ModalTrigger } from '../ui/modal';
 
 import getItemsCount from './getItemsCount';
 import getLineItemsCount from './getLineItemsCount';
 import OrderSummaryModal from './OrderSummaryModal';
 import { type OrderSummarySubtotalsProps } from './OrderSummarySubtotals';
-import removeBundledItems from './removeBundledItems';
+import { removeBundledItems } from './removeBundledItems';
 
 export interface OrderSummaryDrawerProps {
     lineItems: LineItemMap;
@@ -66,7 +65,7 @@ const OrderSummaryDrawer: FunctionComponent<
                 handlingAmount={handlingAmount}
                 headerLink={headerLink}
                 isTaxIncluded={isTaxIncluded}
-                items={nonBundledLineItems}
+                items={lineItems}
                 onRemovedCoupon={onRemovedCoupon}
                 onRemovedGiftCertificate={onRemovedGiftCertificate}
                 shippingAmount={shippingAmount}
@@ -87,7 +86,7 @@ const OrderSummaryDrawer: FunctionComponent<
             handlingAmount,
             headerLink,
             isTaxIncluded,
-            nonBundledLineItems,
+            lineItems,
             onRemovedCoupon,
             onRemovedGiftCertificate,
             giftWrappingAmount,
@@ -117,7 +116,9 @@ const OrderSummaryDrawer: FunctionComponent<
                             'cartDrawer-figure--stack': getLineItemsCount(nonBundledLineItems) > 1,
                         })}
                     >
-                        <div className="cartDrawer-imageWrapper">{getImage(nonBundledLineItems)}</div>
+                        <div className="cartDrawer-imageWrapper">
+                            {getImage(nonBundledLineItems)}
+                        </div>
                     </figure>
                     <div className="cartDrawer-body">
                         <h3 className="cartDrawer-items optimizedCheckout-headingPrimary">

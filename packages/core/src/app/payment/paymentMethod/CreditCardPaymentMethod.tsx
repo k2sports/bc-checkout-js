@@ -14,14 +14,14 @@ import { find, noop } from 'lodash';
 import React, { Component, type ReactNode } from 'react';
 import { type ObjectSchema } from 'yup';
 
+import { type CheckoutContextProps } from '@bigcommerce/checkout/contexts';
 import { type MapToPropsFactory } from '@bigcommerce/checkout/legacy-hoc';
 import { withLanguage, type WithLanguageProps } from '@bigcommerce/checkout/locale';
-import { type CheckoutContextProps, type PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
+import { type PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
 import { LoadingOverlay } from '@bigcommerce/checkout/ui';
 
 import { withCheckout } from '../../checkout';
 import { connectFormik, type ConnectFormikProps } from '../../common/form';
-import { withForm, type WithFormProps } from '../../ui/form';
 import {
     configureCardValidator,
     CreditCardFieldset,
@@ -38,6 +38,7 @@ import {
     isInstrumentFeatureAvailable,
 } from '../storedInstrument';
 import StoreInstrumentFieldset from '../StoreInstrumentFieldset';
+import withForm, { type WithFormProps } from '../withForm';
 import withPayment, { type WithPaymentProps } from '../withPayment';
 
 import type CreditCardFieldsetValues from './CreditCardFieldsetValues';
@@ -179,7 +180,6 @@ class CreditCardPaymentMethod extends Component<
                     },
                     this.getSelectedInstrument(),
                 );
-
             } catch (error) {
                 onUnhandledError(error);
             }
@@ -214,7 +214,10 @@ class CreditCardPaymentMethod extends Component<
 
         return (
             <LoadingOverlay hideContentWhenLoading isLoading={isLoading}>
-                <div className="paymentMethod paymentMethod--creditCard" data-test='credit-cart-payment-method'>
+                <div
+                    className="paymentMethod paymentMethod--creditCard"
+                    data-test="credit-cart-payment-method"
+                >
                     {shouldShowInstrumentFieldset && (
                         <CardInstrumentFieldset
                             instruments={instruments}

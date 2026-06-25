@@ -4,10 +4,8 @@ import { type FieldProps } from 'formik';
 import React, { type FunctionComponent, memo, useCallback, useMemo } from 'react';
 
 import { TranslatedString } from '@bigcommerce/checkout/locale';
-import { useThemeContext } from '@bigcommerce/checkout/ui';
+import { type AutocompleteItem, FormField, Label } from '@bigcommerce/checkout/ui';
 
-import { type AutocompleteItem } from '../../ui/autocomplete';
-import { FormField, Label } from '../../ui/form';
 import {
     getAddressFormFieldInputId,
     getAddressFormFieldLabelId,
@@ -42,18 +40,15 @@ const GoogleAutocompleteFormField: FunctionComponent<GoogleAutocompleteFormField
 }) => {
     const fieldName = parentFieldName ? `${parentFieldName}.${name}` : name;
 
-    const { themeV2 } = useThemeContext();
     const labelContent = useMemo(() => <TranslatedString id="address.address_line_1_label" />, []);
 
     const labelId = getAddressFormFieldLabelId(name);
 
     const inputProps = useMemo(
         () => ({
-            className: classNames(
-                'form-input optimizedCheckout-form-input',
-                { 'floating-input': isFloatingLabelEnabled },
-                { 'floating-form-field-input': themeV2 },
-            ),
+            className: classNames('form-input optimizedCheckout-form-input', {
+                'floating-input floating-form-field-input': isFloatingLabelEnabled,
+            }),
             id: getAddressFormFieldInputId(name),
             'aria-labelledby': labelId,
             placeholder: isFloatingLabelEnabled ? ' ' : placeholder,
@@ -92,8 +87,12 @@ const GoogleAutocompleteFormField: FunctionComponent<GoogleAutocompleteFormField
     );
 
     const renderLabel = isFloatingLabelEnabled ? null : (
-        <Label additionalClassName={themeV2 ? 'body-regular' : ''} htmlFor={inputProps.id} id={labelId}
-            isFloatingLabelEnabled={isFloatingLabelEnabled}>
+        <Label
+            additionalClassName="body-regular"
+            htmlFor={inputProps.id}
+            id={labelId}
+            isFloatingLabelEnabled={isFloatingLabelEnabled}
+        >
             {labelContent}
         </Label>
     );
@@ -111,7 +110,6 @@ const GoogleAutocompleteFormField: FunctionComponent<GoogleAutocompleteFormField
                 isFloatingLabelEnabled={isFloatingLabelEnabled}
                 label={renderLabel}
                 name={fieldName}
-                themeV2={themeV2}
             />
         </div>
     );

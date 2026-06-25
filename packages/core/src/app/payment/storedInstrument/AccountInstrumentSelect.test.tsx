@@ -5,12 +5,15 @@ import { noop } from 'lodash';
 import React from 'react';
 import { type Omit } from 'utility-types';
 
-import { createLocaleContext, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/locale';
+import { LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getStoreConfig } from '../../config/config.mock';
 
-import AccountInstrumentSelect, { type AccountInstrumentSelectProps } from './AccountInstrumentSelect';
+import AccountInstrumentSelect, {
+    type AccountInstrumentSelectProps,
+} from './AccountInstrumentSelect';
 import { getInstruments } from './instruments.mock';
 import isAccountInstrument from './isAccountInstrument';
 
@@ -93,7 +96,9 @@ describe('AccountInstrumentSelect', () => {
         await userEvent.click(screen.getByTestId('instrument-select'));
 
         expect(screen.getByTestId('instrument-select-menu')).toBeInTheDocument();
-        expect(screen.getByTestId('instrument-select-externalId')).toHaveTextContent('test@external-id.com');
+        expect(screen.getByTestId('instrument-select-externalId')).toHaveTextContent(
+            'test@external-id.com',
+        );
         expect(screen.getByTestId('instrument-select-externalId')).toBeVisible();
         expect(screen.getByText('test@external-id-2.com')).toBeVisible();
     });
@@ -188,9 +193,7 @@ describe('AccountInstrumentSelect', () => {
             </LocaleContext.Provider>
         );
 
-        render(
-            <Component selectedInstrumentId={defaultProps.selectedInstrumentId} show={true} />,
-        );
+        render(<Component selectedInstrumentId={defaultProps.selectedInstrumentId} show={true} />);
 
         const form = screen.getByTestId('form-test');
 

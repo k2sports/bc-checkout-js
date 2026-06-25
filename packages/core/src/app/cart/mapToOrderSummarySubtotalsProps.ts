@@ -1,27 +1,29 @@
 import { type Checkout } from '@bigcommerce/checkout-sdk';
 
 import { type OrderSummarySubtotalsProps } from '../order';
-import { getShippingCostAfterAutomaticDiscount, hasSelectedShippingOptions } from '../shipping';
+import { hasSelectedShippingOptions } from '../shipping';
 
-export default function mapToOrderSummarySubtotalsProps({
-    subtotal,
-    cart: { discountAmount, isTaxIncluded },
-    giftCertificates,
-    consignments,
-    handlingCostTotal,
-    shippingCostBeforeDiscount,
-    giftWrappingCostTotal,
-    coupons,
-    taxes,
-    fees,
-}: Checkout,
-isShippingDiscountDisplayEnabled: boolean,
+export default function mapToOrderSummarySubtotalsProps(
+    {
+        subtotal,
+        cart: { discountAmount, isTaxIncluded },
+        giftCertificates,
+        consignments,
+        handlingCostTotal,
+        shippingCostBeforeDiscount,
+        giftWrappingCostTotal,
+        coupons,
+        taxes,
+        fees,
+        comparisonShippingCost,
+    }: Checkout,
+    isShippingDiscountDisplayEnabled: boolean,
 ): OrderSummarySubtotalsProps {
     const allConsignmentsHaveSelectedShippingOption = hasSelectedShippingOptions(consignments);
 
     const shippingAmount = allConsignmentsHaveSelectedShippingOption
         ? isShippingDiscountDisplayEnabled
-            ? getShippingCostAfterAutomaticDiscount(shippingCostBeforeDiscount, consignments)
+            ? comparisonShippingCost
             : shippingCostBeforeDiscount
         : undefined;
 
@@ -31,9 +33,10 @@ isShippingDiscountDisplayEnabled: boolean,
         giftCertificates,
         giftWrappingAmount: giftWrappingCostTotal,
         shippingAmount,
-        shippingAmountBeforeDiscount: isShippingDiscountDisplayEnabled && allConsignmentsHaveSelectedShippingOption
-            ? shippingCostBeforeDiscount
-            : undefined,
+        shippingAmountBeforeDiscount:
+            isShippingDiscountDisplayEnabled && allConsignmentsHaveSelectedShippingOption
+                ? shippingCostBeforeDiscount
+                : undefined,
         handlingAmount: handlingCostTotal,
         coupons,
         taxes,

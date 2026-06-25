@@ -7,53 +7,31 @@ import {
 } from '@bigcommerce/checkout-sdk';
 import type React from 'react';
 
+import {
+    type ExtensionAction,
+    type ExtensionServiceInterface,
+} from '@bigcommerce/checkout/contexts';
 import { ErrorLevelType, type ErrorLogger } from '@bigcommerce/checkout/error-handling-utils';
 
-import { type ExtensionAction } from './ExtensionProvider';
 import { type CommandHandler, type QueryHandler } from './handler';
 import * as commandHandlerFactories from './handler/commandHandlers';
 import * as queryHandlerFactories from './handler/queryHandlers';
 
-export class ExtensionService {
+export class ExtensionService implements ExtensionServiceInterface {
     private handlers: { [extensionId: string]: Array<() => void> } = {};
+    private dispatch: React.Dispatch<ExtensionAction> | undefined;
 
     constructor(
         private checkoutService: CheckoutService,
-        private dispatch: React.Dispatch<ExtensionAction>,
         private errorLogger: ErrorLogger,
     ) {}
 
-    async loadExtensions(): Promise<void> {
-        await this.checkoutService.loadExtensions();
+    setDispatch(dispatch: React.Dispatch<ExtensionAction>): void {
+        this.dispatch = dispatch;
     }
 
-    preloadExtensions(): void {
-        const state = this.checkoutService.getState();
-        const extensions = state.data.getExtensions();
-        const cartId = state.data.getCart()?.id;
-        const parentOrigin = state.data.getConfig()?.links.siteLink;
-
-        if (!cartId || !parentOrigin) {
-            return;
-        }
-
-        extensions?.forEach((extension) => {
-            const url = new URL(extension.url);
-
-            url.searchParams.set('extensionId', extension.id);
-            url.searchParams.set('cartId', cartId);
-            url.searchParams.set('parentOrigin', parentOrigin);
-
-            const link = document.createElement('link');
-
-            link.rel = 'preload';
-            link.as = 'document';
-            link.href = url.toString();
-
-            const head = document.head;
-
-            head.appendChild(link);
-        });
+    async loadExtensions(): Promise<void> {
+        await this.checkoutService.loadExtensions();
     }
 
     async renderExtension(container: string, region: ExtensionRegion): Promise<void> {
@@ -109,6 +87,10 @@ export class ExtensionService {
     }
 
     private registerHandlers(extension: Extension): void {
+        if (!this.dispatch) {
+            throw new Error('ExtensionService dispatch is not set');
+        }
+
         const handlerProps = {
             checkoutService: this.checkoutService,
             dispatch: this.dispatch,

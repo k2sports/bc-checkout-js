@@ -24,6 +24,7 @@ const {
     getNextVersion,
     mergeManifests,
     transformManifest,
+    transformLoaderManifest,
 } = require('./scripts/webpack');
 
 const ENTRY_NAME = 'checkout';
@@ -52,11 +53,17 @@ function appConfig(options, argv) {
             cache: {
                 type: 'filesystem',
             },
+            snapshot: {
+                managedPaths: [
+                    /^(.+?[\\/]node_modules[\\/](?!\.cache)(?!@bigcommerce[\\/]checkout-sdk)(?:@.+?[\\/])?.+?)(?:[\\/].*)?$/,
+                ],
+            },
             devtool: isProduction ? 'source-map' : 'eval-source-map',
             resolve: {
                 alias,
                 extensions: ['.ts', '.tsx', '.js'],
                 mainFields: ['browser', 'module', 'main'],
+                symlinks: false,
             },
             optimization: {
                 runtimeChunk: 'single',
@@ -170,11 +177,12 @@ function appConfig(options, argv) {
             ].filter(Boolean),
             module: {
                 rules: [
-                    ...(isProduction ?  [{
+                    {
                         test: /\.[tj]sx?$/,
                         enforce: 'pre',
                         loader: require.resolve('source-map-loader'),
-                    }]: []),
+                        include: /[\\/]node_modules[\\/]@bigcommerce[\\/]checkout-sdk[\\/]/,
+                    },
                     {
                         test: /\.tsx?$/,
                         include: tsLoaderIncludes,
@@ -192,6 +200,8 @@ function appConfig(options, argv) {
                         test: /app\/polyfill\.ts$/,
                         include: [
                             join(__dirname, 'packages', 'core', 'src'),
+                            join(__dirname, 'packages', 'contexts', 'src'),
+                            join(__dirname, 'packages', 'payment-integration-api', 'src'),
                             join(__dirname, 'packages', 'locale', 'src'),
                             join(__dirname, 'packages', 'test-mocks', 'src'),
                         ],
@@ -211,6 +221,14 @@ function appConfig(options, argv) {
                                 },
                             },
                         ],
+                    },
+                    {
+                        test: /\.css$/,
+                        use: [
+                            isProduction ? MiniCssExtractPlugin.loader : 'style-loader',
+                            'css-loader',
+                        ],
+                        sideEffects: true,
                     },
                     {
                         test: /\.scss$/,
@@ -250,7 +268,7 @@ function appConfig(options, argv) {
                         sideEffects: true,
                     },
                     {
-                        test: /\.(gif|png|jpe?g|svg)$/i,
+                        test: /\.(gif|png|jpe?g|svg|webp)$/i,
                         use: [
                             {
                                 loader: 'file-loader',
@@ -291,11 +309,17 @@ function loaderConfig(options, argv) {
                 ),
             },
             mode,
+            snapshot: {
+                managedPaths: [
+                    /^(.+?[\\/]node_modules[\\/](?!\.cache)(?!@bigcommerce[\\/]checkout-sdk)(?:@.+?[\\/])?.+?)(?:[\\/].*)?$/,
+                ],
+            },
             devtool: isProduction ? 'source-map' : 'eval-source-map',
             resolve: {
                 alias,
                 extensions: ['.ts', '.tsx', '.js'],
                 mainFields: ['module', 'browser', 'main'],
+                symlinks: false,
             },
             output: {
                 path: isProduction ? join(__dirname, 'dist') : join(__dirname, 'build'),
@@ -315,16 +339,18 @@ function loaderConfig(options, argv) {
 
                         eventEmitter.on('app:done', () => {
                             if (!wasTriggeredBefore) {
+                                const MANIFEST_JSON = transformLoaderManifest(
+                                    join(
+                                        __dirname,
+                                        isProduction ? 'dist' : 'build',
+                                        `manifest-app-${appVersion}.json`,
+                                    ),
+                                    PRELOAD_ASSETS,
+                                );
+
                                 const definePlugin = new DefinePlugin({
                                     LIBRARY_NAME: JSON.stringify(LIBRARY_NAME),
-                                    PRELOAD_ASSETS: JSON.stringify(PRELOAD_ASSETS),
-                                    MANIFEST_JSON: JSON.stringify(
-                                        require(join(
-                                            __dirname,
-                                            isProduction ? 'dist' : 'build',
-                                            `manifest-app-${appVersion}.json`,
-                                        )),
-                                    ),
+                                    MANIFEST_JSON: JSON.stringify(MANIFEST_JSON),
                                 });
 
                                 definePlugin.apply(compiler);
@@ -343,10 +369,6 @@ function loaderConfig(options, argv) {
                 }),
                 new BuildHookPlugin({
                     onSuccess() {
-                        if (process.env.PRERELEASE) {
-                            return;
-                        }
-
                         const folder = isProduction ? 'dist' : 'build';
 
                         copyFileSync(
@@ -396,6 +418,8 @@ function loaderConfig(options, argv) {
                         test: /\.tsx?$/,
                         include: [
                             join(__dirname, 'packages', 'core', 'src'),
+                            join(__dirname, 'packages', 'contexts', 'src'),
+                            join(__dirname, 'packages', 'payment-integration-api', 'src'), // remove when checkout context is relocated
                             join(__dirname, 'packages', 'dom-utils', 'src'),
                             join(__dirname, 'packages', 'legacy-hoc', 'src'),
                             join(__dirname, 'packages', 'locale', 'src'),

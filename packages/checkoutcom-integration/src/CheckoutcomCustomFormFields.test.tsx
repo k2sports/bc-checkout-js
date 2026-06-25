@@ -10,21 +10,19 @@ import { noop } from 'lodash';
 import React, { type FunctionComponent } from 'react';
 
 import {
+    CheckoutContext,
+    LocaleContext,
+    type LocaleContextType,
+    PaymentFormContext,
+    type PaymentFormService,
+} from '@bigcommerce/checkout/contexts';
+import {
     CreditCardPaymentMethodComponent,
     type CreditCardPaymentMethodProps,
     type CreditCardPaymentMethodValues,
 } from '@bigcommerce/checkout/credit-card-integration';
-import {
-    createLocaleContext,
-    LocaleContext,
-    type LocaleContextType,
-} from '@bigcommerce/checkout/locale';
-import {
-    CheckoutContext,
-    PaymentFormContext,
-    type PaymentFormService,
-    type PaymentMethodProps,
-} from '@bigcommerce/checkout/payment-integration-api';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
+import { type PaymentMethodProps } from '@bigcommerce/checkout/payment-integration-api';
 import {
     getCart,
     getConsignment,
@@ -38,30 +36,6 @@ import { render, screen } from '@bigcommerce/checkout/test-utils';
 import checkoutcomCustomFormFields, { ccDocumentField } from './CheckoutcomCustomFormFields';
 
 const getAPMProps = {
-    ideal: () => ({
-        checkoutCustomMethod: 'ideal',
-        method: {
-            id: 'ideal',
-            gateway: 'checkoutcom',
-            logoUrl: '',
-            method: 'ideal',
-            supportedCards: [],
-            providesShippingAddress: false,
-            config: { cardCode: null, displayName: 'iDEAL' },
-            type: 'PAYMENT_TYPE_API',
-            nonce: null,
-            initializationData: {
-                gateway: 'checkoutcom',
-                idealIssuers: [
-                    { bic: 'INGBNL2A', name: 'Issuer Simulation V3 - ING' },
-                    { bic: 'RABONL2U', name: 'Issuer Simulation V3 - RABO' },
-                ],
-            },
-            clientToken: null,
-            returnUrl:
-                'https://test-store.store.bcdev/checkout.php?action=set_external_checkout&provider=checkoutcom',
-        },
-    }),
     sepa: () => ({
         checkoutCustomMethod: 'sepa',
         method: {
@@ -88,6 +62,7 @@ const getAPMProps = {
             clientToken: null,
             returnUrl:
                 'https://test-store.store.bcdev/checkout.php?action=set_external_checkout&provider=checkoutcom',
+            skipRedirectConfirmationAlert: false,
         },
     }),
     oxxo: () => ({
@@ -106,6 +81,7 @@ const getAPMProps = {
             clientToken: null,
             returnUrl:
                 'https://test-store.store.bcdev/checkout.php?action=set_external_checkout&provider=checkoutcom',
+            skipRedirectConfirmationAlert: false,
         },
     }),
     fawry: () => ({
@@ -124,6 +100,7 @@ const getAPMProps = {
             clientToken: null,
             returnUrl:
                 'https://test-store.store.bcdev/checkout.php?action=set_external_checkout&provider=checkoutcom',
+            skipRedirectConfirmationAlert: false,
         },
     }),
 };
@@ -302,58 +279,6 @@ describe('CheckoutCustomFormFields', () => {
 
         afterEach(() => {
             jest.clearAllMocks();
-        });
-    });
-
-    describe('iDeal', () => {
-        const IdealFormFieldset = checkoutcomCustomFormFields.ideal;
-        const idealProps = getAPMProps.ideal();
-        const user = userEvent.setup();
-
-        it('Shopper is able to see iDeal Payment Method', () => {
-            render(
-                <CheckoutcomAPMsTest
-                    {...idealProps}
-                    cardFieldset={<IdealFormFieldset method={idealProps.method} />}
-                />,
-            );
-            expect(
-                screen.getByRole('button', {
-                    name: 'Your bank',
-                }),
-            ).toBeInTheDocument();
-        });
-
-        it('Shopper selects an Issuer from dropdown', async () => {
-            render(
-                <CheckoutcomAPMsTest
-                    {...idealProps}
-                    cardFieldset={<IdealFormFieldset method={idealProps.method} />}
-                />,
-            );
-
-            await user.click(
-                screen.getByRole('button', {
-                    name: 'Your bank',
-                }),
-            );
-            expect(
-                screen.getByRole('button', {
-                    name: 'Your bank',
-                }),
-            ).toBeInTheDocument();
-            expect(
-                screen.getByRole('button', {
-                    name: 'INGBNL2A / Issuer Simulation V3 - ING',
-                }),
-            ).toBeInTheDocument();
-            await user.click(screen.getByText('INGBNL2A / Issuer Simulation V3 - ING'));
-
-            expect(
-                screen.getAllByRole('button', {
-                    name: 'INGBNL2A / Issuer Simulation V3 - ING',
-                }),
-            ).toHaveLength(2);
         });
     });
 

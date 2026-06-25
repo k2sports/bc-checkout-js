@@ -5,7 +5,8 @@ import { noop } from 'lodash';
 import React from 'react';
 import { type Omit } from 'utility-types';
 
-import { createLocaleContext, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/locale';
+import { LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { getYear } from '@bigcommerce/checkout/test-mocks';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
@@ -49,7 +50,9 @@ describe('InstrumentSelect', () => {
             </LocaleContext.Provider>,
         );
 
-        expect(screen.getByText(`Visa ending in ${getInstruments().find(isCardInstrument)?.last4}`)).toBeInTheDocument();
+        expect(
+            screen.getByText(`Visa ending in ${getInstruments().find(isCardInstrument)?.last4}`),
+        ).toBeInTheDocument();
         expect(screen.getByText(`Expires 02/${getYear(1)}`)).toBeInTheDocument();
     });
 
@@ -90,8 +93,14 @@ describe('InstrumentSelect', () => {
 
         await userEvent.click(screen.getByTestId('instrument-select'));
 
-        expect(screen.getAllByText(`Visa ending in ${getInstruments().find(isCardInstrument)?.last4}`)).toHaveLength(2);
-        expect(screen.getByText(`American Express ending in ${getInstruments().filter(isCardInstrument)[1].last4}`)).toBeInTheDocument();
+        expect(
+            screen.getAllByText(`Visa ending in ${getInstruments().find(isCardInstrument)?.last4}`),
+        ).toHaveLength(2);
+        expect(
+            screen.getByText(
+                `American Express ending in ${getInstruments().filter(isCardInstrument)[1].last4}`,
+            ),
+        ).toBeInTheDocument();
     });
 
     it('highlights instrument that is already expired', async () => {
@@ -122,12 +131,12 @@ describe('InstrumentSelect', () => {
 
         await userEvent.click(screen.getByTestId('instrument-select'));
 
-        expect(
-            screen.getAllByTestId('instrument-select-option-expiry')[0]
-        ).toHaveClass('instrumentSelect-expiry--expired');
-        expect(
-            screen.getAllByTestId('instrument-select-option-expiry')[1]
-        ).not.toHaveClass('instrumentSelect-expiry--expired');
+        expect(screen.getAllByTestId('instrument-select-option-expiry')[0]).toHaveClass(
+            'instrumentSelect-expiry--expired',
+        );
+        expect(screen.getAllByTestId('instrument-select-option-expiry')[1]).not.toHaveClass(
+            'instrumentSelect-expiry--expired',
+        );
     });
 
     it('hides list of instruments by default', () => {
@@ -220,9 +229,7 @@ describe('InstrumentSelect', () => {
             </LocaleContext.Provider>
         );
 
-        render(
-            <Component selectedInstrumentId={defaultProps.selectedInstrumentId} show={true} />,
-        );
+        render(<Component selectedInstrumentId={defaultProps.selectedInstrumentId} show={true} />);
 
         const form = screen.getByTestId('form-test');
 

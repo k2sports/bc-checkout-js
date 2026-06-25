@@ -6,7 +6,6 @@ import {
   withLanguage,
   type WithLanguageProps,
 } from '@bigcommerce/checkout/locale';
-import { useThemeContext } from '@bigcommerce/checkout/ui';
 
 import { type AddressSelectProps } from './AddressSelect';
 import SingleLineStaticAddress from './SingleLineStaticAddress';
@@ -14,7 +13,7 @@ import StaticAddress from './StaticAddress';
 
 type AddressSelectButtonProps = Pick<
   AddressSelectProps,
-  'selectedAddress' | 'addresses' | 'type' | 'showSingleLineAddress' | 'placeholderText'
+  'selectedAddress' | 'type' | 'showSingleLineAddress' | 'placeholderText'
 >;
 
 const AddressSelectButton: FunctionComponent<AddressSelectButtonProps & WithLanguageProps> = ({
@@ -24,13 +23,12 @@ const AddressSelectButton: FunctionComponent<AddressSelectButtonProps & WithLang
   showSingleLineAddress,
   placeholderText,
 }) => {
-  const { themeV2 } = useThemeContext();
   const [ariaExpanded, setAriaExpanded] = useState(false);
 
   const SelectedAddress = () => {
     if (!selectedAddress) {
       return (
-        <span className={themeV2 ? 'body-regular' : ''} data-test="address-select-placeholder">
+        <span className="body-regular" data-test="address-select-placeholder">
           {placeholderText ?? <TranslatedString id="address.enter_address_action" />}
         </span>
       );

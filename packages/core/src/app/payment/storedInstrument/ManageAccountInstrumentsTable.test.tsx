@@ -1,7 +1,8 @@
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import { createLocaleContext, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/locale';
+import { LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getStoreConfig } from '../../config/config.mock';
@@ -33,9 +34,9 @@ describe('ManageAccountInstrumentsTable', () => {
             </LocaleContext.Provider>,
         );
 
-        expect(
-            screen.getAllByTestId('manage-instrument-accountExternalId')[0]
-        ).toHaveTextContent('test@external-id.com');
+        expect(screen.getAllByTestId('manage-instrument-accountExternalId')[0]).toHaveTextContent(
+            'test@external-id.com',
+        );
     });
 
     it('triggers callback when delete button is clicked', async () => {
@@ -59,7 +60,11 @@ describe('ManageAccountInstrumentsTable', () => {
             </LocaleContext.Provider>,
         );
 
-        expect(screen.getByText(localeContext.language.translate('payment.instrument_manage_modal_empty_text'))).toBeInTheDocument();
+        expect(
+            screen.getByText(
+                localeContext.language.translate('payment.instrument_manage_modal_empty_text'),
+            ),
+        ).toBeInTheDocument();
     });
 
     it('shows loading overlay when deleting', () => {

@@ -8,17 +8,21 @@ import userEvent from '@testing-library/user-event';
 import { noop } from 'lodash';
 import React, { act, type FunctionComponent } from 'react';
 
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
 import {
     type AnalyticsContextProps,
     type AnalyticsEvents,
     AnalyticsProviderMock,
-} from '@bigcommerce/checkout/analytics';
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
-import { getLanguageService, LocaleProvider } from '@bigcommerce/checkout/locale';
-import {
-    CHECKOUT_ROOT_NODE_ID,
+    CapabilitiesContext,
     CheckoutProvider,
-} from '@bigcommerce/checkout/payment-integration-api';
+    defaultCapabilities,
+    ExtensionProvider,
+    type ExtensionServiceInterface,
+    LocaleProvider,
+    ThemeProvider,
+} from '@bigcommerce/checkout/contexts';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
+import { CHECKOUT_ROOT_NODE_ID } from '@bigcommerce/checkout/payment-integration-api';
 import {
     CheckoutPageNodeObject,
     CheckoutPreset,
@@ -28,13 +32,13 @@ import {
     consignmentCouponDiscount,
 } from '@bigcommerce/checkout/test-framework';
 import { renderWithoutWrapper as render, screen, waitFor } from '@bigcommerce/checkout/test-utils';
-import { ThemeProvider } from '@bigcommerce/checkout/ui';
 
 import { createErrorLogger } from '../common/error';
 import {
     createEmbeddedCheckoutStylesheet,
     createEmbeddedCheckoutSupport,
 } from '../embeddedCheckout';
+import { getCountries } from '../geography/countries.mock';
 
 import Checkout, { type CheckoutProps } from './Checkout';
 
@@ -42,6 +46,7 @@ describe('Checkout', () => {
     let checkout: CheckoutPageNodeObject;
     let CheckoutTest: FunctionComponent<CheckoutProps>;
     let checkoutService: CheckoutService;
+    let extensionService: ExtensionServiceInterface;
     let defaultProps: CheckoutProps & AnalyticsContextProps;
     let embeddedMessengerMock: EmbeddedCheckoutMessenger;
     let analyticsTracker: AnalyticsEvents;
@@ -63,6 +68,7 @@ describe('Checkout', () => {
         window.scrollTo = jest.fn();
 
         checkoutService = createCheckoutService();
+        extensionService = new ExtensionService(checkoutService, createErrorLogger());
         embeddedMessengerMock = createEmbeddedCheckoutMessenger({
             parentOrigin: 'https://store.url',
         });
@@ -97,9 +103,12 @@ describe('Checkout', () => {
 
         CheckoutTest = (props) => (
             <CheckoutProvider checkoutService={checkoutService}>
-                <LocaleProvider checkoutService={checkoutService}>
+                <LocaleProvider
+                    checkoutService={checkoutService}
+                    languageService={getLanguageService()}
+                >
                     <AnalyticsProviderMock>
-                        <ExtensionProvider checkoutService={checkoutService} errorLogger={defaultProps.errorLogger}>
+                        <ExtensionProvider extensionService={extensionService}>
                             <ThemeProvider>
                                 <Checkout {...props} />
                             </ThemeProvider>
@@ -241,7 +250,7 @@ describe('Checkout', () => {
             expect(mockAddEventListener).not.toHaveBeenCalledWith(
                 'prerenderingchange',
                 expect.any(Function),
-                { once: true }
+                { once: true },
             );
         });
 
@@ -256,7 +265,7 @@ describe('Checkout', () => {
             expect(mockAddEventListener).toHaveBeenCalledWith(
                 'prerenderingchange',
                 expect.any(Function),
-                { once: true }
+                { once: true },
             );
         });
 
@@ -324,20 +333,6 @@ describe('Checkout', () => {
             expect(screen.getByText('test@example.com')).toBeInTheDocument();
         });
 
-        it('logs unhandled error', async () => {
-            checkoutService = checkout.use(CheckoutPreset.UnsupportedProvider);
-
-            render(<CheckoutTest {...defaultProps} />);
-
-            await checkout.waitForCustomerStep();
-
-            const error = new Error(
-                'Unable to proceed because payment method data is unavailable or not properly configured.',
-            );
-
-            expect(defaultProps.errorLogger.log).toHaveBeenCalledWith(error);
-        });
-
         it('renders checkout button container with ApplePay', async () => {
             (window as any).ApplePaySession = {};
 
@@ -387,6 +382,11 @@ describe('Checkout', () => {
             const error = new Error();
 
             checkoutService = checkout.use(CheckoutPreset.CheckoutWithBillingEmail);
+
+            // Mock countries to ensure form renders
+            jest.spyOn(checkoutService.getState().data, 'getShippingCountries').mockReturnValue(
+                getCountries(),
+            );
 
             jest.spyOn(checkoutService, 'loadShippingAddressFields').mockImplementation(() => {
                 throw error;
@@ -459,12 +459,14 @@ describe('Checkout', () => {
             checkoutService = checkout.use(CheckoutPreset.CheckoutWithShipping, {
                 checkout: {
                     ...checkoutWithShippingDiscount,
-                    consignments: [{
-                        ...checkoutWithShippingDiscount.consignments[0],
-                        discounts: [
-                            { ...consignmentAutomaticDiscount, amount: 3 }
-                        ]
-                    }],
+                    comparisonShippingCost: 0,
+                    consignments: [
+                        {
+                            ...checkoutWithShippingDiscount.consignments[0],
+                            comparisonShippingCost: 0,
+                            discounts: [{ ...consignmentAutomaticDiscount, amount: 3 }],
+                        },
+                    ],
                     coupons: [],
                 },
             });
@@ -496,16 +498,19 @@ describe('Checkout', () => {
                         {
                             ...checkoutWithShippingDiscount.consignments[0],
                             id: 'consignment-2',
+                            comparisonShippingCost: 0,
                             discounts: [
                                 { ...consignmentAutomaticDiscount, amount: 3 },
                                 { ...consignmentCouponDiscount, amount: 1 },
-                            ]
-                        }
+                            ],
+                        },
                     ],
-                    coupons: [{
-                        ...checkoutWithShippingDiscount.coupons[0],
-                        discountedAmount: 4,
-                    }]
+                    coupons: [
+                        {
+                            ...checkoutWithShippingDiscount.coupons[0],
+                            discountedAmount: 4,
+                        },
+                    ],
                 },
             });
 
@@ -513,7 +518,8 @@ describe('Checkout', () => {
 
             await checkout.waitForBillingStep();
 
-            const shippingOptionsInShippingSummary = screen.getAllByTestId('static-shipping-option');
+            const shippingOptionsInShippingSummary =
+                screen.getAllByTestId('static-shipping-option');
 
             expect(shippingOptionsInShippingSummary).toHaveLength(2);
             expect(shippingOptionsInShippingSummary[0]).toHaveTextContent('Pickup In Store');
@@ -549,7 +555,7 @@ describe('Checkout', () => {
 
             await checkout.waitForBillingStep();
 
-            await waitFor(()=>{
+            await waitFor(() => {
                 expect(defaultProps.errorLogger.log).toHaveBeenCalledWith(error);
             });
         });
@@ -582,6 +588,92 @@ describe('Checkout', () => {
             await waitFor(() => {
                 expect(defaultProps.errorLogger.log).toHaveBeenCalledWith(error);
             });
+        });
+
+        it('redirects to B2B buyer portal after payment when invoiceRedirect capability is enabled', async () => {
+            const originalLocation = window.location;
+
+            Object.defineProperty(window, 'location', {
+                value: {
+                    // eslint-disable-next-line @typescript-eslint/no-misused-spread
+                    ...window.location,
+                    replace: jest.fn(),
+                },
+                configurable: true,
+                writable: true,
+            });
+
+            try {
+                checkoutService = checkout.use(CheckoutPreset.CheckoutWithShippingAndBilling);
+
+                jest.spyOn(checkoutService, 'submitOrder').mockResolvedValue({
+                    data: {
+                        getOrder: () => ({ orderId: 123 }) as any,
+                    },
+                } as any);
+                jest.spyOn(checkoutService, 'refreshB2BPaymentMethods').mockResolvedValue(
+                    {} as any,
+                );
+                jest.spyOn(checkoutService, 'persistB2BMetadata').mockResolvedValue({} as any);
+
+                const getState = checkoutService.getState.bind(checkoutService);
+
+                jest.spyOn(checkoutService, 'getState').mockImplementation(() => {
+                    const state = getState();
+
+                    state.data.getB2BReceiptId = () => '123';
+
+                    return state;
+                });
+
+                const invoiceRedirectCapabilities = {
+                    ...defaultCapabilities,
+                    orderConfirmation: {
+                        ...defaultCapabilities.orderConfirmation,
+                        invoiceRedirect: true,
+                        persistB2BMetadata: true,
+                    },
+                };
+
+                const CheckoutWithInvoiceRedirect: FunctionComponent<CheckoutProps> = (props) => (
+                    <CheckoutProvider checkoutService={checkoutService}>
+                        <LocaleProvider
+                            checkoutService={checkoutService}
+                            languageService={getLanguageService()}
+                        >
+                            <AnalyticsProviderMock>
+                                <ExtensionProvider extensionService={extensionService}>
+                                    <ThemeProvider>
+                                        <CapabilitiesContext.Provider
+                                            value={invoiceRedirectCapabilities}
+                                        >
+                                            <Checkout {...props} />
+                                        </CapabilitiesContext.Provider>
+                                    </ThemeProvider>
+                                </ExtensionProvider>
+                            </AnalyticsProviderMock>
+                        </LocaleProvider>
+                    </CheckoutProvider>
+                );
+
+                render(<CheckoutWithInvoiceRedirect {...defaultProps} />);
+
+                await checkout.waitForPaymentStep();
+
+                await userEvent.click(screen.getByText(/place order/i));
+
+                await waitFor(() => {
+                    expect(window.location.replace).toHaveBeenCalledWith(
+                        'https://store.url/#/invoice?receiptId=123',
+                    );
+                });
+            } finally {
+                Object.defineProperty(window, 'location', {
+                    value: originalLocation,
+                    configurable: true,
+                    writable: true,
+                });
+            }
         });
     });
 });

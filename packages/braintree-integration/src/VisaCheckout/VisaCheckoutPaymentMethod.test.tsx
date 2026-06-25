@@ -6,20 +6,21 @@ import {
     type PaymentInitializeOptions,
     type PaymentMethod,
 } from '@bigcommerce/checkout-sdk';
+import { createBraintreeVisaCheckoutPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/braintree';
 import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React, { type FunctionComponent } from 'react';
 
 import {
-    createLocaleContext,
+    CheckoutProvider,
     LocaleContext,
     type LocaleContextType,
-} from '@bigcommerce/checkout/locale';
-import {
-    CheckoutProvider,
-    getPaymentMethodName,
     PaymentFormContext,
     type PaymentFormService,
+} from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
+import {
+    getPaymentMethodName,
     PaymentMethodId,
     type PaymentMethodProps,
     PaymentMethodType,
@@ -141,7 +142,7 @@ describe('when using Visa Checkout payment', () => {
         expect(checkoutService.deinitializePayment).toHaveBeenCalledWith({ methodId: method.id });
         expect(checkoutService.initializePayment).toHaveBeenCalledWith({
             methodId: method.id,
-
+            integrations: [createBraintreeVisaCheckoutPaymentStrategy],
             [method.id]: expect.any(Object),
         });
     });
@@ -163,7 +164,7 @@ describe('when using Visa Checkout payment', () => {
         expect(checkoutService.deinitializePayment).toHaveBeenCalledWith({ methodId: method.id });
         expect(checkoutService.initializePayment).toHaveBeenCalledWith({
             methodId: method.id,
-
+            integrations: [createBraintreeVisaCheckoutPaymentStrategy],
             [method.id]: expect.any(Object),
         });
 

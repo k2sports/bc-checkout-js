@@ -1,9 +1,16 @@
 import classNames from 'classnames';
 import { noop } from 'lodash';
-import React, { type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+    type ReactElement,
+    type ReactNode,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
 import { CSSTransition } from 'react-transition-group';
 
-import { isMobileView, MobileView } from '../ui/responsive';
+import { isMobileView, MobileView } from '@bigcommerce/checkout/ui';
 
 import CheckoutStepHeader from './CheckoutStepHeader';
 import type CheckoutStepType from './CheckoutStepType';
@@ -23,18 +30,18 @@ export interface CheckoutStepProps {
 }
 
 const CheckoutStep = ({
-        children,
-        heading,
-        isActive,
-        isBusy,
-        isComplete,
-        isEditable,
-        onEdit,
-        suggestion,
-        summary,
-        type,
-        onExpanded = noop,
-    }: CheckoutStepProps): ReactElement => {
+    children,
+    heading,
+    isActive,
+    isBusy,
+    isComplete,
+    isEditable,
+    onEdit,
+    suggestion,
+    summary,
+    type,
+    onExpanded = noop,
+}: CheckoutStepProps): ReactElement => {
     const [isClosed, setIsClosed] = useState(true);
 
     const containerRef = useRef<HTMLLIElement>(null);
@@ -92,9 +99,7 @@ const CheckoutStep = ({
 
         timeoutDelay.current =
             parseFloat(
-                contentRef.current
-                    ? getComputedStyle(contentRef.current).transitionDuration
-                    : '0s',
+                contentRef.current ? getComputedStyle(contentRef.current).transitionDuration : '0s',
             ) * 1000;
 
         return timeoutDelay.current;
@@ -190,11 +195,7 @@ const CheckoutStep = ({
                         timeout={{}}
                         unmountOnExit
                     >
-                        <div
-                            aria-busy={isBusy}
-                            className="checkout-view-content"
-                            ref={contentRef}
-                        >
+                        <div aria-busy={isBusy} className="checkout-view-content" ref={contentRef}>
                             {isActive ? children : null}
                         </div>
                     </CSSTransition>

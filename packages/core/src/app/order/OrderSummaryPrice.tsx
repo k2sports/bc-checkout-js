@@ -2,9 +2,8 @@ import classNames from 'classnames';
 import React, { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
 import { CSSTransition } from 'react-transition-group';
 
+import { useCheckout } from '@bigcommerce/checkout/contexts';
 import { preventDefault } from '@bigcommerce/checkout/dom-utils';
-import { useCheckout } from '@bigcommerce/checkout/payment-integration-api';
-import { useThemeContext } from '@bigcommerce/checkout/ui';
 
 import { ShopperCurrency } from '../currency';
 
@@ -60,31 +59,30 @@ const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
     zeroLabel,
     isOrderTotal = false,
 }) => {
-    const [ highlight, setHighlight ] = useState<boolean>(false);
-    const [ previousAmount, setPreviousAmount ] = useState<OrderSummaryPriceProps['amount']>(amount);
-    const {
-        checkoutState: {
-            statuses: { isSubmittingOrder }
-        }
-    } = useCheckout();
+    const [highlight, setHighlight] = useState<boolean>(false);
+    const [previousAmount, setPreviousAmount] = useState<OrderSummaryPriceProps['amount']>(amount);
+    const { selectedState: isActionDisabled } = useCheckout(({ statuses }) =>
+        statuses.isSubmittingOrder(),
+    );
 
-    const { themeV2 } = useThemeContext();
     const displayValue = getDisplayValue(amount, zeroLabel);
-    const isActionDisabled = isSubmittingOrder();
 
     useEffect(() => {
         setHighlight(amount !== previousAmount);
         setPreviousAmount(amount);
-    }, [ amount ]);
+    }, [amount]);
 
-    const handleTransitionEnd: (node: HTMLElement, done: () => void) => void = useCallback((node, done) => {
-        node.addEventListener('animationend', ({ target }) => {
-            if (target === node) {
-                setHighlight(false);
-                done();
-            }
-        });
-    }, [ setHighlight ]);
+    const handleTransitionEnd: (node: HTMLElement, done: () => void) => void = useCallback(
+        (node, done) => {
+            node.addEventListener('animationend', ({ target }) => {
+                if (target === node) {
+                    setHighlight(false);
+                    done();
+                }
+            });
+        },
+        [setHighlight],
+    );
 
     const handleActionTrigger = () => {
         if (isActionDisabled || !onActionTriggered) {
@@ -92,7 +90,7 @@ const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
         }
 
         onActionTriggered();
-    }
+    };
 
     return (
         <div data-test={testId}>
@@ -110,10 +108,10 @@ const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
                         className,
                     )}
                 >
-                    <span className={classNames('cart-priceItem-label',
-                        {
-                            'body-regular': themeV2 && !isOrderTotal,
-                            'sub-header': themeV2 && isOrderTotal
+                    <span
+                        className={classNames('cart-priceItem-label', {
+                            'body-regular': !isOrderTotal,
+                            'sub-header': isOrderTotal,
                         })}
                     >
                         <span data-test="cart-price-label">
@@ -130,7 +128,7 @@ const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
                                 <a
                                     className={classNames({
                                         'link--disabled': isActionDisabled,
-                                        'body-cta': themeV2 && !isOrderTotal
+                                        'body-cta': !isOrderTotal,
                                     })}
                                     data-test="cart-price-callback"
                                     href="#"
@@ -142,10 +140,10 @@ const OrderSummaryPrice: FC<OrderSummaryPriceProps> = ({
                         )}
                     </span>
 
-                    <span className={classNames('cart-priceItem-value',
-                        {
-                            'body-medium': themeV2 && !isOrderTotal,
-                            'header': themeV2 && isOrderTotal
+                    <span
+                        className={classNames('cart-priceItem-value', {
+                            'body-medium': !isOrderTotal,
+                            header: isOrderTotal,
                         })}
                     >
                         {isNumberValue(amountBeforeDiscount) && amountBeforeDiscount !== amount && (

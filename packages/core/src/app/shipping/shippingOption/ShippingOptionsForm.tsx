@@ -1,13 +1,14 @@
+// EOC Override: This file has been modified to filter shipping options based on customer groups
 import { type CheckoutSelectors } from '@bigcommerce/checkout-sdk';
 import { type FormikProps } from 'formik';
 import { noop } from 'lodash';
 import React, { type ReactElement, useEffect } from 'react';
 
-import { useAnalytics } from '@bigcommerce/checkout/analytics';
+import { useAnalytics } from '@bigcommerce/checkout/contexts';
 import { TranslatedString } from '@bigcommerce/checkout/locale';
 
 import getFilteredShippingOptions from '../getFilteredShippingOptions'; // custom import
-import withFormikExtended from '../../common/form/withFormikExtended';
+import { withFormikExtended } from '../../common/form';
 import getRecommendedShippingOption from '../getRecommendedShippingOption';
 import { getShippingOptionIds } from '../utils';
 

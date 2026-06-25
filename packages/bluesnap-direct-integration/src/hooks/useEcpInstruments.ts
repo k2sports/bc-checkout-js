@@ -2,8 +2,8 @@ import { type AchInstrument, type PaymentMethod } from '@bigcommerce/checkout-sd
 import { find } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useCheckout, usePaymentFormContext } from '@bigcommerce/checkout/contexts';
 import { isAchInstrument } from '@bigcommerce/checkout/instrument-utils';
-import { useCheckout, usePaymentFormContext } from '@bigcommerce/checkout/payment-integration-api';
 
 const useEcpInstruments = (method: PaymentMethod) => {
     const [currentInstrument, setCurrentInstrument] = useState<AchInstrument | undefined>();

@@ -2,7 +2,6 @@ import {
     type Order,
     type ShopperConfig,
     type ShopperCurrency,
-    type StoreConfig,
     type StoreCurrency,
 } from '@bigcommerce/checkout-sdk';
 import classNames from 'classnames';
@@ -26,8 +25,8 @@ import { ContinueButton } from './ContinueButton';
 import { OrderSummaryContainer } from './OrderSummaryContainer';
 
 interface OrderConfirmationPageProps {
+    cannotCreatePersonalAccount: boolean;
     order: Order;
-    config: StoreConfig;
     supportEmail: string;
     supportPhoneNumber: string | undefined;
     paymentInstructions: string | undefined;
@@ -46,7 +45,7 @@ interface OrderConfirmationPageProps {
 }
 
 export const OrderConfirmationPage = ({
-    config,
+    cannotCreatePersonalAccount,
     currency,
     customerCanBeCreated,
     error,
@@ -73,7 +72,6 @@ export const OrderConfirmationPage = ({
             <div className="orderConfirmation">
                 <ThankYouHeader name={order.billingAddress.firstName} />
                 <OrderStatus
-                    config={config}
                     order={order}
                     supportEmail={supportEmail}
                     supportPhoneNumber={supportPhoneNumber}
@@ -89,7 +87,7 @@ export const OrderConfirmationPage = ({
                     </OrderConfirmationSection>
                 )}
 
-                {shouldShowPasswordForm && !hasSignedUp && (
+                {!cannotCreatePersonalAccount && shouldShowPasswordForm && !hasSignedUp && (
                     <GuestSignUpForm
                         customerCanBeCreated={customerCanBeCreated}
                         isSigningUp={isSigningUp}
@@ -99,11 +97,7 @@ export const OrderConfirmationPage = ({
                 )}
 
                 {hasSignedUp &&
-                    (order?.customerId ? (
-                        <PasswordSavedSuccessAlert />
-                    ) : (
-                        <SignedUpSuccessAlert />
-                    ))}
+                    (order?.customerId ? <PasswordSavedSuccessAlert /> : <SignedUpSuccessAlert />)}
 
                 <ContinueButton siteLink={siteLink} />
             </div>
@@ -119,4 +113,3 @@ export const OrderConfirmationPage = ({
         <ErrorModal error={error} onClose={onErrorModalClose} shouldShowErrorCode={false} />
     </div>
 );
-

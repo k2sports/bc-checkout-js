@@ -8,12 +8,10 @@ import { createBoltCustomerStrategy } from '@bigcommerce/checkout-sdk/integratio
 import { noop } from 'lodash';
 import React, { type FunctionComponent, memo, useEffect, useState } from 'react';
 
-import { useAnalytics } from '@bigcommerce/checkout/analytics';
+import { useAnalytics } from '@bigcommerce/checkout/contexts';
 import { stopPropagation } from '@bigcommerce/checkout/dom-utils';
 import { TranslatedString } from '@bigcommerce/checkout/locale';
-
-import { Button } from '../../ui/button';
-import { IconBolt } from '../../ui/icon';
+import { Button, IconBolt } from '@bigcommerce/checkout/ui';
 
 export interface BoltCheckoutSuggestionProps {
     isExecutingPaymentMethodCheckout: boolean;

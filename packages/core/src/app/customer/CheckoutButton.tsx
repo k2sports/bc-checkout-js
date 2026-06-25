@@ -1,8 +1,11 @@
-import { type CustomerInitializeOptions, type CustomerRequestOptions } from '@bigcommerce/checkout-sdk';
+import {
+    type CustomerInitializeOptions,
+    type CustomerRequestOptions,
+} from '@bigcommerce/checkout-sdk';
 import { noop } from 'lodash';
 import React, { type ReactElement, useEffect } from 'react';
 
-const WALLET_BUTTON_HEIGHT = 36;
+const WALLET_BUTTON_HEIGHT = 40;
 
 export interface CheckoutButtonProps {
     containerId: string;
@@ -24,9 +27,11 @@ const CheckoutButton = ({
     onClick = noop,
 }: CheckoutButtonProps): ReactElement => {
     useEffect(() => {
-        const heightOption = isShowingWalletButtonsOnTop && (methodId === 'braintreepaypal' || methodId === 'braintreepaypalcredit' )
-            ? { buttonHeight: WALLET_BUTTON_HEIGHT }
-            : {};
+        const heightOption =
+            isShowingWalletButtonsOnTop &&
+            (methodId === 'braintreepaypal' || methodId === 'braintreepaypalcredit')
+                ? { buttonHeight: WALLET_BUTTON_HEIGHT }
+                : {};
 
         initialize({
             methodId,

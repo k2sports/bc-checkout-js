@@ -3,14 +3,13 @@ import {
     type CheckoutService,
     createCheckoutService,
     createLanguageService,
+    type PaymentInitializeOptions,
 } from '@bigcommerce/checkout-sdk';
+import { createBraintreeVenmoPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/braintree';
 import React, { type FunctionComponent } from 'react';
-import { render } from '@testing-library/react';
 
-import { type PaymentMethodProps } from '@bigcommerce/checkout/payment-integration-api';
-
-import BraintreeVenmoPaymentMethod from './BraintreeVenmoPaymentMethod';
 import { HostedPaymentComponent } from '@bigcommerce/checkout/hosted-payment-integration';
+import { type PaymentMethodProps } from '@bigcommerce/checkout/payment-integration-api';
 import {
     getCart,
     getCustomer,
@@ -18,6 +17,9 @@ import {
     getPaymentMethod,
     getStoreConfig,
 } from '@bigcommerce/checkout/test-mocks';
+import { render } from '@bigcommerce/checkout/test-utils';
+
+import BraintreeVenmoPaymentMethod from './BraintreeVenmoPaymentMethod';
 
 jest.mock('@bigcommerce/checkout/hosted-payment-integration', () => ({
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -31,6 +33,8 @@ describe('BraintreeVenmoPaymentMethod', () => {
     let HostedPaymentComponentMock: FunctionComponent;
 
     beforeEach(() => {
+        jest.clearAllMocks();
+
         HostedPaymentComponentMock = HostedPaymentComponent as jest.Mock;
         checkoutService = createCheckoutService();
         checkoutState = {
@@ -64,12 +68,30 @@ describe('BraintreeVenmoPaymentMethod', () => {
                 checkoutService: defaultProps.checkoutService,
                 checkoutState: defaultProps.checkoutState,
                 deinitializePayment: defaultProps.checkoutService.deinitializePayment,
-                initializePayment: defaultProps.checkoutService.initializePayment,
+                initializePayment: expect.any(Function),
                 language: defaultProps.language,
                 method: defaultProps.method,
                 paymentForm: defaultProps.paymentForm,
             }),
             expect.anything(),
         );
+    });
+
+    it('calls initializePayment with Braintree Venmo payment strategy', async () => {
+        render(<BraintreeVenmoPaymentMethod {...defaultProps} />);
+
+        const mockCall = (HostedPaymentComponentMock as jest.Mock).mock.calls[0][0];
+        const initializePayment = mockCall.initializePayment;
+
+        const testOptions: PaymentInitializeOptions = {
+            methodId: 'braintreevenmo',
+        };
+
+        await initializePayment(testOptions);
+
+        expect(checkoutService.initializePayment).toHaveBeenCalledWith({
+            ...testOptions,
+            integrations: [createBraintreeVenmoPaymentStrategy],
+        });
     });
 });

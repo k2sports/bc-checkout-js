@@ -9,18 +9,21 @@ import userEvent from '@testing-library/user-event';
 import { noop } from 'lodash';
 import React, { type FunctionComponent } from 'react';
 
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
 import {
-    type AnalyticsContextProps,
-    type AnalyticsEvents,
     AnalyticsProviderMock,
-} from '@bigcommerce/checkout/analytics';
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
-import { getLanguageService, LocaleProvider } from '@bigcommerce/checkout/locale';
-import {
-    CHECKOUT_ROOT_NODE_ID,
+    CapabilitiesContext,
     CheckoutProvider,
-} from '@bigcommerce/checkout/payment-integration-api';
+    defaultCapabilities,
+    ExtensionProvider,
+    type ExtensionServiceInterface,
+    LocaleProvider,
+    ThemeProvider,
+} from '@bigcommerce/checkout/contexts';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
+import { CHECKOUT_ROOT_NODE_ID } from '@bigcommerce/checkout/payment-integration-api';
 import {
+    addressExtraFields,
     CheckoutPageNodeObject,
     CheckoutPreset,
     checkoutSettings,
@@ -30,17 +33,23 @@ import {
     checkoutWithShippingAndBilling,
     consignment,
     customer,
+    customerWithoutSavedAddresses,
     formFields,
     payments,
     shippingAddress,
     shippingAddress2,
     shippingAddress3,
 } from '@bigcommerce/checkout/test-framework';
-import { act, renderWithoutWrapper as render, screen } from '@bigcommerce/checkout/test-utils';
-import { ThemeProvider } from '@bigcommerce/checkout/ui';
+import {
+    act,
+    renderWithoutWrapper as render,
+    screen,
+    waitFor,
+} from '@bigcommerce/checkout/test-utils';
+import { B2BSessionStorage } from '@bigcommerce/checkout/utility';
 
 import Checkout from '../checkout/Checkout';
-import { type CheckoutIntermediateProps } from '../checkout/CheckoutIntermediate';
+import { type CheckoutInitializerProps } from '../checkout/CheckoutInitializer';
 import { getCheckoutPayment } from '../checkout/checkouts.mock';
 import { createErrorLogger } from '../common/error';
 import {
@@ -50,16 +59,16 @@ import {
 
 describe('Billing step', () => {
     let checkout: CheckoutPageNodeObject;
-    let CheckoutTest: FunctionComponent<CheckoutIntermediateProps>;
+    let CheckoutTest: FunctionComponent<CheckoutInitializerProps>;
     let checkoutService: CheckoutService;
-    let defaultProps: CheckoutIntermediateProps & AnalyticsContextProps;
+    let extensionService: ExtensionServiceInterface;
+    let defaultProps: CheckoutInitializerProps;
     let embeddedMessengerMock: EmbeddedCheckoutMessenger;
-    let analyticsTracker: Partial<AnalyticsEvents>;
 
     const checkoutWithCustomer = {
         ...checkoutWithShipping,
         customer,
-    }
+    };
 
     beforeAll(() => {
         checkout = new CheckoutPageNodeObject();
@@ -69,6 +78,7 @@ describe('Billing step', () => {
     afterEach(() => {
         jest.unmock('lodash');
         checkout.resetHandlers();
+        sessionStorage.clear();
     });
 
     afterAll(() => {
@@ -76,34 +86,30 @@ describe('Billing step', () => {
     });
 
     beforeEach(() => {
+        const errorLogger = createErrorLogger();
+
         window.scrollTo = jest.fn();
 
         checkoutService = createCheckoutService();
         embeddedMessengerMock = createEmbeddedCheckoutMessenger({
             parentOrigin: 'https://store.url',
         });
-        analyticsTracker = {
-            checkoutBegin: jest.fn(),
-            trackStepViewed: jest.fn(),
-            trackStepCompleted: jest.fn(),
-            exitCheckout: jest.fn(),
-        };
         defaultProps = {
             checkoutId: 'x',
             containerId: CHECKOUT_ROOT_NODE_ID,
             createEmbeddedMessenger: () => embeddedMessengerMock,
             embeddedStylesheet: createEmbeddedCheckoutStylesheet(),
             embeddedSupport: createEmbeddedCheckoutSupport(getLanguageService()),
-            errorLogger: createErrorLogger(),
-            analyticsTracker,
+            errorLogger,
         };
+        extensionService = new ExtensionService(checkoutService, errorLogger);
 
         jest.spyOn(defaultProps.errorLogger, 'log').mockImplementation(noop);
         jest.spyOn(checkoutService, 'updateBillingAddress');
 
         jest.mock('lodash', () => ({
             ...jest.requireActual('lodash'),
-            debounce: (fn) => {
+            debounce: (fn: any) => {
                 fn.cancel = jest.fn();
 
                 return fn;
@@ -112,14 +118,12 @@ describe('Billing step', () => {
 
         CheckoutTest = (props) => (
             <CheckoutProvider checkoutService={checkoutService}>
-                <LocaleProvider checkoutService={checkoutService}>
+                <LocaleProvider
+                    checkoutService={checkoutService}
+                    languageService={getLanguageService()}
+                >
                     <AnalyticsProviderMock>
-                        <ExtensionProvider
-                            checkoutService={checkoutService}
-                            errorLogger={{
-                                log: jest.fn(),
-                            }}
-                        >
+                        <ExtensionProvider extensionService={extensionService}>
                             <ThemeProvider>
                                 <Checkout {...props} />
                             </ThemeProvider>
@@ -139,6 +143,8 @@ describe('Billing step', () => {
 
         await checkout.waitForBillingStep();
 
+        expect(screen.queryByText(addressExtraFields[0].name)).not.toBeInTheDocument();
+
         await checkout.fillAddressForm();
 
         checkout.updateCheckout(
@@ -154,7 +160,9 @@ describe('Billing step', () => {
         await checkout.waitForPaymentStep();
 
         expect(checkoutService.updateBillingAddress).toHaveBeenCalled();
-        expect(screen.getByRole('radio', { name: payments[0].config.displayName })).toBeInTheDocument();
+        expect(
+            screen.getByRole('radio', { name: payments[0].config.displayName }),
+        ).toBeInTheDocument();
     });
 
     it('edit the billing address and goes back to the payment step', async () => {
@@ -166,7 +174,9 @@ describe('Billing step', () => {
 
         await checkout.waitForPaymentStep();
 
-        expect(screen.getByRole('radio', { name: payments[0].config.displayName })).toBeInTheDocument();
+        expect(
+            screen.getByRole('radio', { name: payments[0].config.displayName }),
+        ).toBeInTheDocument();
 
         await userEvent.click(screen.getAllByRole('button', { name: 'Edit' })[2]);
 
@@ -174,7 +184,9 @@ describe('Billing step', () => {
 
         await checkout.fillAddressForm();
 
-        expect(screen.queryByLabelText('Save this address in my address book.')).not.toBeInTheDocument();
+        expect(
+            screen.queryByLabelText('Save this address in my address book.'),
+        ).not.toBeInTheDocument();
 
         checkout.updateCheckout(
             'put',
@@ -189,7 +201,9 @@ describe('Billing step', () => {
         await checkout.waitForPaymentStep();
 
         expect(checkoutService.updateBillingAddress).toHaveBeenCalled();
-        expect(screen.getByRole('radio', { name: payments[0].config.displayName })).toBeInTheDocument();
+        expect(
+            screen.getByRole('radio', { name: payments[0].config.displayName }),
+        ).toBeInTheDocument();
     });
 
     it('should show order comments', async () => {
@@ -215,10 +229,8 @@ describe('Billing step', () => {
             config: checkoutSettings,
             checkout: {
                 ...checkoutWithShipping,
-                billingAddress:checkoutWithBillingEmail.billingAddress,
-                payments:[
-                    getCheckoutPayment(),
-                ],
+                billingAddress: checkoutWithBillingEmail.billingAddress,
+                payments: [getCheckoutPayment()],
             },
             formFields,
             extensions: [],
@@ -236,49 +248,46 @@ describe('Billing step', () => {
             config: checkoutSettings,
             checkout: {
                 ...checkoutWithShipping,
-                billingAddress:checkoutWithBillingEmail.billingAddress,
+                billingAddress: checkoutWithBillingEmail.billingAddress,
                 consignments: [
                     {
                         ...consignment,
-                        shippingAddress:{
+                        shippingAddress: {
                             ...consignment.shippingAddress,
-                            'customFields': [
+                            customFields: [
                                 {
-                                    'fieldId': 'field_25',
-                                    'fieldValue': 'Custom Text'
+                                    fieldId: 'field_25',
+                                    fieldValue: 'Custom Text',
                                 },
                                 {
-                                    'fieldId': 'field_27',
-                                    'fieldValue': '1'
+                                    fieldId: 'field_27',
+                                    fieldValue: '1',
                                 },
                                 {
-                                    'fieldId': 'field_28',
-                                    'fieldValue': 'Custom message text'
+                                    fieldId: 'field_28',
+                                    fieldValue: 'Custom message text',
                                 },
                                 {
-                                    'fieldId': 'field_29',
-                                    'fieldValue': '2020-01-01'
+                                    fieldId: 'field_29',
+                                    fieldValue: '2020-01-01',
                                 },
                                 {
-                                    'fieldId': 'field_31',
-                                    'fieldValue': ['0', '1']
+                                    fieldId: 'field_31',
+                                    fieldValue: ['0', '1'],
                                 },
                                 {
-                                    'fieldId': 'field_32',
-                                    'fieldValue': '0'
+                                    fieldId: 'field_32',
+                                    fieldValue: '0',
                                 },
                                 {
-                                    'fieldId': 'field_33',
-                                    'fieldValue': 3
-                                }
-                            ]
+                                    fieldId: 'field_33',
+                                    fieldValue: 3,
+                                },
+                            ],
                         },
-
-                    }
+                    },
                 ],
-                payments:[
-                    getCheckoutPayment(),
-                ],
+                payments: [getCheckoutPayment()],
             },
             formFields,
         });
@@ -296,6 +305,35 @@ describe('Billing step', () => {
         expect(screen.getByText('Custom Checkbox is required')).toBeInTheDocument();
         expect(screen.getByText('Custom Radio is required')).toBeInTheDocument();
         expect(screen.getByText('Custom Dropdown is required')).toBeInTheDocument();
+    });
+
+    it('renders extra address fields when hasAddressExtraFields is enabled', async () => {
+        const configOverrides = {
+            ...checkoutSettings,
+            storeConfig: {
+                ...checkoutSettings.storeConfig,
+                checkoutSettings: {
+                    ...checkoutSettings.storeConfig.checkoutSettings,
+                    capabilities: {
+                        ...defaultCapabilities,
+                        userJourney: {
+                            ...defaultCapabilities.userJourney,
+                            hasAddressExtraFields: true,
+                        },
+                    },
+                },
+            },
+        };
+
+        checkoutService = checkout.use(CheckoutPreset.CheckoutWithShippingAndAddressExtraFields, {
+            config: configOverrides,
+        });
+
+        render(<CheckoutTest {...defaultProps} />);
+
+        await checkout.waitForBillingStep();
+
+        expect(screen.getByText(addressExtraFields[0].name)).toBeInTheDocument();
     });
 
     describe('registered customer', () => {
@@ -331,7 +369,7 @@ describe('Billing step', () => {
                         postalCode: shippingAddress3.postalCode,
                         phone: shippingAddress3.phone,
                     } as BillingAddress,
-                }
+                },
             );
 
             await act(async () => {
@@ -347,7 +385,9 @@ describe('Billing step', () => {
 
             await checkout.waitForPaymentStep();
 
-            expect(screen.getByRole('radio', { name: payments[0].config.displayName })).toBeInTheDocument();
+            expect(
+                screen.getByRole('radio', { name: payments[0].config.displayName }),
+            ).toBeInTheDocument();
         });
 
         it('completes the billing step after selecting an invalid address', async () => {
@@ -365,7 +405,7 @@ describe('Billing step', () => {
                 phone: shippingAddress3.phone,
             } as BillingAddress;
 
-            defaultProps.initialState ={
+            defaultProps.initialState = {
                 config: checkoutSettings,
                 checkout: checkoutWithCustomer,
                 formFields,
@@ -384,7 +424,7 @@ describe('Billing step', () => {
                 {
                     ...checkoutWithShippingAndBilling,
                     billingAddress: invalidBillingAddress,
-                }
+                },
             );
 
             await act(async () => {
@@ -394,7 +434,9 @@ describe('Billing step', () => {
 
             expect(checkoutService.updateBillingAddress).toHaveBeenCalled();
             expect(screen.getByLabelText('First Name')).toBeInTheDocument();
-            expect(screen.getByRole('textbox', { name: /address/i })).toHaveDisplayValue(shippingAddress3.address1);
+            expect(screen.getByRole('textbox', { name: /address/i })).toHaveDisplayValue(
+                shippingAddress3.address1,
+            );
 
             checkout.updateCheckout(
                 'put',
@@ -405,17 +447,22 @@ describe('Billing step', () => {
                         ...invalidBillingAddress,
                         firstName: shippingAddress3.firstName,
                     },
-                }
+                },
             );
 
             await act(async () => {
-                await userEvent.type(await screen.findByLabelText('First Name'), shippingAddress3.address1);
+                await userEvent.type(
+                    await screen.findByLabelText('First Name'),
+                    shippingAddress3.address1,
+                );
                 await userEvent.click(screen.getByText('Continue'));
             });
 
             await checkout.waitForPaymentStep();
 
-            expect(screen.getByRole('radio', { name: payments[0].config.displayName })).toBeInTheDocument();
+            expect(
+                screen.getByRole('radio', { name: payments[0].config.displayName }),
+            ).toBeInTheDocument();
         });
 
         it('completes the billing step after creating a new address even with existing addresses', async () => {
@@ -453,7 +500,162 @@ describe('Billing step', () => {
             await checkout.waitForPaymentStep();
 
             expect(checkoutService.updateBillingAddress).toHaveBeenCalled();
-            expect(screen.getByRole('radio', { name: payments[0].config.displayName })).toBeInTheDocument();
+            expect(
+                screen.getByRole('radio', { name: payments[0].config.displayName }),
+            ).toBeInTheDocument();
+        });
+    });
+
+    describe('restrictManualAddressEntry warning', () => {
+        const checkoutWithShippingAndNoAddresses = {
+            ...checkoutWithShipping,
+            customer: customerWithoutSavedAddresses,
+        };
+
+        it('shows a warning when restrictManualAddressEntry is true and the customer has no saved addresses', async () => {
+            checkoutService = checkout.use(CheckoutPreset.CheckoutWithShipping, {
+                checkout: checkoutWithShippingAndNoAddresses,
+            });
+
+            const restrictManualAddressCapabilities = {
+                ...defaultCapabilities,
+                billing: {
+                    ...defaultCapabilities.billing,
+                    restrictManualAddressEntry: true,
+                },
+            };
+
+            const CheckoutWithRestrictedAddressEntry: FunctionComponent<
+                CheckoutInitializerProps
+            > = (props) => (
+                <CheckoutProvider checkoutService={checkoutService}>
+                    <LocaleProvider
+                        checkoutService={checkoutService}
+                        languageService={getLanguageService()}
+                    >
+                        <AnalyticsProviderMock>
+                            <ExtensionProvider extensionService={extensionService}>
+                                <ThemeProvider>
+                                    <CapabilitiesContext.Provider
+                                        value={restrictManualAddressCapabilities}
+                                    >
+                                        <Checkout {...props} />
+                                    </CapabilitiesContext.Provider>
+                                </ThemeProvider>
+                            </ExtensionProvider>
+                        </AnalyticsProviderMock>
+                    </LocaleProvider>
+                </CheckoutProvider>
+            );
+
+            render(<CheckoutWithRestrictedAddressEntry {...defaultProps} />);
+
+            expect(
+                await screen.findByText(/no billing address to choose from/i),
+            ).toBeInTheDocument();
+        });
+
+        it('does not show the warning when restrictManualAddressEntry is false', async () => {
+            checkoutService = checkout.use(CheckoutPreset.CheckoutWithShipping, {
+                checkout: checkoutWithShippingAndNoAddresses,
+            });
+
+            render(<CheckoutTest {...defaultProps} />);
+
+            await checkout.waitForBillingStep();
+
+            expect(
+                screen.queryByText(/no billing address to choose from/i),
+            ).not.toBeInTheDocument();
+        });
+    });
+
+    describe('B2B company address book', () => {
+        const companyAddressBookCapabilities = {
+            ...defaultCapabilities,
+            userJourney: {
+                ...defaultCapabilities.userJourney,
+                hasCompanyAddressBook: true,
+            },
+        };
+
+        const CheckoutWithCompanyAddressBook: FunctionComponent<CheckoutInitializerProps> = (
+            props,
+        ) => (
+            <CheckoutProvider checkoutService={checkoutService}>
+                <LocaleProvider
+                    checkoutService={checkoutService}
+                    languageService={getLanguageService()}
+                >
+                    <AnalyticsProviderMock>
+                        <ExtensionProvider extensionService={extensionService}>
+                            <ThemeProvider>
+                                <CapabilitiesContext.Provider
+                                    value={companyAddressBookCapabilities}
+                                >
+                                    <Checkout {...props} />
+                                </CapabilitiesContext.Provider>
+                            </ThemeProvider>
+                        </ExtensionProvider>
+                    </AnalyticsProviderMock>
+                </LocaleProvider>
+            </CheckoutProvider>
+        );
+
+        // With hasCompanyAddressBook enabled the searchable address book is rendered, which only
+        // lists addresses flagged for billing. shippingAddress3 is given id 3 and isBilling.
+        const customerWithCompanyBillingAddress = {
+            ...customer,
+            addresses: [{ ...shippingAddress3, id: 3, isBilling: true }],
+        };
+        const checkoutWithCompanyBillingAddress = {
+            ...checkoutWithShipping,
+            customer: customerWithCompanyBillingAddress,
+        };
+
+        it('stores the selected billing address id when hasCompanyAddressBook is enabled', async () => {
+            checkoutService = checkout.use(CheckoutPreset.CheckoutWithShipping, {
+                checkout: checkoutWithCompanyBillingAddress,
+            });
+
+            jest.spyOn(checkoutService, 'updateBillingAddress').mockResolvedValue(
+                checkoutService.getState(),
+            );
+
+            render(<CheckoutWithCompanyAddressBook {...defaultProps} />);
+
+            await checkout.waitForBillingStep();
+
+            await act(async () => {
+                await userEvent.click(screen.getByTestId('address-select-button'));
+                await userEvent.click(screen.getByTestId('address-select-option-action'));
+            });
+
+            expect(B2BSessionStorage.getAddressId(B2BSessionStorage.billingAddressIdKey)).toBe(3);
+        });
+
+        it('does not store the billing address id when hasCompanyAddressBook is disabled', async () => {
+            checkoutService = checkout.use(CheckoutPreset.CheckoutWithShipping, {
+                checkout: checkoutWithCustomer,
+            });
+
+            jest.spyOn(checkoutService, 'updateBillingAddress').mockResolvedValue(
+                checkoutService.getState(),
+            );
+
+            render(<CheckoutTest {...defaultProps} />);
+
+            await checkout.waitForBillingStep();
+
+            await act(async () => {
+                await userEvent.click(screen.getByTestId('address-select-button'));
+                // shippingAddress3 is the customer's saved address with id 3.
+                await userEvent.click(screen.getByText(shippingAddress3.address1));
+            });
+
+            expect(
+                B2BSessionStorage.getAddressId(B2BSessionStorage.billingAddressIdKey),
+            ).toBeUndefined();
         });
     });
 });

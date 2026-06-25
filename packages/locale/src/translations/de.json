@@ -18,6 +18,9 @@
       "custom_required_error": "{label} ist erforderlich",
       "custom_min_error": "{label} sollte nicht weniger als {min} Zeichen lang sein",
       "custom_max_error": "{label} sollte nicht mehr als {max} Zeichen lang sein",
+      "custom_min_number_error": "{label} muss größer oder gleich {min} sein",
+      "custom_max_number_error": "{label} muss kleiner oder gleich {max} sein",
+      "custom_range_error": "{label} muss zwischen {min} und {max} liegen",
       "invalid_characters_error": "{label} enthält ungültige Zeichen",
       "custom_valid_error": "{label} ist nicht gültig",
       "edit_address_action": "Adresse bearbeiten",
@@ -30,10 +33,12 @@
       "last_name_label": "Nachname",
       "last_name_required_error": "Es muss ein Nachname angegeben werden",
       "phone_number_label": "Telefonnummer",
+      "phone_number_invalid_error": "Die eingegebene Telefonnummer ist ungültig",
       "phone_number_required_error": "Es muss eine Telefonnummer angegeben werden",
       "postal_code_label": "Postleitzahl",
       "postal_code_required_error": "Postleitzahl ist erforderlich",
       "save_in_addressbook": "Diese Adresse in meinem Adressbuch speichern.",
+      "search_addresses": "Adressen suchen",
       "select_country_action": "Ein Land auswählen",
       "select_state_action": "Bundesstaat auswählen",
       "state_label": "Bundesstaat/Provinz",
@@ -45,6 +50,7 @@
     "billing": {
       "billing_address_heading": "Rechnungsadresse",
       "billing_heading": "Rechnungsstellung",
+      "no_billing_addresses_warning": "Sie haben leider keine Rechnungsadresse zur Auswahl. Bitte gehen Sie zu Ihrem Adressbuch, um eine Adresse anzulegen, oder wenden Sie sich an Ihren Website-Administrator.",
       "save_billing_address_error": "Beim Speichern der Rechnungsadresse zu Ihrem Preisangebot ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
       "billing_address_amazonpay": "Verwaltet von Amazon Pay",
       "use_shipping_address_label": "Meine Rechnungsadresse ist die gleiche wie meine Versandadresse."
@@ -57,6 +63,8 @@
       "discount_text": "Rabatt",
       "downloads_action": "Zu Downloads",
       "edit_cart_action": "Warenkorb bearbeiten",
+      "back_to_invoices": "Zurück zu den Rechnungen",
+      "go_to_cart_action": "Warenkorb",
       "edit_multi_shipping_cart_message": "Für neue Artikel wird standardmäßig die Lieferadresse Nr. 1 gewählt. Ändern Sie die Zuweisung, wenn Sie möchten, dass sie an andere Ziele versendet werden.",
       "estimated_total_text": "Geschätzter Gesamtbetrag",
       "free_text": "Kostenlos",
@@ -65,12 +73,22 @@
       "item": "Artikel",
       "items": "Artikel",
       "item_count_text": "{count, plural, one{1 Artikel} other{# Artikel} }",
+      "backorder_count_text": "{count} werden nachbestellt",
+      "backorder_quantities_changed_heading": "Die Rückstandsbestellmengen haben sich für die folgenden Artikel geändert:",
+      "cart_stock_modal_destination": "Zielort #{consignmentNumber}",
+      "ready_to_ship_count_text": "{count} bereit zum Versand",
+      "bundled_item_label": "Bundle:",
+      "show_backorder_details": "Nachbestellungsdetails anzeigen",
+      "hide_backorder_details": "Nachbestellungsdetails verbergen",
       "print_action": "Drucken",
+      "qty_label": "Menge: {quantity}",
       "remaining_text": "verbleiben",
       "remove_action": "Entfernen",
       "return_to_checkout": "ZURÜCK ZUR KASSE",
       "see_all_action": "Alle anzeigen",
       "see_less_action": "Weniger anzeigen",
+      "show_order_summary_action": "Bestellübersicht anzeigen",
+      "hide_order_summary_action": "Bestellübersicht ausblenden",
       "shipping_text": "Versand",
       "gift_wrapping_text": "Geschenkverpackung",
       "show_details_action": "Details anzeigen",
@@ -79,7 +97,8 @@
       "taxes_text": "Steuern",
       "total_text": "Summe",
       "empty_cart_message": "Ihr Warenkorb ist leer, Sie werden weitergeleitet. Bitte klicken Sie <a href=\"{url}\" target=\"_top\">hier</a>, wenn Ihr Browser Sie nicht weiterleitet.",
-      "consistency_error": "Ihr Zahlungsvorgang konnte nicht bearbeitet werden, da sich einige Angaben geändert haben. Bitte überprüfen Sie Ihre Bestellung und versuchen Sie es erneut."
+      "consistency_error": "Ihr Zahlungsvorgang konnte nicht bearbeitet werden, da sich einige Angaben geändert haben. Bitte überprüfen Sie Ihre Bestellung und versuchen Sie es erneut.",
+      "empty_cart_error_message": "Ihr Warenkorb enthält Artikel, die nicht zum Kauf verfügbar sind oder das Kauflimit überschritten haben. Um Ihre Bestellung aufzugeben, erstellen Sie bitte einen neuen Warenkorb mit den erlaubten Mengen oder mit anderen Artikeln."
     },
     "common": {
       "back_action": "Zurück",
@@ -192,7 +211,6 @@
       "amazon_continue_action": "Mit Amazon fortfahren",
       "amazonpay_continue_action": "Mit Amazon Pay fortfahren",
       "amazon_name_text": "Amazon Pay",
-      "barclaycard_continue_action": "Fortfahren",
       "bluesnap_v2_continue_action": "Fortfahren",
       "bluesnap_direct_account_type_select": {
         "label": "Wählen Sie einen Konto-Typ aus.",
@@ -280,6 +298,8 @@
       "credit_card_number_required_error": "Kreditkartennummer erforderlich",
       "credit_card_number_mismatch_error": "Die eingegebene Kartennummer entspricht nicht der in Ihrem Konto gespeicherten Karte",
       "credit_debit_card_text": "Kredit-/Debitkarte",
+      "open_banking_display_name_text": "Open Banking",
+      "invoice_payment_comment_label": "Zahlungskommentar",
       "payment_methods_text": "Zahlungsmethoden",
       "redeemable_payments_text": "Einlösbare Zahlungen",
       "instrument_storage_options_text": "Optionen zur Speicherung von Zahlungen",
@@ -288,7 +308,6 @@
       "humm_not_processable_error": "Humm kann Ihre Zahlung für diese Bestellung nicht verarbeiten, bitte wählen Sie eine andere Zahlungsmethode aus.",
       "klarna_continue_action": "Weiter mit Klarna",
       "klarna_name_text": "Klarna",
-      "masterpass_name_text": "Masterpass",
       "mollie_unsupported_method_error": "Diese Zahlungsmethode kann nicht für den Kauf digitaler Produkte verwendet werden. Bitte wenden Sie sich an den Kunden-Support oder versuchen Sie es erneut.",
       "opy_continue_action": "Weiter mit {methodName}",
       "opy_widget_slogan": "Jetzt kaufen. Später bezahlen.",
@@ -306,6 +325,7 @@
       "payment_method_invalid_error": "Bei der Verarbeitung Ihrer Zahlung ist ein Fehler aufgetreten. Bitte kontaktieren Sie uns, um Hilfe zu erhalten, oder wählen Sie eine andere Zahlungsmethode.",
       "payment_method_unavailable_error": "Dieser Zahlungsdienstleister ist vorübergehend nicht verfügbar. Bitte versuchen Sie es später erneut.",
       "payment_not_required_text": "Für diese Bestellung ist keine Zahlung erforderlich.",
+      "payment_methods_unavailable_error": "Wir können derzeit keine Zahlungsmethoden laden. Bitte versuchen Sie es später erneut oder kontaktieren Sie den Laden für Unterstützung.",
       "paypal_complete_action": "Bestellung abschließen",
       "paypal_continue_action": "Mit PayPal fortfahren",
       "paypal_pay_later_complete_action": "Bestellung abschließen",
@@ -316,7 +336,7 @@
       "paypal_description_text": "Mit Ihrem PayPal-Konto bezahlen",
       "paypal_name_text": "PayPal",
       "paypal_credit_name_text": "Später bezahlen",
-      "place_order_action": "Jetzt Kaufen",
+      "place_order_action": "Bestellung aufgeben",
       "place_order_error": "Beim Aufgeben Ihrer Bestellung ist ein Fehler aufgetreten. Bitte nehmen Sie Kontakt zu uns auf.",
       "place_order_error_heading": "Bestellung konnte nicht aufgegeben werden",
       "postal_code_label": "Postleitzahl",
@@ -379,10 +399,13 @@
       "phone_number_label": "Telefonnummer",
       "errors": {
         "account_number_required_error": "Kontonummer ist erforderlich",
+        "field_required_error": "{label} ist erforderlich",
         "routing_number_required_error": "Routing-Nummer ist erforderlich",
         "phone_number_required_error": "Es muss eine Telefonnummer angegeben werden",
         "business_name_required_error": "Unternehmensname ist erforderlich",
         "only_numbers_error": "{label} darf nur Zahlen enthalten",
+        "disabled_PO_number_credit": "Dieser Kauf übersteigt Ihr verfügbares Guthaben, bitte wählen Sie eine andere Zahlungsmethode",
+        "disabled_PO_number_currency_mismatch": "Bitte verwenden Sie {currency}, um {name} zu nutzen",
         "additional_action_required": "Bitte fahren Sie mit weiteren Aktionen fort.",
         "authorization_expired": "Die Autorisierung für diese Transaktion ist abgelaufen.",
         "authorization_revoked": "Die Autorisierung für diese Transaktion wurde widerrufen.",
@@ -444,6 +467,7 @@
         "three_d_secure_declined": "Es gab ein Problem mit Ihrer Zahlung. Bitte überprüfen Sie Ihre Zahlungsdaten oder wenden Sie sich an Ihren Kartenaussteller.",
         "three_d_secure_failed": "Die Zahlung ist fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Zahlungsoption.",
         "three_d_secure_required": "Eine weitere Authentifizierung ist erforderlich, um Ihre Zahlung zu verarbeiten. Bitte nehmen Sie Kontakt zu uns auf.",
+        "three_d_secure_payment_failed": "Die Kreditkarteninformationen sind ungültig oder die 3D-Secure-Verifizierung ist fehlgeschlagen. Bitte versuchen Sie es mit einer anderen Karte oder versuchen Sie die Zahlung später erneut.",
         "token_error": "Wir haben Schwierigkeiten bei der Verarbeitung Ihrer Transaktion. Bitte versuchen Sie es später erneut.",
         "transaction_declined": "Ihre Zahlung wurde abgelehnt. Bitte versuchen Sie es erneut.",
         "transaction_rejected": "Die Zahlung wurde abgelehnt. Bitte versuchen Sie es erneut.",
@@ -470,6 +494,7 @@
       }
     },
     "redeemable": {
+      "auto_promotion": "Automatischer Rabatt",
       "applied_text": "Angewendet",
       "apply_action": "Anwenden",
       "apply_store_credit_after_action": "Shop-Guthaben zum Bestellen verwenden",
@@ -480,11 +505,16 @@
       "coupon_location_error": "Ihre Versandadresse entspricht nicht den Standortanforderungen für den von Ihnen eingegebenen Coupon-Code.",
       "coupon_min_order_total": "Ihre Bestellung entspricht nicht der Mindestsumme, die für die Anwendung dieses Gutscheincodes erforderlich ist.",
       "coupon_text": "Gutschein",
+      "coupon_placeholder": "Geben Sie hier Ihren Code ein",
+      "discounts_text": "Rabatte",
       "gift_certificate_remaining_text": "verbleiben",
       "gift_certificate_text": "Geschenkgutschein",
+      "manual_discount": "Manueller Preisnachlass",
+      "maximum_discount_applied_text": "Maximaler Rabatt angewendet",
       "remove_action": "Entfernen",
       "store_credit_available_text": "Ihr Konto verfügt derzeit insgesamt über {storeCredit} Shop-Guthaben",
-      "toggle_action": "Coupon/Geschenkgutschein"
+      "toggle_action": "Coupon/Geschenkgutschein",
+      "total_savings_text": "Sie haben insgesamt <span class=\"total-savings-highlight\">{totalDiscount}</span> gespart!"
     },
     "remote": {
       "browser_unsupported": "Für die gewählte Zahlungsmethode ist ein anderer Webbrowser erforderlich. Bitte wählen Sie eine andere Zahlungsmethode.",
@@ -514,6 +544,7 @@
       "save_shipping_address_error": "Beim Speichern der Versandadresse zu Ihrem Preisangebot ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
       "save_shipping_option_error": "Beim Speichern des Versandangebots zu Ihrer Bestellung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
       "select_shipping_address_text": "Bitte wählen Sie eine Versandadresse, um Versandangebote anzuzeigen",
+      "no_shipping_addresses_warning": "Entschuldigung, Sie haben leider keine Lieferadresse zur Auswahl. Bitte gehen Sie zu Ihrem Adressbuch, um eine Adresse anzulegen, oder wenden Sie sich an Ihren Website-Administrator.",
       "shipping_address_heading": "Versandadresse",
       "multishipping_consignment_index_heading": "Zielort #{consignmentNumber}",
       "multishipping_incomplete_consignment_error": "Bitte vervollständigen Sie die Adresse, die Artikelzuordnung und die Methodenauswahl für Ziel Nr.{consignmentNumber}.",
@@ -542,6 +573,9 @@
       "multishipping_left_to_allocate_items_table_item": "Artikel",
       "multishipping_left_to_allocate_items_table_left_to_allocate": "Zuzuweisen",
       "multishipping_left_to_allocate_items_table_quantity": "Menge",
+      "multishipping_backordered_quantity": "({count} werden nachbestellt)",
+      "no_countries_available_heading": "Wir haben Probleme beim Laden Ihres Versandlandes",
+      "no_countries_available_message": "Bitte aktualisieren Sie die Seite oder versuchen Sie es gleich erneut. Wenn das Problem weiterhin besteht, wenden Sie sich an unser Support-Team und wir helfen Ihnen, Ihre Bestellung abzuschließen.",
       "multishipping_item_split_tooltip_message": "Diese Artikelmengen werden aufgrund einer mengenbasierten Werbeaktion oder eines benutzerdefinierten Preises in eine separate Zeile aufgeteilt.",
       "ship_to_multi": "An mehrere Adressen versenden",
       "ship_to_single": "An eine einzelne Adresse versenden",
@@ -589,13 +623,16 @@
       "agreement_with_link_text": "Ja, ich stimme den <a href=\"{url}\" target=\"_blank\">Allgemeinen Geschäftsbedingungen</a> zu.",
       "terms_and_conditions_heading": "Allgemeine Geschäftsbedingungen"
     },
-    "withdrawal_terms": {
-      "notice_with_link_text": "Bitte beachten Sie und unsere <a href=\"{url}\" target=\"_blank\">Widerrufsbelehrung</a>."
-    },
     "order_confirmation": {
       "mandate": {
         "adyenv3": {
-          "boletobancario": "Boleto Bancário-Ticket"
+          "boletobancario": "Boleto Bancário-Ticket",
+          "multibanco": {
+            "reference": "Zahlungsreferenz",
+            "entity": "Entitätsnummer",
+            "expires_at": "Ablaufdatum"
+          },
+          "oxxo": "OXXO-Ticket"
         },
         "bluesnapdirect": {
           "sepa_direct_debit": "SEPA-Lastschriftmandatsreferenz: {mandate}"
@@ -634,7 +671,186 @@
       "thank_you_customer_heading": "Vielen Dank, {name}!",
       "thank_you_heading": "Vielen Dank.",
       "continue_shopping": "Weiter einkaufen »",
-      "order_status_update_facebook_messenger_heading": "Sofortige Aktualisierungen Ihrer Bestellung im Messenger erhalten"
+      "order_status_update_facebook_messenger_heading": "Sofortige Aktualisierungen Ihrer Bestellung im Messenger erhalten",
+      "expired_token": {
+        "heading": "Link abgelaufen",
+        "description": "Aus Sicherheitsgründen ist dieser Link abgelaufen.",
+        "resend_action": "Sicheren Link erneut senden",
+        "sending": "Wird gesendet ...",
+        "resend_success": "Ein neuer Link wurde an Ihre E-Mail-Adresse gesendet.",
+        "resend_error": "Link konnte nicht erneut gesendet werden. Bitte versuchen Sie es später erneut."
+      },
+      "rate_limited": {
+        "heading": "Zu viele Anfragen",
+        "message": "Sie haben zu viele Versuche unternommen. Bitte warten Sie einige Minuten und versuchen Sie es erneut."
+      }
     }
+  },
+  "redeemable": {
+    "applied_text": "Angewendet",
+    "apply_action": "Anwenden",
+    "apply_store_credit_after_action": "Shop-Guthaben zum Bestellen verwenden",
+    "apply_store_credit_before_action": "Anwenden",
+    "code_invalid_error": "Der Geschenkgutschein oder Coupon-Code ist ungültig",
+    "code_label": "Geschenkgutschein oder Coupon-Code",
+    "code_required_error": "Bitte geben Sie einen Geschenkgutschein- oder Coupon-Code ein",
+    "coupon_location_error": "Ihre Versandadresse entspricht nicht den Standortanforderungen für den von Ihnen eingegebenen Coupon-Code.",
+    "coupon_min_order_total": "Ihre Bestellung entspricht nicht der Mindestsumme, die für die Anwendung dieses Gutscheincodes erforderlich ist.",
+    "coupon_text": "Gutschein",
+    "gift_certificate_remaining_text": "verbleiben",
+    "gift_certificate_text": "Geschenkgutschein",
+    "remove_action": "Entfernen",
+    "store_credit_available_text": "Ihr Konto verfügt derzeit insgesamt über {storeCredit} Shop-Guthaben",
+    "toggle_action": "Coupon/Geschenkgutschein"
+  },
+  "remote": {
+    "browser_unsupported": "Für die gewählte Zahlungsmethode ist ein anderer Webbrowser erforderlich. Bitte wählen Sie eine andere Zahlungsmethode.",
+    "connection_error": "Verbindung zum Remote-Abschluss des Bezahlvorgangs verweigert. Bitte versuchen Sie es später erneut.",
+    "continue_with_text": "Oder fortfahren mit",
+    "or_text": "oder",
+    "payment_method_error": "Beim Abrufen Ihrer Remote-Zahlungsmethode ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "select_different_card_action": "Eine andere Karte wählen",
+    "session_error": "Ihre Remote-Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+    "shipping_address_error": "Beim Abrufen Ihrer Remote-Versandadresse ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "sign_in_action": "Anmelden bei {providerName}",
+    "sign_out_action": "Abmelden von {providerName}",
+    "sign_out_after_action": "um andere Zahlungsmethoden anzuzeigen",
+    "sign_in_required_error": "Remote-Anmeldung vor der Zahlung erforderlich",
+    "sign_out_before_action": "",
+    "start_with_text": "Schnellerer Bezahlvorgang mit:",
+    "powered_by": "Bereitgestellt von"
+  },
+  "shipping": {
+    "cart_change_error": "Es wurde eine Aktualisierung Ihres Warenkorbs erkannt und Ihre verfügbaren Versandkosten wurden aktualisiert. Bitte wählen Sie erneut eine Versandmethode aus, um fortzufahren.",
+    "enter_shipping_address_text": "Bitte geben Sie eine Versandadresse ein, um Versandangebote anzuzeigen",
+    "order_comment_label": "Kommentare zur Bestellung",
+    "assign_item_error": "Beim Zuordnen des Artikels zur Adresse ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "assign_item_invalid_address_error_heading": "Ungültige Adresse",
+    "assign_item_invalid_address_error": "Die gewählte Adresse ist nicht gültig. Bitte rufen Sie Ihre Kontoseite auf und aktualisieren Sie sie.",
+    "unassign_item_error": "Bei der Aufhebung der Zuordnung des Artikels zur Adresse ist ein Fehler aufgetreten.",
+    "save_shipping_address_error": "Beim Speichern der Versandadresse zu Ihrem Preisangebot ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "save_shipping_option_error": "Beim Speichern des Versandangebots zu Ihrer Bestellung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "select_shipping_address_text": "Bitte wählen Sie eine Versandadresse, um Versandangebote anzuzeigen",
+    "shipping_address_heading": "Versandadresse",
+    "multishipping_consignment_index_heading": "Zielort #{consignmentNumber}",
+    "multishipping_incomplete_consignment_error": "Bitte vervollständigen Sie die Adresse, die Artikelzuordnung und die Methodenauswahl für Ziel Nr.{consignmentNumber}.",
+    "multishipping_add_new_destination": "Neues Ziel hinzufügen",
+    "multishipping_address_heading": "Wählen Sie aus, wohin jeder Artikel versendet werden soll",
+    "multishipping_address_heading_guest": "Bitte melden Sie sich zuerst an",
+    "multishipping_guest_intro": "Um Ihre Artikel an mehrere Adressen zu versenden, müssen Sie",
+    "multishipping_guest_sign_in": "sich in Ihrem Konto anmelden",
+    "multishipping_guest_create": "oder <a href=\"{url}\" target=\"_blank\">ein Konto erstellen</a>, bevor Sie fortfahren.",
+    "multishipping_item_to_allocate_message": "{count, plural, one{1 noch zuzuordnender Artikel} other{{count} noch zuzuordnende Artikel}}",
+    "multishipping_item_allocated_message": "{count, plural, one{1 Artikel zugeordnet} other{{count} Artikel zugeordnet}}",
+    "multishipping_item_reallocated_message": "Artikel neu zuweisen",
+    "multishipping_item_hide_items_message": "Artikel ausblenden",
+    "multishipping_item_show_items_message": "Artikel anzeigen",
+    "multishipping_left_to_allocate_message": "{count} noch zuzuweisen",
+    "multishipping_items_selected_message": "{count} Artikel ausgewählt",
+    "multishipping_items_allocate_save": "Speichern",
+    "multishipping_items_allocate_allocate": "Zuweisen",
+    "multishipping_items_allocate_cancel": "Abbrechen",
+    "multishipping_items_allocate_clear_all": "Alles löschen",
+    "multishipping_items_allocate_select_all_items_left": "Alle verbleibenden Artikel auswählen",
+    "multishipping_all_items_allocated_message": "Alle Artikel sind zugewiesen.",
+    "multishipping_no_item_allocated_message": "Kein Artikel zugewiesen",
+    "multishipping_allocate_items": "Artikel zuweisen",
+    "multishipping_digital_item_no_shipping_banner": "Für digitale Produkte ist kein Versand erforderlich, daher wird er hier nicht angezeigt.",
+    "multishipping_left_to_allocate_items_table_item": "Artikel",
+    "multishipping_left_to_allocate_items_table_left_to_allocate": "Zuzuweisen",
+    "multishipping_left_to_allocate_items_table_quantity": "Menge",
+    "multishipping_item_split_tooltip_message": "Diese Artikelmengen werden aufgrund einer mengenbasierten Werbeaktion oder eines benutzerdefinierten Preises in eine separate Zeile aufgeteilt.",
+    "ship_to_multi": "An mehrere Adressen versenden",
+    "ship_to_single": "An eine einzelne Adresse versenden",
+    "ship_to_single_action": "Stattdessen an eine einzelne Adresse liefern",
+    "ship_to_single_message": "Wenn Sie fortfahren, gehen alle Fortschritte für mehrere Adressen verloren. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "shipping_heading": "Versand",
+    "shipping_method_label": "Versandmethode",
+    "shipping_option_expired_error": "Der Versandpreis, der Ihnen angeboten wurde, ist nicht mehr gültig. Klicken Sie auf „OK“, um die aktuellsten Versandpreise anzuzeigen.",
+    "shipping_option_expired_heading": "Ihr Versandpreis wurde aktualisiert",
+    "view_shipping_options_action": "Andere Optionen anzeigen",
+    "quantity_required_error": "Menge ist erforderlich",
+    "quantity_invalid_error": "Die Menge muss eine Zahl sein",
+    "quantity_max_error": "Die Menge darf den Betrag „Noch zuzuweisen“ nicht überschreiten.",
+    "quantity_min_error": "Die Menge kann nicht kleiner als 0 sein",
+    "custom_item_quantity_error": "Alle Mengen dieses benutzerdefinierten Produkts müssen demselben Zielort zugewiesen werden, da es speziell für diesen Bestellentwurf erstellt wurde.",
+    "choose_shipping_address": "Wählen Sie eine Versandadresse",
+    "multishipping_unavailable_action": "Versand an mehrere Adressen nicht möglich",
+    "multishipping_unavailable_message": "Der Versand an mehrere Adressen ist nicht möglich, wenn aufgrund einer Werbeaktion ein kostenloser Artikel zu Ihrem Warenkorb hinzugefügt wird.",
+    "checkout_switched_to_single_shipping": "Ihr Checkout wurde automatisch aktualisiert, um eine einzige Lieferadresse zu verwenden. Der Versand an mehrere Adressen ist nicht möglich, wenn sich ein kostenloser Werbeartikel in Ihrem Warenkorb befindet.",
+    "guest_multishipping_no_shipping_address_message": "Es wurde keine Lieferadresse eingegeben",
+    "guest_multishipping_enter_shipping_address_action": "Versandadresse eingeben"
+  },
+  "social": {
+    "share_action": "Freigeben",
+    "share_heading": "Erzählen Sie Ihren Freunden von Ihrem Kauf!",
+    "tweet_action": "Twittern"
+  },
+  "spam_protection": {
+    "verify_action": "Bitte klicken Sie hier, um zu bestätigen, dass Sie ein menschlicher Benutzer sind, bevor Sie fortfahren."
+  },
+  "privacy_policy": {
+    "required_error": "Bitte stimmen Sie der Datenschutzerklärung zu.",
+    "label": "Ja, ich stimme der <a href=\"{url}\" target=\"_blank\">Datenschutzerklärung</a> zu.",
+    "heading": "Datenschutzerklärung"
+  },
+  "privacy_policy_auto_consent": {
+    "label": "*Wenn Sie auf Weiter klicken, stimmen Sie unseren <a href=\"{url}\" target=\"_blank\">Datenschutzbestimmungen</a> zu."
+  },
+  "tax": {
+    "inclusive_label": "In der Gesamtsumme enthaltene Steuer:"
+  },
+  "terms_and_conditions": {
+    "agreement_required_error": "Bitte stimmen Sie den Allgemeinen Geschäftsbedingungen zu",
+    "agreement_text": "Ja, ich stimme den obigen Allgemeinen Geschäftsbedingungen zu.",
+    "agreement_with_link_text": "Ja, ich stimme den <a href=\"{url}\" target=\"_blank\">Allgemeinen Geschäftsbedingungen</a> zu.",
+    "terms_and_conditions_heading": "Allgemeine Geschäftsbedingungen"
+  },
+  "withdrawal_terms": {
+    "notice_with_link_text": "Bitte beachten Sie und unsere <a href=\"{url}\" target=\"_blank\">Widerrufsbelehrung</a>."
+  },
+  "order_confirmation": {
+    "mandate": {
+      "adyenv3": {
+        "boletobancario": "Boleto Bancário-Ticket"
+      },
+      "bluesnapdirect": {
+        "sepa_direct_debit": "SEPA-Lastschriftmandatsreferenz: {mandate}"
+      },
+      "checkoutcom": {
+        "boleto": "Boleto Bancário-Ticket",
+        "oxxo": "OXXO-Ticket",
+        "sepa": "SEPA-Lastschriftverfahren (über Checkout.com) Mandatsreferenz: {mandate}"
+      },
+      "stripev3": {
+        "iban": "SEPA-Lastschriftmandat"
+      },
+      "stripeupe": {
+        "au_becs_debit": "BECS-Lastschriftmandat",
+        "boleto": "Boleto Bancário-Ticket",
+        "oxxo": "OXXO-Ticket",
+        "sepa_debit": "SEPA-Lastschriftmandat"
+      },
+      "paypalcommercealternativemethods": {
+        "oxxo": "OXXO-Ticket",
+        "ratepay": {
+          "account_holder_name": "Kontoinhaber",
+          "iban": "Iban",
+          "payment_reference": "Zahlungsreferenz"
+        }
+      }
+    },
+    "order_number_text": "Ihre Bestellnummer lautet <strong>{orderNumber}</strong>",
+    "order_pending_review_text": "Ihre Bestellung wurde an uns gesendet, wartet aber derzeit auf den Eingang der Zahlung. Sobald wir die Zahlung für Ihre Bestellung erhalten haben, wird diese abgeschlossen. Wenn Sie bereits Zahlungsdaten angegeben haben, werden wir Ihre Bestellung manuell bearbeiten und Ihnen eine E-Mail senden, sobald sie abgeschlossen ist.",
+    "order_pending_status_text": "Wir haben Ihre Bestellung erhalten und sind dabei, Ihre Zahlung zu verarbeiten. Sobald die Zahlung verifiziert wurde, wird Ihre Bestellung abgeschlossen. Wir senden Ihnen eine E-Mail, wenn dies der Fall ist. Bitte beachten Sie, dass dieser Vorgang einige Minuten dauern kann, abhängig von den Verarbeitungszeiten der von Ihnen gewählten Methode. Wenn Sie Fragen zu Ihrem Kauf haben, senden Sie uns eine E-Mail an <a href=\"mailto:{supportEmail}?Subject=Order {orderNumber}\" target=\"_top\">{supportEmail}</a>.",
+    "order_incomplete_status_text": "Wir haben Ihre Bestellung und Ihre Zahlung erhalten. Ihre Bestellung wird nun von unserem System bearbeitet. Bitte beachten Sie, dass dies einige Minuten dauern kann. Wenn Sie Fragen zu Ihrem Kauf haben, senden Sie uns eine E-Mail an <a href=\"mailto:{supportEmail}?Subject=Order {orderNumber}\" target=\"_top\">{supportEmail}</a>.",
+    "order_with_downloadable_digital_items_text": "Sie können Ihre digitalen Käufe jederzeit herunterladen, indem Sie auf die Links auf dieser Seite klicken, oder indem Sie sich in Ihrem Konto anmelden. Außerdem befindet sich ein Download-Link in Ihrer Bestätigungs-E-Mail, die Sie in Kürze erhalten sollten.",
+    "order_with_support_number_text": "Sie erhalten eine E-Mail mit Informationen zu Ihrem Kauf. Wenn Sie Fragen zu Ihrem Kauf haben, senden Sie uns eine E-Mail an <a href=\"mailto:{supportEmail}?Subject=Order {orderNumber}\" target=\"_top\">{supportEmail}</a> oder rufen Sie uns an unter <a href=\"tel://{supportPhoneNumber}\">{supportPhoneNumber}</a>.",
+    "order_without_downloadable_digital_items_text": "Sobald wir Ihre Zahlung erhalten haben, senden wir Ihnen eine Bestätigungs-E-Mail mit einem Link zum Herunterladen Ihrer digitalen Einkäufe.",
+    "order_without_support_number_text": "Sie erhalten eine E-Mail mit Informationen zu Ihrem Kauf. Wenn Sie Fragen zu Ihrem Kauf haben, senden Sie uns eine E-Mail an <a href=\"mailto:{supportEmail}?Subject=Order {orderNumber}\" target=\"_top\">{supportEmail}</a>.",
+    "thank_you_customer_heading": "Vielen Dank, {name}!",
+    "thank_you_heading": "Vielen Dank.",
+    "continue_shopping": "Weiter einkaufen »",
+    "order_status_update_facebook_messenger_heading": "Sofortige Aktualisierungen Ihrer Bestellung im Messenger erhalten"
   }
 }

@@ -8,15 +8,16 @@ import {
 import userEvent from '@testing-library/user-event';
 import React, { type FunctionComponent } from 'react';
 
-import { AnalyticsProviderMock } from '@bigcommerce/checkout/analytics';
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
-import { type ErrorLogger } from '@bigcommerce/checkout/error-handling-utils';
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
 import {
-    createLocaleContext,
+    AnalyticsProviderMock,
+    CheckoutProvider,
+    ExtensionProvider,
+    type ExtensionServiceInterface,
     LocaleContext,
     type LocaleContextType,
-} from '@bigcommerce/checkout/locale';
-import { CheckoutProvider, PaymentMethodId } from '@bigcommerce/checkout/payment-integration-api';
+} from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen, within } from '@bigcommerce/checkout/test-utils';
 
 import { getAddressFormFields } from '../address/formField.mock';
@@ -27,42 +28,45 @@ import CheckoutStepType from '../checkout/CheckoutStepType';
 import { createErrorLogger } from '../common/error';
 import { getStoreConfig } from '../config/config.mock';
 import { getCustomer } from '../customer/customers.mock';
-import { getConsignment } from '../shipping/consignment.mock';
+import { getCountries } from '../geography/countries.mock';
 
-import Shipping, { type ShippingProps, type WithCheckoutShippingProps } from './Shipping';
+import { getConsignment } from './consignment.mock';
+import Shipping, { type ShippingProps } from './Shipping';
 import { getShippingAddress } from './shipping-addresses.mock';
 
 describe('Shipping component', () => {
     let localeContext: LocaleContextType;
     let checkoutService: CheckoutService;
+    let extensionService: ExtensionServiceInterface;
     let checkoutState: CheckoutSelectors;
     let defaultProps: ShippingProps;
-    let ComponentTest: FunctionComponent<ShippingProps> & Partial<WithCheckoutShippingProps>;
-    let errorLogger: ErrorLogger;
+    let ComponentTest: FunctionComponent<ShippingProps>;
 
     beforeEach(() => {
         localeContext = createLocaleContext(getStoreConfig());
         checkoutService = createCheckoutService();
-        errorLogger = createErrorLogger();
+        extensionService = new ExtensionService(checkoutService, createErrorLogger());
         checkoutState = checkoutService.getState();
 
         defaultProps = {
+            cartHasChanged: false,
             isBillingSameAsShipping: true,
             isMultiShippingMode: false,
-            onToggleMultiShipping: jest.fn(),
-            cartHasChanged: false,
+            navigateNextStep: jest.fn(),
+            onCreateAccount: jest.fn(),
+            onReady: jest.fn(),
             onSignIn: jest.fn(),
+            onToggleMultiShipping: jest.fn(),
+            onUnhandledError: jest.fn(),
+            setIsMultishippingMode: jest.fn(),
             step: {
                 isActive: true,
+                isBusy: false,
                 isComplete: true,
                 isEditable: true,
                 isRequired: true,
-                type: CheckoutStepType.Shipping
+                type: CheckoutStepType.Shipping,
             },
-            providerWithCustomCheckout: PaymentMethodId.StripeUPE,
-            isShippingMethodLoading: true,
-            navigateNextStep: jest.fn(),
-            onUnhandledError: jest.fn(),
         };
 
         jest.spyOn(checkoutService, 'loadShippingAddressFields').mockResolvedValue(
@@ -111,6 +115,8 @@ describe('Shipping component', () => {
 
         jest.spyOn(checkoutState.data, 'getCheckout').mockReturnValue(getCheckout());
 
+        jest.spyOn(checkoutState.data, 'getShippingCountries').mockReturnValue(getCountries());
+
         jest.spyOn(checkoutService, 'updateBillingAddress').mockResolvedValue(
             {} as CheckoutSelectors,
         );
@@ -123,7 +129,7 @@ describe('Shipping component', () => {
             <CheckoutProvider checkoutService={checkoutService}>
                 <LocaleContext.Provider value={localeContext}>
                     <AnalyticsProviderMock>
-                        <ExtensionProvider checkoutService={checkoutService} errorLogger={errorLogger} >
+                        <ExtensionProvider extensionService={extensionService}>
                             <Shipping {...props} />
                         </ExtensionProvider>
                     </AnalyticsProviderMock>
@@ -146,7 +152,7 @@ describe('Shipping component', () => {
         it('opens confirmation dialog on clicking the link and calls onToggleMultiShipping when confirm is clicked', async () => {
             render(<ComponentTest {...defaultProps} isMultiShippingMode={true} />);
 
-            const shippingModeToggle = await screen.findByTestId("shipping-mode-toggle");
+            const shippingModeToggle = await screen.findByTestId('shipping-mode-toggle');
 
             expect(shippingModeToggle.innerHTML).toBe('Ship to a single address');
 
@@ -155,10 +161,22 @@ describe('Shipping component', () => {
             const confirmationModal = await screen.findByRole('dialog');
 
             expect(confirmationModal).toBeInTheDocument();
-            expect(within(confirmationModal).getByText(localeContext.language.translate('shipping.ship_to_single_action'))).toBeInTheDocument();
-            expect(within(confirmationModal).getByText(localeContext.language.translate('shipping.ship_to_single_message'))).toBeInTheDocument();
+            expect(
+                within(confirmationModal).getByText(
+                    localeContext.language.translate('shipping.ship_to_single_action'),
+                ),
+            ).toBeInTheDocument();
+            expect(
+                within(confirmationModal).getByText(
+                    localeContext.language.translate('shipping.ship_to_single_message'),
+                ),
+            ).toBeInTheDocument();
 
-            await userEvent.click(within(confirmationModal).getByText(localeContext.language.translate('common.proceed_action')));
+            await userEvent.click(
+                within(confirmationModal).getByText(
+                    localeContext.language.translate('common.proceed_action'),
+                ),
+            );
 
             expect(defaultProps.onToggleMultiShipping).toHaveBeenCalled();
         });
@@ -178,26 +196,40 @@ describe('Shipping component', () => {
                             id: '123',
                             quantity: 1,
                             addedByPromotion: true,
-                        }
+                        },
                     ],
                 },
             } as Cart);
-            
+
             render(<ComponentTest {...defaultProps} isMultiShippingMode={false} />);
 
-            const shippingModeToggle = await screen.findByTestId("shipping-mode-toggle");
+            const shippingModeToggle = await screen.findByTestId('shipping-mode-toggle');
 
-            expect(shippingModeToggle.innerHTML).toBe(localeContext.language.translate('shipping.ship_to_multi'));
+            expect(shippingModeToggle.innerHTML).toBe(
+                localeContext.language.translate('shipping.ship_to_multi'),
+            );
 
             await userEvent.click(shippingModeToggle);
 
             const confirmationModal = await screen.findByRole('dialog');
 
             expect(confirmationModal).toBeInTheDocument();
-            expect(within(confirmationModal).getByText(localeContext.language.translate('shipping.multishipping_unavailable_action'))).toBeInTheDocument();
-            expect(within(confirmationModal).getByText(localeContext.language.translate('shipping.multishipping_unavailable_message'))).toBeInTheDocument();
+            expect(
+                within(confirmationModal).getByText(
+                    localeContext.language.translate('shipping.multishipping_unavailable_action'),
+                ),
+            ).toBeInTheDocument();
+            expect(
+                within(confirmationModal).getByText(
+                    localeContext.language.translate('shipping.multishipping_unavailable_message'),
+                ),
+            ).toBeInTheDocument();
 
-            await userEvent.click(within(confirmationModal).getByText(localeContext.language.translate('common.back_action')));
+            await userEvent.click(
+                within(confirmationModal).getByText(
+                    localeContext.language.translate('common.back_action'),
+                ),
+            );
 
             expect(defaultProps.onToggleMultiShipping).not.toHaveBeenCalled();
         });
@@ -217,20 +249,34 @@ describe('Shipping component', () => {
                             id: '123',
                             quantity: 1,
                             addedByPromotion: true,
-                        }
+                        },
                     ],
                 },
             } as Cart);
-            
+
             render(<ComponentTest {...defaultProps} isMultiShippingMode={true} />);
 
             const confirmationModal = await screen.findByRole('dialog');
 
             expect(confirmationModal).toBeInTheDocument();
-            expect(within(confirmationModal).getByText(localeContext.language.translate('shipping.multishipping_unavailable_action'))).toBeInTheDocument();
-            expect(within(confirmationModal).getByText(localeContext.language.translate('shipping.checkout_switched_to_single_shipping'))).toBeInTheDocument();
+            expect(
+                within(confirmationModal).getByText(
+                    localeContext.language.translate('shipping.multishipping_unavailable_action'),
+                ),
+            ).toBeInTheDocument();
+            expect(
+                within(confirmationModal).getByText(
+                    localeContext.language.translate(
+                        'shipping.checkout_switched_to_single_shipping',
+                    ),
+                ),
+            ).toBeInTheDocument();
 
-            await userEvent.click(within(confirmationModal).getByText(localeContext.language.translate('common.ok_action')));
+            await userEvent.click(
+                within(confirmationModal).getByText(
+                    localeContext.language.translate('common.ok_action'),
+                ),
+            );
 
             expect(defaultProps.onToggleMultiShipping).toHaveBeenCalled();
         });
@@ -239,6 +285,7 @@ describe('Shipping component', () => {
             jest.spyOn(checkoutState.data, 'getCart').mockReturnValue({
                 ...getCart(),
                 lineItems: {
+                    ...getCart().lineItems,
                     physicalItems: [
                         {
                             ...getPhysicalItem(),
@@ -247,14 +294,14 @@ describe('Shipping component', () => {
                             ...getPhysicalItem(),
                             id: '123',
                             parentId: getPhysicalItem().id,
-                        }
+                        },
                     ],
                 },
             } as Cart);
 
             render(<ComponentTest {...defaultProps} isMultiShippingMode={false} />);
 
-            expect(screen.queryByTestId("shipping-mode-toggle")).not.toBeInTheDocument();
+            expect(screen.queryByTestId('shipping-mode-toggle')).not.toBeInTheDocument();
         });
     });
 

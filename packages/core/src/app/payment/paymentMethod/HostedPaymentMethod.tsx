@@ -6,16 +6,16 @@ import {
     type PaymentMethod,
     type PaymentRequestOptions,
 } from '@bigcommerce/checkout-sdk';
-import { createExternalPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/external';
 import { createHummPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/humm';
 import { createOffsitePaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/offsite';
 import { memoizeOne } from '@bigcommerce/memoize';
 import { find, noop } from 'lodash';
 import React, { Component, type ReactNode } from 'react';
 
+import { type CheckoutContextProps } from '@bigcommerce/checkout/contexts';
 import { type MapToPropsFactory } from '@bigcommerce/checkout/legacy-hoc';
 import { withLanguage, type WithLanguageProps } from '@bigcommerce/checkout/locale';
-import { type CheckoutContextProps, type PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
+import { type PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
 import { LoadingOverlay } from '@bigcommerce/checkout/ui';
 
 import { withCheckout } from '../../checkout';
@@ -77,11 +77,7 @@ class HostedPaymentMethod extends Component<
             await initializePayment({
                 gatewayId: method.gateway,
                 methodId: method.id,
-                integrations: [
-                    createHummPaymentStrategy,
-                    createExternalPaymentStrategy,
-                    createOffsitePaymentStrategy,
-                ],
+                integrations: [createHummPaymentStrategy, createOffsitePaymentStrategy],
             });
 
             if (isInstrumentFeatureAvailableProp) {

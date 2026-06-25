@@ -2,13 +2,9 @@ import { type FieldProps } from 'formik';
 import React, { type FunctionComponent, useCallback, useMemo } from 'react';
 
 import { TranslatedString } from '@bigcommerce/checkout/locale';
-import { useThemeContext } from '@bigcommerce/checkout/ui';
-
-import { Fieldset, FormField, Label, Legend, TextInput } from '../ui/form';
+import { Fieldset, FormField, Label, Legend, TextInput } from '@bigcommerce/checkout/ui';
 
 const OrderComments: FunctionComponent = () => {
-    const { themeV2 } = useThemeContext();
-
     const renderLabel = useCallback(
         (name: string) => (
             <Label hidden htmlFor={name}>
@@ -19,13 +15,15 @@ const OrderComments: FunctionComponent = () => {
     );
 
     const renderInput = useCallback(
-        ({ field }: FieldProps) => <TextInput {...field} autoComplete="off" id="orderComment" maxLength={2000} themeV2={themeV2} />,
+        ({ field }: FieldProps) => (
+            <TextInput {...field} autoComplete="off" id="orderComment" maxLength={2000} />
+        ),
         [],
     );
 
     const legend = useMemo(
         () => (
-            <Legend themeV2={themeV2}>
+            <Legend>
                 <TranslatedString id="shipping.order_comment_label" />
             </Legend>
         ),
@@ -34,7 +32,12 @@ const OrderComments: FunctionComponent = () => {
 
     return (
         <Fieldset legend={legend} testId="checkout-shipping-comments">
-            <FormField id="orderComment" input={renderInput} label={renderLabel} name="orderComment" />
+            <FormField
+                id="orderComment"
+                input={renderInput}
+                label={renderLabel}
+                name="orderComment"
+            />
         </Fieldset>
     );
 };

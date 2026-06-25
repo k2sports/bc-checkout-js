@@ -1,3 +1,4 @@
+// EOC Override: This file has been modified for custom checkout
 import type { BrowserOptions } from '@sentry/browser';
 
 import { loadFiles } from './loader';
@@ -8,6 +9,13 @@ export interface ManageShippingMethods {
   hideFreeShippingGroups?: number[];
   withdrawalTermsUrl?: string;
 }
+
+enum OrderPermalinkStatus {
+  Valid = 'valid',
+  Expired = 'expired',
+  RateLimited = 'rate_limited',
+}
+
 export interface CustomCheckoutWindow extends Window {
   checkoutConfig: {
     containerId: string;
@@ -15,6 +23,7 @@ export interface CustomCheckoutWindow extends Window {
     checkoutId?: string;
     publicPath?: string;
     sentryConfig?: BrowserOptions;
+    permalinkStatus?: OrderPermalinkStatus | null;
     manageShippingMethods?: ManageShippingMethods;
   };
 }
@@ -30,7 +39,7 @@ function isCustomCheckoutWindow(window: Window): window is CustomCheckoutWindow 
     throw new Error('Checkout config is missing.');
   }
 
-  console.log('Manage Shipping Methods v2.1.0', window.checkoutConfig);
+  console.log('Manage Shipping Methods v3.0.0', window.checkoutConfig);
 
   const { renderOrderConfirmation, renderCheckout } = await loadFiles();
 

@@ -63,7 +63,7 @@
     margin-bottom: spacing("eighth");
 }
 
-.product-options {
+.product-options, .product-backorder-details-container {
     color: color("greys");
     font-size: fontSize("tiny");
     margin: 0;
@@ -71,6 +71,13 @@
 
 .product-description {
     margin-top: spacing("quarter");
+}
+
+.product-backorder-details-container {
+    overflow: hidden;
+    transition:
+        height $animation-collapse-transitionSpeed $animation-collapse-transitionCurve,
+        opacity $animation-collapse-transitionSpeed $animation-collapse-transitionCurve;
 }
 
 .product-actions {
@@ -87,5 +94,46 @@
 }
 
 .product-price--beforeDiscount {
+    color: $color-secondaryDarkest;
     text-decoration: line-through;
+    font-weight: fontWeight('medium');
+}
+
+.bundled-items-container {
+    margin-left: 0;
+    margin-top: spacing("quarter");
+
+    .bundled-item {
+        color: color("greys");
+        font-size: fontSize("tiny");
+        margin: 0;
+    }
+
+    .bundled-item-name {
+        margin-bottom: 0;
+    }
+
+    .body-bold {
+        font-weight: $fontWeight-bold;
+    }
+}
+
+// =============================================================================
+// PRODUCT ITEM ANIMATION
+// =============================================================================
+
+// Product item animation (add/remove products via BOGO coupons)
+.productList-item {
+    transition:
+        height $animation-collapse-transitionSpeed $animation-collapse-transitionCurve,
+        opacity $animation-collapse-transitionSpeed $animation-collapse-transitionCurve,
+        transform $animation-collapse-transitionSpeed $animation-collapse-transitionCurve;
+}
+
+// Accessibility: respect prefers-reduced-motion
+@media (prefers-reduced-motion: reduce) {
+    .productList-item,
+    .product-backorder-details-container {
+        transition: opacity 100ms ease-out !important;
+    }
 }

@@ -1,18 +1,20 @@
 import { type PaymentMethod } from '@bigcommerce/checkout-sdk';
 import React, { type ComponentType, lazy, Suspense } from 'react';
 
+import { PaymentFormProvider, type PaymentFormValues } from '@bigcommerce/checkout/contexts';
 import { withLanguage, type WithLanguageProps } from '@bigcommerce/checkout/locale';
-import { PaymentFormProvider, type PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
 import { LazyContainer } from '@bigcommerce/checkout/ui';
 
 import { withCheckout, type WithCheckoutProps } from '../../checkout';
 import { connectFormik, type WithFormikProps } from '../../common/form';
-import { withForm, type WithFormProps } from '../../ui/form';
 import createPaymentFormService from '../createPaymentFormService';
 import resolvePaymentMethod from '../resolvePaymentMethod';
+import withForm, { type WithFormProps } from '../withForm';
 import withPayment, { type WithPaymentProps } from '../withPayment';
 
-const PaymentMethodV1 = lazy(() => import(/* webpackChunkName: "payment-method-v1" */'./PaymentMethod'));
+const PaymentMethodV1 = lazy(
+    () => import(/* webpackChunkName: "payment-method-v1" */ './PaymentMethod'),
+);
 
 export interface PaymentMethodProps {
     method: PaymentMethod;
@@ -56,13 +58,11 @@ const PaymentMethodContainer: ComponentType<
         setValidationSchema,
     };
 
-    const ResolvedPaymentMethod = resolvePaymentMethod(
-        {
-            id: method.id,
-            gateway: method.gateway,
-            type: method.type,
-        },
-    );
+    const ResolvedPaymentMethod = resolvePaymentMethod({
+        id: method.id,
+        gateway: method.gateway,
+        type: method.type,
+    });
 
     if (!ResolvedPaymentMethod) {
         return (

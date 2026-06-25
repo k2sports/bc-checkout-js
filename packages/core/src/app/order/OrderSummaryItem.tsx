@@ -1,12 +1,14 @@
 import classNames from 'classnames';
 import { isNumber } from 'lodash';
-import React, { type FunctionComponent, memo, type ReactNode } from 'react';
+import React, { type FunctionComponent, memo, type ReactNode, useRef } from 'react';
 
-import { useThemeContext } from '@bigcommerce/checkout/ui';
+import { useCheckout } from '@bigcommerce/checkout/contexts';
+import { TranslatedString } from '@bigcommerce/checkout/locale';
+import { CollapseCSSTransition } from '@bigcommerce/checkout/ui';
 
 import { ShopperCurrency } from '../currency';
 
-export interface OrderSummaryItemProps {
+export interface OrderItemType {
     id: string | number;
     amount: number;
     quantity: number;
@@ -15,6 +17,22 @@ export interface OrderSummaryItemProps {
     image?: ReactNode;
     description?: ReactNode;
     productOptions?: OrderSummaryItemOption[];
+    quantityBackordered?: number;
+    quantityOnHand?: number;
+    backorderMessage?: string;
+    bundledItems?: Array<{
+        id: string;
+        name: string;
+        bundleLabel?: string;
+        quantityBackordered?: number;
+        quantityOnHand?: number;
+        backorderMessage?: string;
+    }>;
+}
+
+interface OrderSummaryItemProps {
+    orderItem: OrderItemType;
+    shouldExpandBackorderDetails: boolean;
 }
 
 export interface OrderSummaryItemOption {
@@ -22,16 +40,85 @@ export interface OrderSummaryItemOption {
     content: ReactNode;
 }
 
-const OrderSummaryItem: FunctionComponent<OrderSummaryItemProps> = ({
-    amount,
-    amountAfterDiscount,
-    image,
-    name,
-    productOptions,
-    quantity,
-    description,
+const OrderSummaryItemBackorderDetails = ({
+    isExpanded,
+    quantityBackordered,
+    quantityOnHand,
+    backorderMessage,
+}: {
+    isExpanded: boolean;
+    quantityBackordered?: number;
+    quantityOnHand?: number;
+    backorderMessage?: string;
 }) => {
-    const { themeV2 } = useThemeContext();
+    const backorderDetailsRef = useRef<HTMLDivElement>(null);
+    const { selectedState: config } = useCheckout(({ data }) => data.getConfig());
+
+    const inventorySettings = config?.inventorySettings;
+    const showQuantityOnBackorder = !!inventorySettings?.showQuantityOnBackorder;
+    const showBackorderMessage = !!inventorySettings?.showBackorderMessage;
+    const shouldDisplayBackorderMessagesOnStorefront =
+        !!inventorySettings?.shouldDisplayBackorderMessagesOnStorefront;
+
+    if (
+        !shouldDisplayBackorderMessagesOnStorefront ||
+        (!showQuantityOnBackorder && !showBackorderMessage)
+    ) {
+        return null;
+    }
+
+    const shouldDisplayQuantityOnHand = showQuantityOnBackorder && !!quantityOnHand;
+    const shouldDisplayQuantityOnBackorder = showQuantityOnBackorder && !!quantityBackordered;
+    const shouldDisplayBackorderMessage =
+        showBackorderMessage && !!backorderMessage && !!quantityBackordered;
+
+    return (
+        <CollapseCSSTransition isVisible={isExpanded} nodeRef={backorderDetailsRef}>
+            <div
+                className="product-backorder-details-container optimizedCheckout-contentSecondary sub-text-medium"
+                ref={backorderDetailsRef}
+            >
+                {shouldDisplayQuantityOnHand && (
+                    <div data-test="cart-item-onhand-qty">
+                        <TranslatedString
+                            data={{ count: quantityOnHand }}
+                            id="cart.ready_to_ship_count_text"
+                        />
+                    </div>
+                )}
+                {shouldDisplayQuantityOnBackorder && (
+                    <div data-test="cart-item-backorder-qty">
+                        <TranslatedString
+                            data={{ count: quantityBackordered }}
+                            id="cart.backorder_count_text"
+                        />
+                    </div>
+                )}
+                {shouldDisplayBackorderMessage && (
+                    <div data-test="cart-item-backorder-message">{backorderMessage}</div>
+                )}
+            </div>
+        </CollapseCSSTransition>
+    );
+};
+
+const OrderSummaryItem: FunctionComponent<OrderSummaryItemProps> = ({
+    orderItem,
+    shouldExpandBackorderDetails,
+}) => {
+    const {
+        amount,
+        amountAfterDiscount,
+        image,
+        name,
+        productOptions,
+        quantity,
+        description,
+        quantityBackordered,
+        quantityOnHand,
+        backorderMessage,
+        bundledItems,
+    } = orderItem;
 
     return (
         <div className="product" data-test="cart-item">
@@ -39,23 +126,15 @@ const OrderSummaryItem: FunctionComponent<OrderSummaryItemProps> = ({
 
             <div className="product-column product-body">
                 <h4
-                    className={classNames('product-title optimizedCheckout-contentPrimary',
-                        { 'body-medium': themeV2 })}
+                    className="product-title optimizedCheckout-contentPrimary body-medium"
                     data-test="cart-item-product-title"
                 >
-                    {themeV2
-                        ? (<span className="body-bold">
-                            {`${quantity} x `}
-                        </span>)
-                        : (`${quantity} x `)
-                    }
+                    <span className="body-bold">{`${quantity} x `}</span>
                     {name}
                 </h4>
                 {productOptions && productOptions.length > 0 && (
                     <ul
-                        className={classNames('product-options optimizedCheckout-contentSecondary', {
-                            'sub-text-medium': themeV2,
-                        })}
+                        className="product-options optimizedCheckout-contentSecondary sub-text-medium"
                         data-test="cart-item-product-options"
                     >
                         {productOptions.map((option, index) => (
@@ -73,13 +152,51 @@ const OrderSummaryItem: FunctionComponent<OrderSummaryItemProps> = ({
                         {description}
                     </div>
                 )}
+                <OrderSummaryItemBackorderDetails
+                    backorderMessage={backorderMessage}
+                    isExpanded={shouldExpandBackorderDetails}
+                    quantityBackordered={quantityBackordered}
+                    quantityOnHand={quantityOnHand}
+                />
+
+                {bundledItems && bundledItems.length > 0 && (
+                    <ul className="bundled-items-container">
+                        {bundledItems.map((item) => (
+                            <li
+                                className="bundled-item optimizedCheckout-contentSecondary sub-text-medium"
+                                key={item.id}
+                            >
+                                <div
+                                    className="bundled-item-name"
+                                    data-test="cart-item-bundled-item-name"
+                                >
+                                    <span className="body-bold">
+                                        {item.bundleLabel ? (
+                                            `${item.bundleLabel}:`
+                                        ) : (
+                                            <TranslatedString id="cart.bundled_item_label" />
+                                        )}
+                                    </span>{' '}
+                                    {item.name}
+                                </div>
+                                <OrderSummaryItemBackorderDetails
+                                    backorderMessage={item.backorderMessage}
+                                    isExpanded={shouldExpandBackorderDetails}
+                                    quantityBackordered={item.quantityBackordered}
+                                    quantityOnHand={item.quantityOnHand}
+                                />
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
 
             <div className="product-column product-actions">
                 {isNumber(amountAfterDiscount) && amountAfterDiscount !== amount && (
-                    <div className={classNames('product-price', {
-                        'body-medium': themeV2,
-                    })} data-test="cart-item-product-price--afterDiscount">
+                    <div
+                        className="product-price body-medium"
+                        data-test="cart-item-product-price--afterDiscount"
+                    >
                         <ShopperCurrency amount={amountAfterDiscount} />
                     </div>
                 )}
@@ -88,8 +205,10 @@ const OrderSummaryItem: FunctionComponent<OrderSummaryItemProps> = ({
                     className={classNames('product-price', 'optimizedCheckout-contentPrimary', {
                         'product-price--beforeDiscount':
                             isNumber(amountAfterDiscount) && amountAfterDiscount !== amount,
-                        'body-medium': themeV2 && isNumber(amountAfterDiscount) && amountAfterDiscount === amount,
-                        'body-regular': themeV2 && isNumber(amountAfterDiscount) && amountAfterDiscount !== amount,
+                        'body-medium':
+                            isNumber(amountAfterDiscount) && amountAfterDiscount === amount,
+                        'body-regular':
+                            isNumber(amountAfterDiscount) && amountAfterDiscount !== amount,
                     })}
                     data-test="cart-item-product-price"
                 >
@@ -98,6 +217,6 @@ const OrderSummaryItem: FunctionComponent<OrderSummaryItemProps> = ({
             </div>
         </div>
     );
-}
+};
 
 export default memo(OrderSummaryItem);

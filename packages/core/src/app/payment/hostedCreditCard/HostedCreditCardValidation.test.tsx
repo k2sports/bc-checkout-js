@@ -2,7 +2,8 @@ import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React, { type FunctionComponent } from 'react';
 
-import { createLocaleContext, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/locale';
+import { LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getStoreConfig } from '../../config/config.mock';
@@ -65,7 +66,9 @@ describe('HostedCreditCardValidation', () => {
         render(<HostedCreditCardValidationTest cardExpiryId="cardExpiry" />);
 
         expect(
-            screen.getByText(localeContext.language.translate('payment.credit_card_expiration_label')),
+            screen.getByText(
+                localeContext.language.translate('payment.credit_card_expiration_label'),
+            ),
         ).toBeInTheDocument();
     });
 
@@ -73,7 +76,9 @@ describe('HostedCreditCardValidation', () => {
         render(<HostedCreditCardValidationTest cardNumberId="cardCode" />);
 
         expect(
-            screen.queryByText(localeContext.language.translate('payment.credit_card_expiration_label')),
+            screen.queryByText(
+                localeContext.language.translate('payment.credit_card_expiration_label'),
+            ),
         ).not.toBeInTheDocument();
     });
 });

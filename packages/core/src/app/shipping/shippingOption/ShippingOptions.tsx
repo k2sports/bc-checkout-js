@@ -1,3 +1,4 @@
+// EOC Override: This file has been modified to filter shipping options based on customer groups
 import {
   type Cart,
   type CheckoutSelectors,
@@ -7,7 +8,7 @@ import {
 import { map, sortBy, uniq } from 'lodash';
 import { createSelector } from 'reselect';
 
-import { type CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
+import { type CheckoutContextProps } from '@bigcommerce/checkout/contexts';
 
 import { withCheckout } from '../../checkout';
 import getShippableLineItems from '../getShippableLineItems';

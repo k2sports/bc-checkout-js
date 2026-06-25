@@ -2,12 +2,10 @@ import classNames from 'classnames';
 import { noop } from 'lodash';
 import React, { type FunctionComponent, memo, type ReactNode } from 'react';
 
+import { useThemeContext } from '@bigcommerce/checkout/contexts';
 import { preventDefault } from '@bigcommerce/checkout/dom-utils';
 import { TranslatedString } from '@bigcommerce/checkout/locale';
-import { useThemeContext } from '@bigcommerce/checkout/ui';
-
-import { Button, ButtonSize, ButtonVariant } from '../ui/button';
-import { IconCheck } from '../ui/icon';
+import { Button, ButtonSize, ButtonVariant, IconCheck } from '@bigcommerce/checkout/ui';
 
 import type CheckoutStepType from './CheckoutStepType';
 
@@ -50,35 +48,39 @@ const CheckoutStepHeader: FunctionComponent<CheckoutStepHeaderProps> = ({
                 />
 
                 <h2
-                    className={classNames('stepHeader-title optimizedCheckout-headingPrimary',
-                        { 'header': themeV2 && (isActive || isComplete) },
-                        { 'header-secondary': themeV2 && !isActive && !isComplete })}
-                >{heading}</h2>
+                    className={classNames(
+                        'stepHeader-title optimizedCheckout-headingPrimary',
+                        { header: isActive || isComplete },
+                        { 'header-secondary': !isActive && !isComplete },
+                    )}
+                >
+                    {heading}
+                </h2>
             </div>
 
-            {themeV2 && !isActive && isComplete &&
+            {themeV2 && !isActive && isComplete && (
                 <div
                     className="stepHeader-body stepHeader-column optimizedCheckout-contentPrimary body-regular"
                     data-test="step-info"
-                    >
-                        {summary}
+                >
+                    {summary}
                 </div>
-            }
+            )}
 
-            {!themeV2 &&
+            {!themeV2 && (
                 <div
                     className="stepHeader-body stepHeader-column optimizedCheckout-contentPrimary"
                     data-test="step-info"
                 >
                     {!isActive && isComplete && summary}
                 </div>
-            }
+            )}
 
             {isEditable && !isActive && (
                 <div className="stepHeader-actions stepHeader-column">
                     <Button
                         aria-expanded={isActive}
-                        className={classNames({ 'body-regular': themeV2 })}
+                        className="body-regular"
                         size={ButtonSize.Tiny}
                         testId="step-edit-button"
                         variant={ButtonVariant.Secondary}

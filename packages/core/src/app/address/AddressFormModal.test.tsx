@@ -4,8 +4,12 @@ import { faker } from '@faker-js/faker';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import { createLocaleContext, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/locale';
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
+import {
+    CheckoutProvider,
+    LocaleContext,
+    type LocaleContextType,
+} from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getCheckout } from '../checkout/checkouts.mock';
@@ -31,7 +35,7 @@ describe('AddressFormModal Component', () => {
                 <LocaleContext.Provider value={localeContext}>
                     <AddressFormModal {...defaultProps} {...props} />
                 </LocaleContext.Provider>
-            </CheckoutProvider>
+            </CheckoutProvider>,
         );
     };
 
@@ -119,11 +123,13 @@ describe('AddressFormModal Component', () => {
     });
 
     it('renders prefilled address form in the modal when selectedAddress is present', () => {
-        const address = JSON.parse(JSON.stringify({
-            firstName: faker.name.firstName(),
-            lastName: faker.name.lastName(),
-            address1: faker.address.streetAddress(),
-        }));
+        const address = JSON.parse(
+            JSON.stringify({
+                firstName: faker.name.firstName(),
+                lastName: faker.name.lastName(),
+                address1: faker.address.streetAddress(),
+            }),
+        );
 
         renderAddressFormModal({ selectedAddress: address });
 

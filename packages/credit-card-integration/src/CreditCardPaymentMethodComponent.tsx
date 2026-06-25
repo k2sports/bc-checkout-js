@@ -15,6 +15,7 @@ import React, { type ReactElement, type ReactNode, useEffect, useRef, useState }
 import { type ObjectSchema } from 'yup';
 
 import {
+    AutoVaultingDisclaimer,
     CardInstrumentFieldset,
     configureCardValidator,
     CreditCardFieldset,
@@ -26,11 +27,10 @@ import {
     isInstrumentCardCodeRequiredSelector,
     isInstrumentCardNumberRequiredSelector,
     isInstrumentFeatureAvailable,
+    isPaymentMethodAutoVaultingInstruments,
     StoreInstrumentFieldset,
 } from '@bigcommerce/checkout/instrument-utils';
-import { createLocaleContext, LocaleContext } from '@bigcommerce/checkout/locale';
 import {
-    CaptureMessageComponent,
     type CardInstrumentFieldsetValues,
     type PaymentMethodProps,
 } from '@bigcommerce/checkout/payment-integration-api';
@@ -58,6 +58,7 @@ interface CreditCardPaymentMethodDerivedProps {
     isInstrumentFeatureAvailable: boolean;
     isLoadingInstruments: boolean;
     isPaymentDataRequired: boolean;
+    shouldShowAutoVaultingDisclaimer: boolean;
     shouldShowInstrumentFieldset: boolean;
     isInstrumentCardCodeRequired(instrument: Instrument, method: PaymentMethod): boolean;
     isInstrumentCardNumberRequired(instrument: Instrument, method: PaymentMethod): boolean;
@@ -116,6 +117,7 @@ export const CreditCardPaymentMethodComponent = (
             isInstrumentFeatureAvailable: isInstrumentFeatureAvailableFlag,
             isLoadingInstruments: isLoadingInstrumentsProp(),
             isPaymentDataRequired: isPaymentDataRequired(),
+            shouldShowAutoVaultingDisclaimer: isPaymentMethodAutoVaultingInstruments(method),
             shouldShowInstrumentFieldset:
                 isInstrumentFeatureAvailableFlag && instruments.length > 0,
         };
@@ -208,8 +210,12 @@ export const CreditCardPaymentMethodComponent = (
         } = props;
         const { instruments } = getCreditCardPaymentMethodDerivedProps();
         const { selectedInstrumentId } = state;
+        const remainingInstruments = instruments.filter(
+            (instrument) => instrument.bigpayToken !== id,
+        );
 
-        if (instruments.length === 0) {
+        // TODO: revert to if(instruments.length === 0) after state management issue with delete instrument is resolved
+        if (remainingInstruments.length === 0) {
             setState({
                 ...state,
                 isAddingNewCard: true,
@@ -341,6 +347,7 @@ export const CreditCardPaymentMethodComponent = (
         isInstrumentCardNumberRequired: isInstrumentCardNumberRequiredProp,
         isInstrumentFeatureAvailable: isInstrumentFeatureAvailableProp,
         isLoadingInstruments,
+        shouldShowAutoVaultingDisclaimer,
         shouldShowInstrumentFieldset,
     } = getCreditCardPaymentMethodDerivedProps();
 
@@ -358,64 +365,58 @@ export const CreditCardPaymentMethodComponent = (
 
     const storeConfig = getStoreConfig();
 
-    const SentryMessage = methodProp ? `DataCreditCardFieldset ${JSON.stringify(methodProp)}` : '';
-
     if (!storeConfig) {
         throw Error('Unable to get config or customer');
     }
 
     return (
-        <LocaleContext.Provider value={createLocaleContext(storeConfig)}>
-            <LoadingOverlay hideContentWhenLoading isLoading={isLoading}>
-                <div
-                    className="paymentMethod paymentMethod--creditCard"
-                    data-test="credit-cart-payment-method"
-                >
-                    {shouldShowInstrumentFieldset && (
-                        <CardInstrumentFieldset
-                            instruments={outerInstruments}
-                            onDeleteInstrument={handleDeleteInstrument}
-                            onSelectInstrument={handleSelectInstrument}
-                            onUseNewInstrument={handleUseNewCard}
-                            selectedInstrumentId={
-                                selectedInstrument && selectedInstrument.bigpayToken
-                            }
-                            validateInstrument={
-                                getStoredCardValidationFieldset ? (
-                                    getStoredCardValidationFieldset(selectedInstrument)
-                                ) : (
-                                    <CreditCardValidation
-                                        shouldShowCardCodeField={shouldShowCardCodeField}
-                                        shouldShowNumberField={shouldShowNumberField}
-                                    />
-                                )
-                            }
-                        />
-                    )}
+        <LoadingOverlay hideContentWhenLoading isLoading={isLoading}>
+            <div
+                className="paymentMethod paymentMethod--creditCard"
+                data-test="credit-cart-payment-method"
+            >
+                {shouldShowInstrumentFieldset && (
+                    <CardInstrumentFieldset
+                        instruments={outerInstruments}
+                        onDeleteInstrument={handleDeleteInstrument}
+                        onSelectInstrument={handleSelectInstrument}
+                        onUseNewInstrument={handleUseNewCard}
+                        selectedInstrumentId={selectedInstrument && selectedInstrument.bigpayToken}
+                        validateInstrument={
+                            getStoredCardValidationFieldset ? (
+                                getStoredCardValidationFieldset(selectedInstrument)
+                            ) : (
+                                <CreditCardValidation
+                                    shouldShowCardCodeField={shouldShowCardCodeField}
+                                    shouldShowNumberField={shouldShowNumberField}
+                                />
+                            )
+                        }
+                    />
+                )}
 
-                    {shouldShowCreditCardFieldset && !cardFieldset && (
-                        <>
-                            <CaptureMessageComponent message={SentryMessage} />
-                            <CreditCardFieldset
-                                shouldShowCardCodeField={
-                                    methodProp.config.cardCode ||
-                                    methodProp.config.cardCode === null
-                                }
-                                shouldShowCustomerCodeField={methodProp.config.requireCustomerCode}
-                            />
-                        </>
-                    )}
+                {shouldShowCreditCardFieldset && !cardFieldset && (
+                    <CreditCardFieldset
+                        shouldShowCardCodeField={
+                            methodProp.config.cardCode || methodProp.config.cardCode === null
+                        }
+                        shouldShowCustomerCodeField={methodProp.config.requireCustomerCode}
+                    />
+                )}
 
-                    {shouldShowCreditCardFieldset && cardFieldset}
+                {shouldShowCreditCardFieldset && cardFieldset}
 
-                    {isInstrumentFeatureAvailableProp && (
-                        <StoreInstrumentFieldset
-                            instrumentId={selectedInstrument && selectedInstrument.bigpayToken}
-                            instruments={outerInstruments}
-                        />
-                    )}
-                </div>
-            </LoadingOverlay>
-        </LocaleContext.Provider>
+                {isInstrumentFeatureAvailableProp && (
+                    <StoreInstrumentFieldset
+                        instrumentId={selectedInstrument && selectedInstrument.bigpayToken}
+                        instruments={outerInstruments}
+                    />
+                )}
+
+                {shouldShowAutoVaultingDisclaimer && shouldShowCreditCardFieldset && (
+                    <AutoVaultingDisclaimer />
+                )}
+            </div>
+        </LoadingOverlay>
     );
 };

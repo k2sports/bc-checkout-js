@@ -1,7 +1,8 @@
 import { type LanguageService } from '@bigcommerce/checkout-sdk';
 import React from 'react';
 
-import { createLocaleContext, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/locale';
+import { LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getStoreConfig } from '../../config/config.mock';
@@ -24,7 +25,9 @@ describe('StoreCreditOverlay', () => {
             </LocaleContext.Provider>,
         );
 
-        expect(screen.getByText(languageService.translate('payment.payment_not_required_text'))).toBeInTheDocument();
+        expect(
+            screen.getByText(languageService.translate('payment.payment_not_required_text')),
+        ).toBeInTheDocument();
     });
 
     it('renders component with expected class', () => {

@@ -2,19 +2,19 @@ import {
     type Address,
     type CheckoutSelectors,
     type Country,
+    type CustomerAddress,
     type ShippingInitializeOptions,
 } from '@bigcommerce/checkout-sdk';
-import classNames from 'classnames';
 import { isEmpty } from 'lodash';
 import React, { type FunctionComponent, memo } from 'react';
 
+import { type CheckoutContextProps } from '@bigcommerce/checkout/contexts';
 import { localizeAddress } from '@bigcommerce/checkout/locale';
-import { type CheckoutContextProps } from '@bigcommerce/checkout/payment-integration-api';
-import { useThemeContext } from '@bigcommerce/checkout/ui';
 
 import { withCheckout } from '../checkout';
 
 import AddressType from './AddressType';
+import getAddressWithLabel from './getAddressWithLabel';
 
 import './StaticAddress.scss';
 
@@ -29,49 +29,47 @@ export interface StaticAddressEditableProps extends StaticAddressProps {
 
 interface WithCheckoutStaticAddressProps {
     countries?: Country[];
+    customerAddresses?: CustomerAddress[];
 }
 
 const StaticAddress: FunctionComponent<
     StaticAddressEditableProps & WithCheckoutStaticAddressProps
-    > = ({
-        countries,
-        address: addressWithoutLocalization,
-    }) => {
-
-    const { themeV2 } = useThemeContext();
-
-    const address = localizeAddress(addressWithoutLocalization, countries);
+> = ({ countries, customerAddresses, address: addressWithoutLocalization }) => {
+    const addressWithLabel = getAddressWithLabel(addressWithoutLocalization, customerAddresses);
+    const address = localizeAddress(addressWithLabel, countries);
     const isValid = !isEmpty(address);
 
     return !isValid ? null : (
         <div className="vcard checkout-address--static" data-test="static-address">
             {(address.firstName || address.lastName) && (
-                <p className={classNames('fn address-entry',
-                    { 'body-regular': themeV2 })}>
+                <p className="fn address-entry body-regular">
                     <span className="first-name">{`${address.firstName} `}</span>
                     <span className="family-name">{address.lastName}</span>
                 </p>
             )}
 
+            {address.label && (
+                <p className="address-entry body-regular">
+                    <span className="label">{address.label}</span>
+                </p>
+            )}
+
             {(address.phone || address.company) && (
-                <p className={classNames('address-entry',
-                    { 'body-regular': themeV2 })}>
+                <p className="address-entry body-regular">
                     <span className="company-name">{`${address.company} `}</span>
                     <span className="tel">{address.phone}</span>
                 </p>
             )}
 
             <div className="adr">
-                <p className={classNames('street-address address-entry',
-                    { 'body-regular': themeV2 })}>
+                <p className="street-address address-entry body-regular">
                     <span className="address-line-1">{`${address.address1} `}</span>
                     {address.address2 && (
                         <span className="address-line-2">{` / ${address.address2}`}</span>
                     )}
                 </p>
 
-                <p className={classNames('address-entry',
-                    { 'body-regular': themeV2 })}>
+                <p className="address-entry body-regular">
                     {address.city && <span className="locality">{`${address.city}, `}</span>}
                     {address.localizedProvince && (
                         <span className="region">{`${address.localizedProvince}, `}</span>
@@ -94,14 +92,13 @@ export function mapToStaticAddressProps(
 ): WithCheckoutStaticAddressProps | null {
     const {
         checkoutState: {
-            data: { getBillingCountries, getShippingCountries },
+            data: { getBillingCountries, getShippingCountries, getCustomer },
         },
     } = context;
 
     return {
-        countries: type === AddressType.Billing
-            ? getBillingCountries()
-            : getShippingCountries(),
+        countries: type === AddressType.Billing ? getBillingCountries() : getShippingCountries(),
+        customerAddresses: getCustomer()?.addresses,
     };
 }
 

@@ -6,7 +6,7 @@ import {
 } from '@bigcommerce/checkout-sdk';
 import React, { type FunctionComponent } from 'react';
 
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
+import { CheckoutProvider } from '@bigcommerce/checkout/contexts';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getCountries } from '../geography/countries.mock';
@@ -68,7 +68,7 @@ describe('StaticAddress Component', () => {
     });
 
     it('renders component if required fields for shipping address are not missing', () => {
-        render(<StaticAddressTest {...defaultProps} type={AddressType.Shipping} />,);
+        render(<StaticAddressTest {...defaultProps} type={AddressType.Shipping} />);
 
         expect(screen.getByText(defaultProps.address.address1)).toBeInTheDocument();
     });
