@@ -684,6 +684,9 @@
         "heading": "Demasiadas solicitudes",
         "message": "Has hecho demasiados intentos. Espera unos minutos y vuelve a intentarlo."
       }
+    },
+    "withdrawal_terms": {
+      "notice_with_link_text": "Le rogamos que tome nota de nuestra <a href=\"{url}\" target=\"_blank\">política de anulación</a>."
     }
   },
   "redeemable": {
@@ -805,9 +808,6 @@
     "agreement_text": "Sí, acepto los Términos y condiciones anteriores.",
     "agreement_with_link_text": "Sí, acepto los <a href=\"{url}\" target=\"_blank\">Términos y condiciones</a>.",
     "terms_and_conditions_heading": "Términos y condiciones"
-  },
-  "withdrawal_terms": {
-    "notice_with_link_text": "Le rogamos que tome nota de nuestra <a href=\"{url}\" target=\"_blank\">política de anulación</a>."
   },
   "order_confirmation": {
     "mandate": {

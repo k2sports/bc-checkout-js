@@ -684,6 +684,9 @@
         "heading": "Too Many Requests",
         "message": "You've made too many attempts. Please wait a few minutes and try again."
       }
+    },
+    "withdrawal_terms": {
+      "notice_with_link_text": "Please note our <a href=\"{url}\" target=\"_blank\">withdrawal policy</a>."
     }
   },
   "redeemable": {
@@ -805,9 +808,6 @@
     "agreement_text": "Yes, I agree with the above terms and conditions.",
     "agreement_with_link_text": "Yes, I agree with the <a href=\"{url}\" target=\"_blank\">terms and conditions</a>.",
     "terms_and_conditions_heading": "Terms and Conditions"
-  },
-  "withdrawal_terms": {
-    "notice_with_link_text": "Please note our <a href=\"{url}\" target=\"_blank\">withdrawal policy</a>."
   },
   "order_confirmation": {
     "mandate": {

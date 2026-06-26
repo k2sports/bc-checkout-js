@@ -491,6 +491,9 @@
           "paymentSourceDeclinedByProcessor": "Non è possibile utilizzare il metodo di pagamento selezionato. Questa decisione si basa sull'elaborazione automatica dei dati. Per ulteriori informazioni, consulta l'<a href='https://www.ratepay.com/en/ratepay-data-privacy-statement/' target='blank'>Informativa sulla privacy di Ratepay</a> o contatta Ratepay tramite questo <a href='https://www.ratepay.com/en/contact/' target='blank'>modulo</a>.",
           "itemCategoryNotSupportedByPaymentSource": "Gli articoli digitali non sono idonei per il metodo indicato"
         }
+      },
+      "withdrawal_terms": {
+        "notice_with_link_text": "La preghiamo di prendere visione della nostra <a href=\"{url}\" target=\"_blank\">politica di cancellazione</a>."
       }
     },
     "redeemable": {
@@ -805,9 +808,6 @@
     "agreement_text": "Sì, accetto i termini e le condizioni di cui sopra.",
     "agreement_with_link_text": "Sì, accetto i <a href=\"{url}\" target=\"_blank\">termini e le condizioni</a>.",
     "terms_and_conditions_heading": "Termini e condizioni"
-  },
-  "withdrawal_terms": {
-    "notice_with_link_text": "La preghiamo di prendere visione della nostra <a href=\"{url}\" target=\"_blank\">politica di cancellazione</a>."
   },
   "order_confirmation": {
     "mandate": {
