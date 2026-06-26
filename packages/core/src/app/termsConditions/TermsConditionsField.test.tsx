@@ -3,7 +3,8 @@ import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React from 'react';
 
-import { createLocaleContext, LocaleContext } from '@bigcommerce/checkout/locale';
+import { LocaleContext } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getStoreConfig } from '../config/config.mock';
@@ -29,7 +30,9 @@ describe('TermsConditionsField', () => {
             </LocaleContext.Provider>,
         );
 
-        expect(screen.getByText(translate('terms_and_conditions.terms_and_conditions_heading'))).toBeInTheDocument();
+        expect(
+            screen.getByText(translate('terms_and_conditions.terms_and_conditions_heading')),
+        ).toBeInTheDocument();
         expect(screen.getByText(/I agree/)).toBeInTheDocument();
 
         await userEvent.click(screen.getByText('terms and conditions'));
@@ -50,7 +53,9 @@ describe('TermsConditionsField', () => {
             </LocaleContext.Provider>,
         );
 
-        expect(screen.getByText(translate('terms_and_conditions.terms_and_conditions_heading'))).toBeInTheDocument();
+        expect(
+            screen.getByText(translate('terms_and_conditions.terms_and_conditions_heading')),
+        ).toBeInTheDocument();
         expect(screen.getByText(/I agree/)).toBeInTheDocument();
         expect(screen.getByRole('textbox')).toHaveTextContent(terms);
     });

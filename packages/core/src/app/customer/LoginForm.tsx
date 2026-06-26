@@ -1,3 +1,9 @@
+import { type FormikProps, withFormik } from 'formik';
+import { noop } from 'lodash';
+import React, { type FunctionComponent, memo, useCallback } from 'react';
+import { object, string } from 'yup';
+
+import { useCheckout } from '@bigcommerce/checkout/contexts';
 import { preventDefault } from '@bigcommerce/checkout/dom-utils';
 import {
     TranslatedHtml,
@@ -6,18 +12,15 @@ import {
     withLanguage,
     type WithLanguageProps,
 } from '@bigcommerce/checkout/locale';
-import { useCheckout } from '@bigcommerce/checkout/payment-integration-api';
-import { useThemeContext } from '@bigcommerce/checkout/ui';
-import classNames from 'classnames';
-import { type FormikProps, withFormik } from 'formik';
-import { noop } from 'lodash';
-import React, { type FunctionComponent, memo, useCallback } from 'react';
-import { object, string } from 'yup';
-
-
-import { Alert, AlertType } from '../ui/alert';
-import { Button, ButtonVariant } from '../ui/button';
-import { Fieldset, Form, Legend } from '../ui/form';
+import {
+    Alert,
+    AlertType,
+    Button,
+    ButtonVariant,
+    Fieldset,
+    Form,
+    Legend,
+} from '@bigcommerce/checkout/ui';
 
 import CustomerViewType from './CustomerViewType';
 import EmailField from './EmailField';
@@ -62,8 +65,17 @@ const LoginForm: FunctionComponent<
     isFloatingLabelEnabled,
     viewType = CustomerViewType.Login,
 }) => {
-    const { themeV2 } = useThemeContext();
-    const { checkoutState } = useCheckout();
+    const { checkoutState } = useCheckout(
+        ({
+            data: { getCart, getConfig },
+            statuses: { isExecutingPaymentMethodCheckout, isSigningIn },
+        }) => ({
+            cart: getCart(),
+            config: getConfig(),
+            isExecutingPaymentMethodCheckout: isExecutingPaymentMethodCheckout(),
+            isSigningIn: isSigningIn(),
+        }),
+    );
 
     const {
         data: { getCart, getConfig },
@@ -83,9 +95,7 @@ const LoginForm: FunctionComponent<
             guestCheckoutEnabled: canCancel,
             shouldRedirectToStorefrontForAuth,
         },
-        links: {
-            forgotPasswordLink: forgotPasswordUrl
-        }
+        links: { forgotPasswordLink: forgotPasswordUrl },
     } = config;
 
     const isBuyNowCart = cart.source === 'BUY_NOW';
@@ -149,64 +159,73 @@ const LoginForm: FunctionComponent<
 
                 {(viewType === CustomerViewType.Login ||
                     viewType === CustomerViewType.EnforcedLogin) && (
-                    <EmailField isFloatingLabelEnabled={isFloatingLabelEnabled} onChange={onChangeEmail} />
+                    <EmailField
+                        isFloatingLabelEnabled={isFloatingLabelEnabled}
+                        onChange={onChangeEmail}
+                    />
                 )}
 
-                {!shouldRedirectToStorefrontForAuth && <PasswordField isFloatingLabelEnabled={isFloatingLabelEnabled} />}
+                {!shouldRedirectToStorefrontForAuth && (
+                    <PasswordField isFloatingLabelEnabled={isFloatingLabelEnabled} />
+                )}
 
-                <p className={classNames('form-legend-container', { 'body-cta': themeV2 })}>
+                <p className="form-legend-container body-cta">
                     <span>
-                        { isSignInEmailEnabled && !isEmbedded && !isBuyNowCart &&
+                        {isSignInEmailEnabled && !isEmbedded && !isBuyNowCart && (
                             <TranslatedLink
                                 id="login_email.link"
-                                onClick={ onSendLoginEmail }
+                                onClick={onSendLoginEmail}
                                 testId="customer-signin-link"
                             />
-                        }
-                        { !isSignInEmailEnabled && !isEmbedded && !shouldRedirectToStorefrontForAuth &&
-                            <a
-                                data-test="forgot-password-link"
-                                href={ forgotPasswordUrl }
-                                rel="noopener noreferrer"
-                                target="_blank"
-                            >
-                                <TranslatedString id="customer.forgot_password_action" />
-                            </a>
-                        }
+                        )}
+                        {!isSignInEmailEnabled &&
+                            !isEmbedded &&
+                            !shouldRedirectToStorefrontForAuth && (
+                                <a
+                                    data-test="forgot-password-link"
+                                    href={forgotPasswordUrl}
+                                    rel="noopener noreferrer"
+                                    target="_blank"
+                                >
+                                    <TranslatedString id="customer.forgot_password_action" />
+                                </a>
+                            )}
                     </span>
-                    { viewType === CustomerViewType.Login && shouldShowCreateAccountLink &&
+                    {viewType === CustomerViewType.Login && shouldShowCreateAccountLink && (
                         <span>
                             <TranslatedLink
                                 id="customer.create_account_to_continue_text"
                                 onClick={onCreateAccount}
                             />
                         </span>
-                    }
+                    )}
                 </p>
 
                 <div className="form-actions">
-                    {shouldRedirectToStorefrontForAuth ?
+                    {shouldRedirectToStorefrontForAuth ? (
                         <RedirectToStorefrontLogin
-                            isDisabled={Boolean(isSigningIn() || isExecutingPaymentMethodCheckout())}
+                            isDisabled={Boolean(
+                                isSigningIn() || isExecutingPaymentMethodCheckout(),
+                            )}
                             isLoading={Boolean(isSigningIn() || isExecutingPaymentMethodCheckout())}
                         />
-                        :
+                    ) : (
                         <Button
-                            className={themeV2 ? 'body-bold' : ''}
+                            className="body-bold"
                             disabled={isSigningIn() || isExecutingPaymentMethodCheckout()}
                             id="checkout-customer-continue"
                             isLoading={isSigningIn() || isExecutingPaymentMethodCheckout()}
                             testId="customer-continue-button"
                             type="submit"
                             variant={ButtonVariant.Primary}
-                    >
-                        <TranslatedString id="customer.sign_in_action" />
-                    </Button>}
+                        >
+                            <TranslatedString id="customer.sign_in_action" />
+                        </Button>
+                    )}
 
                     {viewType === CustomerViewType.SuggestedLogin && (
                         <a
-                            className={classNames('button optimizedCheckout-buttonSecondary',
-                                { 'body-bold': themeV2 })}
+                            className="button optimizedCheckout-buttonSecondary body-bold"
                             data-test="customer-guest-continue"
                             href="#"
                             id="checkout-guest-continue"
@@ -220,8 +239,7 @@ const LoginForm: FunctionComponent<
                         viewType !== CustomerViewType.EnforcedLogin &&
                         viewType !== CustomerViewType.SuggestedLogin && (
                             <a
-                            className={classNames('button optimizedCheckout-buttonSecondary',
-                                { 'body-bold': themeV2 })}
+                                className="button optimizedCheckout-buttonSecondary body-bold"
                                 data-test="customer-cancel-button"
                                 href="#"
                                 id="checkout-customer-cancel"
@@ -244,20 +262,22 @@ const LoginForm: FunctionComponent<
     );
 };
 
-export default withLanguage(withFormik<LoginFormProps & WithLanguageProps, LoginFormValues>({
-    mapPropsToValues: ({ email = '' }) => ({
-        email,
-        password: '',
-    }),
-    handleSubmit: (values, { props: { onSignIn } }) => {
-        onSignIn(values);
-    },
-    validationSchema: ({ language }: LoginFormProps & WithLanguageProps) =>
-        getEmailValidationSchema({ language }).concat(
-            object({
-                password: string().required(
-                    language.translate('customer.password_required_error'),
-                ),
-            }),
-        ),
-})(memo(LoginForm)));
+export default withLanguage(
+    withFormik<LoginFormProps & WithLanguageProps, LoginFormValues>({
+        mapPropsToValues: ({ email = '' }) => ({
+            email,
+            password: '',
+        }),
+        handleSubmit: (values, { props: { onSignIn } }) => {
+            onSignIn(values);
+        },
+        validationSchema: ({ language }: LoginFormProps & WithLanguageProps) =>
+            getEmailValidationSchema({ language }).concat(
+                object({
+                    password: string().required(
+                        language.translate('customer.password_required_error'),
+                    ),
+                }),
+            ),
+    })(memo(LoginForm)),
+);

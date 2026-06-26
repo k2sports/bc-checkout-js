@@ -1,16 +1,17 @@
-import {
-    type Address,
-    type Consignment,
-    type FormField,
-} from '@bigcommerce/checkout-sdk';
+import { type Address, type Consignment, type FormField } from '@bigcommerce/checkout-sdk';
 import React, { type ReactElement } from 'react';
 
-import { useCheckout } from '@bigcommerce/checkout/payment-integration-api';
-import { LoadingOverlay } from '@bigcommerce/checkout/ui';
+import { useCapabilities, useCheckout, useThemeContext } from '@bigcommerce/checkout/contexts';
+import { Fieldset, LoadingOverlay } from '@bigcommerce/checkout/ui';
 
-import { AddressForm, AddressSelect, AddressType, isValidCustomerAddress } from '../address';
+import {
+    AddressForm,
+    AddressSelect,
+    AddressType,
+    isValidCustomerAddress,
+    reorderAddressFormFields,
+} from '../address';
 import { connectFormik, type ConnectFormikProps } from '../common/form';
-import { Fieldset } from '../ui/form';
 
 import { type SingleShippingFormValues } from './SingleShippingForm';
 
@@ -19,6 +20,7 @@ export interface ShippingAddressFormProps {
     consignments: Consignment[];
     isLoading: boolean;
     formFields: FormField[];
+    validateMaxLength: boolean;
     onUseNewAddress(): void;
     onFieldChange(fieldName: string, value: string): void;
     onAddressSelect(address: Address): void;
@@ -26,31 +28,27 @@ export interface ShippingAddressFormProps {
 
 const addressFieldName = 'shippingAddress';
 
-const ShippingAddressForm = (
-    {
-        address: shippingAddress,
-        onAddressSelect,
-        onUseNewAddress,
-        formFields,
-        isLoading,
-        formik: {
-            values: { shippingAddress: formAddress },
-            setFieldValue: formikSetFieldValue,
-        },
-        onFieldChange,
-    }: ShippingAddressFormProps & ConnectFormikProps<SingleShippingFormValues>,
-): ReactElement => {
+const ShippingAddressForm = ({
+    address: shippingAddress,
+    onAddressSelect,
+    onUseNewAddress,
+    formFields,
+    isLoading,
+    validateMaxLength,
+    formik: {
+        values: { shippingAddress: formAddress },
+        setFieldValue: formikSetFieldValue,
+    },
+    onFieldChange,
+}: ShippingAddressFormProps & ConnectFormikProps<SingleShippingFormValues>): ReactElement => {
+    const { selectedState: customer } = useCheckout(({ data }) => data.getCustomer());
+    const { themeV2 } = useThemeContext();
     const {
-        checkoutState:{
-            data:{
-                getCustomer,
-            },
-        },
-    } = useCheckout();
+        shipping: { hideSaveToAddressBookCheck, restrictManualAddressEntry },
+    } = useCapabilities();
 
-    const customer = getCustomer();
     const addresses = customer?.addresses || [];
-    const shouldShowSaveAddress = !(customer?.isGuest);
+    const shouldShowSaveAddress = !hideSaveToAddressBookCheck && !customer?.isGuest;
 
     const setFieldValue = (fieldName: string, fieldValue: string) => {
         const customFormFieldNames = formFields
@@ -85,7 +83,10 @@ const ShippingAddressForm = (
         shippingAddress,
         addresses,
         formFields,
+        validateMaxLength,
     );
+
+    const sortedFormFields = themeV2 ? reorderAddressFormFields(formFields) : formFields;
 
     return (
         <Fieldset id="checkoutShippingAddress">
@@ -96,21 +97,19 @@ const ShippingAddressForm = (
                             addresses={addresses}
                             onSelectAddress={onAddressSelect}
                             onUseNewAddress={onUseNewAddress}
-                            selectedAddress={
-                                hasValidCustomerAddress ? shippingAddress : undefined
-                            }
+                            selectedAddress={hasValidCustomerAddress ? shippingAddress : undefined}
                             type={AddressType.Shipping}
                         />
                     </LoadingOverlay>
                 </Fieldset>
             )}
 
-            {!hasValidCustomerAddress && (
+            {!restrictManualAddressEntry && !hasValidCustomerAddress && (
                 <LoadingOverlay isLoading={isLoading} unmountContentWhenLoading>
                     <AddressForm
                         countryCode={formAddress && formAddress.countryCode}
                         fieldName={addressFieldName}
-                        formFields={formFields}
+                        formFields={sortedFormFields}
                         onAutocompleteToggle={handleAutocompleteToggle}
                         onChange={handleChange}
                         setFieldValue={setFieldValue}

@@ -1,3 +1,8 @@
+import { type PaymentInitializeOptions } from '@bigcommerce/checkout-sdk';
+import { createAfterpayPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/afterpay';
+import { createClearpayPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/clearpay';
+import { createSezzlePaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/sezzle';
+import { createZipPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/zip';
 import React, { type FunctionComponent } from 'react';
 
 import {
@@ -16,12 +21,24 @@ const HostedPaymentMethod: FunctionComponent<PaymentMethodProps> = ({
     language,
     paymentForm,
 }) => {
+    const initializeHostedPaymentMethod = async (options: PaymentInitializeOptions) => {
+        return checkoutService.initializePayment({
+            ...options,
+            integrations: [
+                createZipPaymentStrategy,
+                createAfterpayPaymentStrategy,
+                createSezzlePaymentStrategy,
+                createClearpayPaymentStrategy,
+            ],
+        });
+    };
+
     return (
         <HostedPaymentComponent
             checkoutService={checkoutService}
             checkoutState={checkoutState}
             deinitializePayment={checkoutService.deinitializePayment}
-            initializePayment={checkoutService.initializePayment}
+            initializePayment={initializeHostedPaymentMethod}
             language={language}
             method={method}
             onUnhandledError={onUnhandledError}
@@ -32,5 +49,13 @@ const HostedPaymentMethod: FunctionComponent<PaymentMethodProps> = ({
 
 export default toResolvableComponent<PaymentMethodProps, PaymentMethodResolveId>(
     HostedPaymentMethod,
-    [{ gateway: 'afterpay' }, { id: 'quadpay' }, { id: 'sezzle' }, { id: 'zip' }],
+    [
+        { gateway: 'afterpay' },
+        { id: 'afterpay' },
+        { gateway: 'clearpay' },
+        { id: 'clearpay' },
+        { id: 'quadpay' },
+        { id: 'sezzle' },
+        { id: 'zip' },
+    ],
 );

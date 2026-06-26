@@ -6,9 +6,12 @@ import {
 import { createBoltCustomerStrategy } from '@bigcommerce/checkout-sdk/integrations/bolt';
 import React, { type FunctionComponent } from 'react';
 
-import { AnalyticsProviderMock } from '@bigcommerce/checkout/analytics';
-import { LocaleProvider } from '@bigcommerce/checkout/locale';
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
+import {
+    AnalyticsProviderMock,
+    CheckoutProvider,
+    LocaleProvider,
+} from '@bigcommerce/checkout/contexts';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
 import { render } from '@bigcommerce/checkout/test-utils';
 
 import { getCheckout } from '../../checkout/checkouts.mock';
@@ -44,7 +47,10 @@ describe('CheckoutSuggestion', () => {
 
         TestComponent = (props) => (
             <CheckoutProvider checkoutService={checkoutService}>
-                <LocaleProvider checkoutService={checkoutService}>
+                <LocaleProvider
+                    checkoutService={checkoutService}
+                    languageService={getLanguageService()}
+                >
                     <AnalyticsProviderMock>
                         <CheckoutSuggestion {...props} />
                     </AnalyticsProviderMock>

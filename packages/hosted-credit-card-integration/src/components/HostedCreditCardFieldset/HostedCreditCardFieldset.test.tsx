@@ -2,11 +2,8 @@ import { Field, Formik } from 'formik';
 import { noop } from 'lodash';
 import React, { type FunctionComponent } from 'react';
 
-import {
-    createLocaleContext,
-    LocaleContext,
-    type LocaleContextType,
-} from '@bigcommerce/checkout/locale';
+import { LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { getStoreConfig } from '@bigcommerce/checkout/test-mocks';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
@@ -76,6 +73,14 @@ describe('HostedCreditCardFieldset', () => {
         );
 
         expect(screen.getByRole('textbox', { name: 'foobar' })).toBeInTheDocument();
+    });
+
+    it('renders the fieldset with the credit-card spacing modifier class', () => {
+        const { container } = render(<HostedCreditCardFieldsetTest {...defaultProps} />);
+
+        expect(container.querySelector('fieldset')).toHaveClass(
+            'form-fieldset--creditCardFieldset',
+        );
     });
 
     it('renders field container with focus styles', () => {

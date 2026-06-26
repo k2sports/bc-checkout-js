@@ -3,8 +3,12 @@ import { createBoltCustomerStrategy } from '@bigcommerce/checkout-sdk/integratio
 import userEvent from '@testing-library/user-event';
 import React, { act, type FunctionComponent } from 'react';
 
-import { type AnalyticsEvents, AnalyticsProviderMock } from '@bigcommerce/checkout/analytics';
-import { LocaleProvider } from '@bigcommerce/checkout/locale';
+import {
+    type AnalyticsEvents,
+    AnalyticsProviderMock,
+    LocaleProvider,
+} from '@bigcommerce/checkout/contexts';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import BoltCheckoutSuggestion, { type BoltCheckoutSuggestionProps } from './BoltCheckoutSuggestion';
@@ -12,7 +16,7 @@ import BoltCheckoutSuggestion, { type BoltCheckoutSuggestionProps } from './Bolt
 describe('BoltCheckoutSuggestion', () => {
     let defaultProps: BoltCheckoutSuggestionProps;
     let TestComponent: FunctionComponent<Partial<BoltCheckoutSuggestionProps>>;
-    let analyticsTrackerMock: Partial<AnalyticsEvents>
+    let analyticsTrackerMock: Partial<AnalyticsEvents>;
 
     beforeEach(() => {
         defaultProps = {
@@ -25,17 +29,21 @@ describe('BoltCheckoutSuggestion', () => {
         };
 
         analyticsTrackerMock = {
-            customerSuggestionInit: jest.fn()
+            customerSuggestionInit: jest.fn(),
         };
 
         const checkoutService = createCheckoutService();
 
-        TestComponent = (props) =>
-            <LocaleProvider checkoutService={checkoutService}>
+        TestComponent = (props) => (
+            <LocaleProvider
+                checkoutService={checkoutService}
+                languageService={getLanguageService()}
+            >
                 <AnalyticsProviderMock analyticsTracker={analyticsTrackerMock}>
                     <BoltCheckoutSuggestion {...defaultProps} {...props} />
                 </AnalyticsProviderMock>
-            </LocaleProvider>;
+            </LocaleProvider>
+        );
     });
 
     it('deinitializes previous Bolt customer strategy before initialisation', () => {
@@ -72,7 +80,7 @@ describe('BoltCheckoutSuggestion', () => {
     });
 
     it('do not track analytics event if no customer email on initialization', async () => {
-       render(<TestComponent />);
+        render(<TestComponent />);
 
         const customerHasBoltAccount = false;
         const initializeOptions = (defaultProps.initializeCustomer as jest.Mock).mock.calls[0][0];
@@ -99,7 +107,9 @@ describe('BoltCheckoutSuggestion', () => {
 
         await new Promise((resolve) => process.nextTick(resolve));
 
-        expect(analyticsTrackerMock.customerSuggestionInit).toHaveBeenCalledWith({ hasBoltAccount: false });
+        expect(analyticsTrackerMock.customerSuggestionInit).toHaveBeenCalledWith({
+            hasBoltAccount: false,
+        });
     });
 
     it('renders Bolt suggestion block if the customer has bolt account', async () => {
@@ -115,11 +125,13 @@ describe('BoltCheckoutSuggestion', () => {
 
         await new Promise((resolve) => process.nextTick(resolve));
 
-        expect(analyticsTrackerMock.customerSuggestionInit).toHaveBeenCalledWith({ hasBoltAccount: true });
+        expect(analyticsTrackerMock.customerSuggestionInit).toHaveBeenCalledWith({
+            hasBoltAccount: true,
+        });
     });
 
     it('executes Bolt Checkout', async () => {
-       render(<TestComponent />);
+        render(<TestComponent />);
 
         const customerHasBoltAccount = true;
         const initializeOptions = (defaultProps.initializeCustomer as jest.Mock).mock.calls[0][0];
@@ -129,10 +141,10 @@ describe('BoltCheckoutSuggestion', () => {
         await new Promise((resolve) => process.nextTick(resolve));
 
         const actionButton = screen.getByRole('button', {
-            name: /bolt bolt checkout/i
-          })
+            name: /bolt bolt checkout/i,
+        });
 
-       await userEvent.click(actionButton);
+        await userEvent.click(actionButton);
 
         expect(defaultProps.executePaymentMethodCheckout).toHaveBeenCalledWith({
             methodId: defaultProps.methodId,

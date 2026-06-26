@@ -8,12 +8,13 @@ import { merge, noop } from 'lodash';
 import React from 'react';
 import '@testing-library/jest-dom';
 
-import { createLocaleContext, LocaleContext } from '@bigcommerce/checkout/locale';
 import {
     CheckoutContext,
+    LocaleContext,
     PaymentFormContext,
     type PaymentFormService,
-} from '@bigcommerce/checkout/payment-integration-api';
+} from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import {
     getInstruments,
     getPaymentFormServiceMock,
@@ -54,6 +55,12 @@ describe('StoreInstrumentFieldset', () => {
                 </PaymentFormContext.Provider>
             </LocaleContext.Provider>
         );
+    });
+
+    it('renders the fieldset with the stored-instrument spacing modifier class', () => {
+        render(<StoreInstrumentFieldsetTest instruments={[]} />);
+
+        expect(screen.getByRole('group')).toHaveClass('form-fieldset--storedInstrument');
     });
 
     describe('when there are no previously stored instruments', () => {

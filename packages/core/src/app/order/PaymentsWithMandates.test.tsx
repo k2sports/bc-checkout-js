@@ -3,7 +3,8 @@ import { type CheckoutService, createCheckoutService } from '@bigcommerce/checko
 import { render, screen } from '@testing-library/react';
 import React, { type FunctionComponent } from 'react';
 
-import { LocaleProvider } from '@bigcommerce/checkout/locale';
+import { LocaleProvider } from '@bigcommerce/checkout/contexts';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
 
 import { PaymentsWithMandates, type PaymentsWithMandatesProps } from './PaymentsWithMandates';
 
@@ -14,30 +15,35 @@ describe('PaymentsWithMandates', () => {
     beforeEach(() => {
         checkoutService = createCheckoutService();
         PaymentsWithMandatesTest = (props) => (
-            <LocaleProvider checkoutService={checkoutService}>
-                <PaymentsWithMandates {...props}/>
+            <LocaleProvider
+                checkoutService={checkoutService}
+                languageService={getLanguageService()}
+            >
+                <PaymentsWithMandates {...props} />
             </LocaleProvider>
-        )
+        );
     });
 
-    it ('renders confirmation mandate link text if mandate has url', async () => {
+    it('renders confirmation mandate link text if mandate has url', async () => {
         const props = {
-            paymentsWithMandates: [{
-                detail: {
-                    step: '1',
-                    instructions: '1',
+            paymentsWithMandates: [
+                {
+                    detail: {
+                        step: '1',
+                        instructions: '1',
+                    },
+                    description: 'test',
+                    amount: 1,
+                    providerId: 'paypalcommercealternativemethod',
+                    methodId: 'ratepay',
+                    mandate: {
+                        id: '',
+                        url: 'Test Url',
+                        mandateText: {},
+                    },
                 },
-                description: 'test',
-                amount: 1,
-                providerId: 'paypalcommercealternativemethod',
-                methodId: 'ratepay',
-                mandate: {
-                    id: '',
-                    url: 'Test Url',
-                    mandateText: {},
-                }
-            }],
-        }
+            ],
+        };
 
         render(<PaymentsWithMandatesTest {...props} />);
 
@@ -46,24 +52,26 @@ describe('PaymentsWithMandates', () => {
         expect(url).toBeInTheDocument();
     });
 
-    it ('renders confirmation mandate id text if mandate  id is defined', async () => {
+    it('renders confirmation mandate id text if mandate  id is defined', async () => {
         const props = {
-            paymentsWithMandates: [{
-                detail: {
-                    step: '1',
-                    instructions: '1',
+            paymentsWithMandates: [
+                {
+                    detail: {
+                        step: '1',
+                        instructions: '1',
+                    },
+                    description: 'test',
+                    amount: 1,
+                    providerId: 'paypalcommercealternativemethod',
+                    methodId: 'ratepay',
+                    mandate: {
+                        id: '1',
+                        url: '',
+                        mandateText: {},
+                    },
                 },
-                description: 'test',
-                amount: 1,
-                providerId: 'paypalcommercealternativemethod',
-                methodId: 'ratepay',
-                mandate: {
-                    id: '1',
-                    url: '',
-                    mandateText: {},
-                }
-            }],
-        }
+            ],
+        };
 
         render(<PaymentsWithMandatesTest {...props} />);
 
@@ -72,26 +80,28 @@ describe('PaymentsWithMandates', () => {
         expect(id).toBeInTheDocument();
     });
 
-    it ('renders MandateTextComponent if mandateText object is not empty', async () => {
+    it('renders MandateTextComponent if mandateText object is not empty', async () => {
         const props = {
-            paymentsWithMandates: [{
-                detail: {
-                    step: '1',
-                    instructions: '1',
-                },
-                description: 'test',
-                amount: 1,
-                providerId: 'paypalcommercealternativemethod',
-                methodId: 'ratepay',
-                mandate: {
-                    id: '',
-                    url: '',
-                    mandateText: {
-                        account_holder_name: 'Account Holder'
+            paymentsWithMandates: [
+                {
+                    detail: {
+                        step: '1',
+                        instructions: '1',
                     },
-                }
-            }],
-        }
+                    description: 'test',
+                    amount: 1,
+                    providerId: 'paypalcommercealternativemethod',
+                    methodId: 'ratepay',
+                    mandate: {
+                        id: '',
+                        url: '',
+                        mandateText: {
+                            account_holder_name: 'Account Holder',
+                        },
+                    },
+                },
+            ],
+        };
 
         render(<PaymentsWithMandatesTest {...props} />);
 

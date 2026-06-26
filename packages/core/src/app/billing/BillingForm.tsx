@@ -1,31 +1,46 @@
 import {
     type Address,
+    type CustomerAddress,
     type FormField,
-} from '@bigcommerce/checkout-sdk';
+    isExtraField,
+} from '@bigcommerce/checkout-sdk/essential';
 import { type FormikProps, withFormik } from 'formik';
-import React, { type RefObject, useRef, useState } from 'react';
+import React, { type RefObject, useEffect, useRef, useState } from 'react';
 import { lazy } from 'yup';
 
-import { TranslatedString, withLanguage, type WithLanguageProps } from '@bigcommerce/checkout/locale';
-import { useCheckout } from '@bigcommerce/checkout/payment-integration-api';
+import { useCapabilities, useCheckout } from '@bigcommerce/checkout/contexts';
+import {
+    TranslatedString,
+    withLanguage,
+    type WithLanguageProps,
+} from '@bigcommerce/checkout/locale';
 import { usePayPalFastlaneAddress } from '@bigcommerce/checkout/paypal-fastlane-integration';
-import { AddressFormSkeleton, LoadingOverlay, useThemeContext } from '@bigcommerce/checkout/ui';
+import {
+    AddressFormSkeleton,
+    Button,
+    ButtonVariant,
+    Fieldset,
+    Form,
+    LoadingOverlay,
+} from '@bigcommerce/checkout/ui';
+import { B2BSessionStorage } from '@bigcommerce/checkout/utility';
 
 import {
-  AddressForm,
-  type AddressFormValues,
-  AddressSelect,
-  AddressType,
-  getAddressFormFieldsValidationSchema,
-  getTranslateAddressError,
-  isValidCustomerAddress,
-  mapAddressToFormValues,
+    AddressForm,
+    type AddressFormValues,
+    AddressSelect,
+    AddressType,
+    getAddressFormFieldsValidationSchema,
+    getTranslateAddressError,
+    isValidCustomerAddress,
+    mapAddressToFormValues,
 } from '../address';
-import { getCustomFormFieldsValidationSchema } from '../formFields';
+import {
+    getAddressExtraFieldsValidationSchema,
+    getCustomFormFieldsValidationSchema,
+} from '../formFields';
 import { OrderComments } from '../orderComments';
 import { getShippableItemsCount } from '../shipping';
-import { Button, ButtonVariant } from '../ui/button';
-import { Fieldset, Form } from '../ui/form';
 
 import StaticBillingAddress from './StaticBillingAddress';
 
@@ -53,16 +68,20 @@ const BillingForm = ({
     const addressFormRef: RefObject<HTMLFieldSetElement> = useRef(null);
     const { isPayPalFastlaneEnabled, paypalFastlaneAddresses } = usePayPalFastlaneAddress();
 
-    const { themeV2 } = useThemeContext();
-    const { checkoutService, checkoutState } = useCheckout();
-
     const {
-        data: { getCustomer, getConfig, getCart },
-        statuses: { isUpdatingBillingAddress, isUpdatingCheckout },
-    } = checkoutState;
-    const customer = getCustomer();
-    const config = getConfig();
-    const cart = getCart();
+        checkoutService,
+        selectedState: { customer, config, cart, isUpdatingBillingAddress, isUpdatingCheckout },
+    } = useCheckout(({ data, statuses }) => ({
+        customer: data.getCustomer(),
+        config: data.getConfig(),
+        cart: data.getCart(),
+        isUpdatingBillingAddress: statuses.isUpdatingBillingAddress(),
+        isUpdatingCheckout: statuses.isUpdatingCheckout(),
+    }));
+    const {
+        billing: { hideSaveToAddressBookCheck, restrictManualAddressEntry },
+        userJourney: { hasAddressExtraFields, hasCompanyAddressBook },
+    } = useCapabilities();
 
     if (!config || !customer || !cart) {
         throw new Error('checkout data is not available');
@@ -72,11 +91,14 @@ const BillingForm = ({
     const addresses = customer.addresses;
     const shouldRenderStaticAddress = methodId === 'amazonpay';
     const allFormFields = getFields(values.countryCode);
-    const customFormFields = allFormFields.filter(({ custom }) => custom);
-    const hasCustomFormFields = customFormFields.length > 0;
+    const customOrExtraFields = allFormFields.filter(
+        (field) => field.custom || isExtraField(field),
+    );
+    const hasCustomOrExtraFields = customOrExtraFields.length > 0;
     const editableFormFields =
-        shouldRenderStaticAddress && hasCustomFormFields ? customFormFields : allFormFields;
-    const billingAddresses = isGuest && isPayPalFastlaneEnabled ? paypalFastlaneAddresses : addresses;
+        shouldRenderStaticAddress && hasCustomOrExtraFields ? customOrExtraFields : allFormFields;
+    const billingAddresses =
+        isGuest && isPayPalFastlaneEnabled ? paypalFastlaneAddresses : addresses;
     const hasAddresses = billingAddresses?.length > 0;
     const hasValidCustomerAddress =
         billingAddress &&
@@ -85,15 +107,36 @@ const BillingForm = ({
             billingAddresses,
             getFields(billingAddress.countryCode),
         );
-    const isUpdating  = isUpdatingBillingAddress() || isUpdatingCheckout();
+    const isUpdating = isUpdatingBillingAddress || isUpdatingCheckout;
     const { enableOrderComments } = config.checkoutSettings;
-    const shouldShowOrderComments  = enableOrderComments && getShippableItemsCount(cart) < 1;
+    const shouldShowOrderComments = enableOrderComments && getShippableItemsCount(cart) < 1;
+    const shouldShowSaveAddress = !hideSaveToAddressBookCheck && !isGuest;
+
+    // Once the address form opens (selected address is invalid or no longer matches a
+    // book entry), the stored book id can't faithfully represent it, so drop it.
+    useEffect(() => {
+        if (
+            hasCompanyAddressBook &&
+            !hasValidCustomerAddress &&
+            B2BSessionStorage.getAddressId(B2BSessionStorage.billingAddressIdKey)
+        ) {
+            B2BSessionStorage.remove(B2BSessionStorage.billingAddressIdKey);
+        }
+    }, [hasCompanyAddressBook, hasValidCustomerAddress]);
 
     const handleSelectAddress = async (address: Partial<Address>) => {
         setIsResettingAddress(true);
 
         try {
             await checkoutService.updateBillingAddress(address);
+
+            B2BSessionStorage.remove(B2BSessionStorage.billingAddressIdKey);
+
+            const selectedAddressId = (address as CustomerAddress).id;
+
+            if (hasCompanyAddressBook && selectedAddressId) {
+                B2BSessionStorage.set(B2BSessionStorage.billingAddressIdKey, selectedAddressId);
+            }
         } catch (error) {
             if (error instanceof Error) {
                 onUnhandledError(error);
@@ -104,6 +147,10 @@ const BillingForm = ({
     };
 
     const handleUseNewAddress = () => {
+        if (hasAddressExtraFields) {
+            B2BSessionStorage.remove(B2BSessionStorage.billingExtraFieldsKey);
+        }
+
         void handleSelectAddress({});
     };
 
@@ -132,13 +179,13 @@ const BillingForm = ({
                     </Fieldset>
                 )}
 
-                {!hasValidCustomerAddress && (
+                {!restrictManualAddressEntry && !hasValidCustomerAddress && (
                     <AddressFormSkeleton isLoading={isResettingAddress}>
                         <AddressForm
                             countryCode={values.countryCode}
                             formFields={editableFormFields}
                             setFieldValue={setFieldValue}
-                            shouldShowSaveAddress={!isGuest}
+                            shouldShowSaveAddress={shouldShowSaveAddress}
                             type={AddressType.Billing}
                         />
                     </AddressFormSkeleton>
@@ -149,7 +196,7 @@ const BillingForm = ({
 
             <div className="form-actions">
                 <Button
-                    className={themeV2 ? 'body-bold' : ''}
+                    className="body-bold"
                     disabled={isUpdating || isResettingAddress}
                     id="checkout-billing-continue"
                     isLoading={isUpdating || isResettingAddress}
@@ -172,27 +219,33 @@ export default withLanguage(
             ...mapAddressToFormValues(
                 getFields(billingAddress && billingAddress.countryCode),
                 billingAddress,
+                B2BSessionStorage.billingExtraFieldsKey,
             ),
             orderComment: customerMessage,
         }),
-        isInitialValid: ({ billingAddress, getFields, language }) =>
-            !!billingAddress &&
-            getAddressFormFieldsValidationSchema({
-                language,
-                formFields: getFields(billingAddress.countryCode),
-            }).isValidSync(billingAddress),
+        validateOnMount: true,
         validationSchema: ({
             language,
             getFields,
             methodId,
         }: BillingFormProps & WithLanguageProps) =>
             methodId === 'amazonpay'
-                ? lazy<Partial<AddressFormValues>>((values) =>
-                      getCustomFormFieldsValidationSchema({
-                          translate: getTranslateAddressError(language),
+                ? lazy<Partial<AddressFormValues>>((values) => {
+                      const translate = getTranslateAddressError(
+                          getFields(values && values.countryCode),
+                          language,
+                      );
+
+                      return getCustomFormFieldsValidationSchema({
+                          translate,
                           formFields: getFields(values && values.countryCode),
-                      }),
-                  )
+                      }).concat(
+                          getAddressExtraFieldsValidationSchema({
+                              translate,
+                              formFields: getFields(values && values.countryCode),
+                          }),
+                      );
+                  })
                 : lazy<Partial<AddressFormValues>>((values) =>
                       getAddressFormFieldsValidationSchema({
                           language,

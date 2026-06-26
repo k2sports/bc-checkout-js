@@ -1,30 +1,3 @@
-
-import {
-    type AnalyticsContextProps,
-    type AnalyticsEvents,
-    AnalyticsProviderMock,
-} from '@bigcommerce/checkout/analytics';
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
-import {
-    createLocaleContext,
-    getLanguageService,
-    LocaleContext,
-    type LocaleContextType,
-    LocaleProvider,
-} from '@bigcommerce/checkout/locale';
-import {
-    CHECKOUT_ROOT_NODE_ID,
-    CheckoutProvider,
-} from '@bigcommerce/checkout/payment-integration-api';
-import {
-    CheckoutPageNodeObject,
-    CheckoutPreset,
-    checkoutSettings,
-    checkoutWithBillingEmail,
-    checkoutWithMultiShippingCart,
-} from '@bigcommerce/checkout/test-framework';
-import { renderWithoutWrapper as render, screen } from '@bigcommerce/checkout/test-utils';
-import { ThemeProvider } from '@bigcommerce/checkout/ui';
 import {
     type BillingAddress,
     type Cart,
@@ -40,6 +13,30 @@ import { faker } from '@faker-js/faker';
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import React, { act, type FunctionComponent } from 'react';
+
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
+import {
+    type AnalyticsContextProps,
+    type AnalyticsEvents,
+    AnalyticsProviderMock,
+    CheckoutProvider,
+    ExtensionProvider,
+    type ExtensionServiceInterface,
+    LocaleContext,
+    type LocaleContextType,
+    LocaleProvider,
+    ThemeProvider,
+} from '@bigcommerce/checkout/contexts';
+import { createLocaleContext, getLanguageService } from '@bigcommerce/checkout/locale';
+import { CHECKOUT_ROOT_NODE_ID } from '@bigcommerce/checkout/payment-integration-api';
+import {
+    CheckoutPageNodeObject,
+    CheckoutPreset,
+    checkoutSettings,
+    checkoutWithBillingEmail,
+    checkoutWithMultiShippingCart,
+} from '@bigcommerce/checkout/test-framework';
+import { renderWithoutWrapper as render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getBillingAddress } from '../billing/billingAddresses.mock';
 import { getCart } from '../cart/carts.mock';
@@ -63,6 +60,7 @@ describe('Customer Component', () => {
     let checkout: CheckoutPageNodeObject;
     let CheckoutTest: FunctionComponent<CheckoutProps>;
     let checkoutService: CheckoutService;
+    let extensionService: ExtensionServiceInterface;
     let defaultProps: CheckoutProps & AnalyticsContextProps;
     let embeddedMessengerMock: EmbeddedCheckoutMessenger;
     let analyticsTracker: AnalyticsEvents;
@@ -84,6 +82,7 @@ describe('Customer Component', () => {
         window.scrollTo = jest.fn();
 
         checkoutService = createCheckoutService();
+        extensionService = new ExtensionService(checkoutService, createErrorLogger());
         embeddedMessengerMock = createEmbeddedCheckoutMessenger({
             parentOrigin: 'https://store.url',
         });
@@ -116,14 +115,12 @@ describe('Customer Component', () => {
 
         CheckoutTest = (props) => (
             <CheckoutProvider checkoutService={checkoutService}>
-                <LocaleProvider checkoutService={checkoutService}>
+                <LocaleProvider
+                    checkoutService={checkoutService}
+                    languageService={getLanguageService()}
+                >
                     <AnalyticsProviderMock>
-                        <ExtensionProvider
-                            checkoutService={checkoutService}
-                            errorLogger={{
-                                log: jest.fn(),
-                            }}
-                        >
+                        <ExtensionProvider extensionService={extensionService}>
                             <ThemeProvider>
                                 <Checkout {...props} />
                             </ThemeProvider>
@@ -258,26 +255,19 @@ describe('Customer Component', () => {
         await userEvent.type(await screen.findByLabelText('Password'), password);
 
         checkout.setRequestHandler(
-            rest.post(
-                '/internalapi/v1/checkout/customer',
-                (_, res, ctx) => res(
-                    ctx.json({ data: { persistentCartRetrievalInformation: false } })
-                )
-            )
+            rest.post('/internalapi/v1/checkout/customer', (_, res, ctx) =>
+                res(ctx.json({ data: { persistentCartRetrievalInformation: false } })),
+            ),
         );
 
-        checkout.updateCheckout(
-            'get',
-            '/checkout/*',
-            {
-                ...checkoutWithBillingEmail,
-                billingAddress: {
-                    ...checkoutWithBillingEmail.billingAddress,
-                    email,
-                },
-                customer: checkoutWithMultiShippingCart.customer,
-            } as CheckoutObject,
-        );
+        checkout.updateCheckout('get', '/checkout/*', {
+            ...checkoutWithBillingEmail,
+            billingAddress: {
+                ...checkoutWithBillingEmail.billingAddress,
+                email,
+            },
+            customer: checkoutWithMultiShippingCart.customer,
+        } as CheckoutObject);
 
         await userEvent.click(await screen.findByText('Sign In'));
 
@@ -290,26 +280,23 @@ describe('Customer Component', () => {
     it('calls onContinueAsGuestError when empty cart error is thrown', async () => {
         const customerEmail = faker.internet.email();
 
-        render(
-            <CheckoutTest {...defaultProps} />)
-        ;
+        render(<CheckoutTest {...defaultProps} />);
 
         await checkout.waitForCustomerStep();
 
         checkout.setRequestHandler(
-            rest.post(
-                '/api/storefront/checkouts/*/billing-address',
-                (_, res, ctx) => res(
+            rest.post('/api/storefront/checkouts/*/billing-address', (_, res, ctx) =>
+                res(
                     ctx.status(400),
                     ctx.json({
                         type: 'empty_cart',
                         title: 'Empty cart',
-                        detail: 'Cart is empty'
-                    })
-                )
-            )
+                        detail: 'Cart is empty',
+                    }),
+                ),
+            ),
         );
-        
+
         await act(async () => {
             await userEvent.clear(await screen.findByLabelText('Email'));
             await userEvent.type(await screen.findByLabelText('Email'), customerEmail);
@@ -318,9 +305,13 @@ describe('Customer Component', () => {
 
         // Wait for the ReactModal to appear using its data-test attribute
         expect(await screen.findByTestId('modal-body')).toBeInTheDocument();
-        
+
         // Check for the actual error message from the translation
-        expect(await screen.findByText("Your cart contains items that aren't available for purchase or have exceeded the purchase limit. To place your order, please create a new cart with the quantities to the allowed limit or with different items.")).toBeInTheDocument();
+        expect(
+            await screen.findByText(
+                "Your cart contains items that aren't available for purchase or have exceeded the purchase limit. To place your order, please create a new cart with the quantities to the allowed limit or with different items.",
+            ),
+        ).toBeInTheDocument();
     });
 
     describe('sign in link shouldRedirectToStorefrontForAuth', () => {
@@ -384,17 +375,16 @@ describe('Customer Component', () => {
         await checkout.waitForCustomerStep();
 
         checkout.setRequestHandler(
-            rest.post(
-                '/api/storefront/checkouts/*/billing-address',
-                (_, res, ctx) => res(
+            rest.post('/api/storefront/checkouts/*/billing-address', (_, res, ctx) =>
+                res(
                     ctx.status(403),
                     ctx.json({
                         type: 'about:blank',
                         title: 'Sign in to Your Account',
-                        detail: 'This email is already associated to an account. Please login to continue.'
-                    })
-                )
-            )
+                        detail: 'This email is already associated to an account. Please login to continue.',
+                    }),
+                ),
+            ),
         );
 
         await act(async () => {
@@ -501,7 +491,9 @@ describe('Customer Component with Stripe', () => {
 
             // eslint-disable-next-line testing-library/no-node-access
             expect(document.querySelector('#stripeupeLink')).toBeInTheDocument();
-            expect(await screen.findByTestId('stripe-customer-continue-as-guest-button')).toBeInTheDocument();
+            expect(
+                await screen.findByTestId('stripe-customer-continue-as-guest-button'),
+            ).toBeInTheDocument();
         });
 
         it("doesn't render Stripe guest form if it enabled but cart amount is smaller then Stripe requires", async () => {
@@ -531,7 +523,9 @@ describe('Customer Component with Stripe', () => {
             // eslint-disable-next-line testing-library/no-node-access
             expect(document.querySelector('#stripeupeLink')).not.toBeInTheDocument();
             expect(await screen.findByTestId('checkout-customer-guest')).toBeInTheDocument();
-            expect(await screen.findByTestId('customer-continue-as-guest-button')).toBeInTheDocument();
+            expect(
+                await screen.findByTestId('customer-continue-as-guest-button'),
+            ).toBeInTheDocument();
         });
     });
 });

@@ -1,14 +1,22 @@
-import { type CheckoutInitialState, createCheckoutService, createEmbeddedCheckoutMessenger } from '@bigcommerce/checkout-sdk/essential';
+import {
+    type CheckoutInitialState,
+    createCheckoutService,
+    createEmbeddedCheckoutMessenger,
+} from '@bigcommerce/checkout-sdk/essential';
 import type { BrowserOptions } from '@sentry/browser';
 import React, { type ReactElement, useEffect, useMemo } from 'react';
 import ReactModal from 'react-modal';
 
-import { AnalyticsProvider } from '@bigcommerce/checkout/analytics';
-import { ExtensionProvider } from '@bigcommerce/checkout/checkout-extension';
+import { ExtensionService } from '@bigcommerce/checkout/checkout-extension';
+import {
+    AnalyticsProvider,
+    CheckoutProvider,
+    ExtensionProvider,
+    LocaleProvider,
+    ThemeProvider,
+} from '@bigcommerce/checkout/contexts';
 import { ErrorBoundary } from '@bigcommerce/checkout/error-handling-utils';
-import { getLanguageService, LocaleProvider } from '@bigcommerce/checkout/locale';
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
-import { ThemeProvider } from '@bigcommerce/checkout/ui';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
 
 import '../../scss/App.scss';
 
@@ -30,21 +38,39 @@ export interface CheckoutAppProps {
 }
 
 const CheckoutApp = (props: CheckoutAppProps): ReactElement => {
-    const { containerId, sentryConfig, publicPath, sentrySampleRate } = props;
+    let isCheckoutHookExperimentEnabled = false;
+    const { containerId, sentryConfig, publicPath, sentrySampleRate, initialState } = props;
 
-    const errorLogger = useMemo(() => createErrorLogger(
-        { sentry: sentryConfig },
-        {
-            errorTypes: ['UnrecoverableError'],
-            publicPath,
-            sampleRate: sentrySampleRate || 0.1,
-        },
-    ), []);
-    const checkoutService = useMemo(() => createCheckoutService({
-        locale: getLanguageService().getLocale(),
-        shouldWarnMutation: process.env.NODE_ENV === 'development',
-        errorLogger,
-    }), []);
+    if (initialState) {
+        isCheckoutHookExperimentEnabled =
+            initialState?.config?.storeConfig.checkoutSettings.features[
+                'CHECKOUT-9842.roll_out_state_new_checkout_hook'
+            ] ?? false;
+    }
+
+    const errorLogger = useMemo(
+        () =>
+            createErrorLogger(
+                { sentry: sentryConfig },
+                {
+                    errorTypes: ['UnrecoverableError'],
+                    publicPath,
+                    sampleRate: sentrySampleRate || 0.1,
+                },
+            ),
+        [],
+    );
+    const languageService = useMemo(() => getLanguageService(), []);
+    const checkoutService = useMemo(
+        () =>
+            createCheckoutService({
+                locale: languageService.getLocale(),
+                shouldWarnMutation: process.env.NODE_ENV === 'development',
+                errorLogger,
+            }),
+        [],
+    );
+    const extensionService = useMemo(() => new ExtensionService(checkoutService, errorLogger), []);
     const embeddedStylesheet = useMemo(() => createEmbeddedCheckoutStylesheet(), []);
     const embeddedSupport = useMemo(() => createEmbeddedCheckoutSupport(getLanguageService()), []);
 
@@ -54,13 +80,14 @@ const CheckoutApp = (props: CheckoutAppProps): ReactElement => {
 
     return (
         <ErrorBoundary errorLogger={errorLogger}>
-            <LocaleProvider checkoutService={checkoutService}>
-                <CheckoutProvider checkoutService={checkoutService} errorLogger={errorLogger}>
+            <LocaleProvider checkoutService={checkoutService} languageService={languageService}>
+                <CheckoutProvider
+                    checkoutService={checkoutService}
+                    errorLogger={errorLogger}
+                    isCheckoutHookExperimentEnabled={isCheckoutHookExperimentEnabled}
+                >
                     <AnalyticsProvider checkoutService={checkoutService}>
-                        <ExtensionProvider
-                            checkoutService={checkoutService}
-                            errorLogger={errorLogger}
-                        >
+                        <ExtensionProvider extensionService={extensionService}>
                             <ThemeProvider>
                                 <Checkout
                                     {...props}

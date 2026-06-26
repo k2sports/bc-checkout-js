@@ -2,7 +2,8 @@ import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React from 'react';
 
-import { createLocaleContext, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/locale';
+import { LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getStoreConfig } from '../../config/config.mock';
@@ -28,7 +29,9 @@ describe('CreditCardValidation', () => {
             </LocaleContext.Provider>,
         );
 
-        expect(screen.getByText('Please re-enter your card number to authorize this transaction.')).toBeInTheDocument();
+        expect(
+            screen.getByText('Please re-enter your card number to authorize this transaction.'),
+        ).toBeInTheDocument();
         expect(screen.getByLabelText('CVV')).toBeInTheDocument();
         expect(screen.getByLabelText('Credit Card Number')).toBeInTheDocument();
     });

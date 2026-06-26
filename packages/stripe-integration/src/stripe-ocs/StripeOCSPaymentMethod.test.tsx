@@ -7,21 +7,23 @@ import {
     type PaymentMethod,
     type WithStripeOCSPaymentInitializeOptions,
 } from '@bigcommerce/checkout-sdk';
-import { createStripeOCSPaymentStrategy } from '@bigcommerce/checkout-sdk/integrations/stripe';
-import { render } from '@testing-library/react';
+import {
+    createStripeCSPaymentStrategy,
+    createStripeOCSPaymentStrategy,
+} from '@bigcommerce/checkout-sdk/integrations/stripe';
+import { act, render } from '@testing-library/react';
 import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React, { type FunctionComponent } from 'react';
 
 import {
-    createLocaleContext,
+    CheckoutProvider,
     LocaleContext,
     type LocaleContextType,
-} from '@bigcommerce/checkout/locale';
-import {
-    CheckoutProvider,
-    type PaymentMethodProps,
-} from '@bigcommerce/checkout/payment-integration-api';
+    ThemeContext,
+} from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
+import { type PaymentMethodProps } from '@bigcommerce/checkout/payment-integration-api';
 import {
     getCheckout,
     getCustomer,
@@ -33,27 +35,27 @@ import {
 import { screen } from '@bigcommerce/checkout/test-utils';
 import { AccordionContext, type AccordionContextProps } from '@bigcommerce/checkout/ui';
 
+import * as getStripeOCSStyles from './getStripeOCSStyles';
 import StripeOCSPaymentMethod from './StripeOCSPaymentMethod';
 
 jest.mock('./getStripeOCSStyles', () => ({
-    getAppearanceForOCSElement: () => {
-        return {
-            variables: {
-                color: '#cccccc',
-            },
-        };
-    },
-    getFonts: () => [{ cssSrc: 'fontSrc' }],
+    ...jest.requireActual<typeof import('./getStripeOCSStyles')>('./getStripeOCSStyles'),
+    getAppearanceForOCSElement: jest.fn(),
+    getFonts: jest.fn(),
 }));
+
+const { CheckoutTheme } =
+    jest.requireActual<typeof import('./getStripeOCSStyles')>('./getStripeOCSStyles');
 
 describe('when using Stripe OCS payment', () => {
     const methodId = 'optimized_checkout';
     const gatewayId = 'stripeocs';
     const methodSelectorPrefix = `${gatewayId}-${methodId}`;
     const expectedContainerId = `${methodSelectorPrefix}-component-field`;
+    const expectedCurrencySelectorContainerId = `${methodSelectorPrefix}-provider-section-on-top-of-payments-list`;
     const defaultAccordionLayout = {
         defaultCollapsed: false,
-        radios: true,
+        radios: 'always',
         spacedAccordionItems: false,
         type: 'accordion',
         visibleAccordionItemsCount: 0,
@@ -73,6 +75,10 @@ describe('when using Stripe OCS payment', () => {
     >;
     let onToggleMock: jest.Mock;
     let accordionContextValues: AccordionContextProps;
+    let themeContextValueMock: {
+        themeV2: boolean;
+    };
+    let getAppearanceForOCSElementMock: jest.Mock;
 
     beforeEach(() => {
         collapseElementMock = jest.fn();
@@ -95,6 +101,24 @@ describe('when using Stripe OCS payment', () => {
             onToggle: onToggleMock,
             selectedItemId: methodSelectorPrefix,
         };
+        themeContextValueMock = {
+            themeV2: false,
+        };
+
+        getAppearanceForOCSElementMock = jest.fn(() => {
+            return {
+                variables: {
+                    color: '#cccccc',
+                },
+            };
+        });
+
+        jest.spyOn(getStripeOCSStyles, 'getAppearanceForOCSElement').mockImplementation(
+            getAppearanceForOCSElementMock,
+        );
+        jest.spyOn(getStripeOCSStyles, 'getFonts').mockImplementation(() => [
+            { cssSrc: 'fontSrc' },
+        ]);
 
         jest.spyOn(checkoutState.data, 'getConfig').mockReturnValue(getStoreConfig());
 
@@ -122,7 +146,9 @@ describe('when using Stripe OCS payment', () => {
                 <LocaleContext.Provider value={localeContext}>
                     <AccordionContext.Provider value={accordionContextValues}>
                         <Formik initialValues={{}} onSubmit={noop}>
-                            <StripeOCSPaymentMethod {...props} />
+                            <ThemeContext.Provider value={themeContextValueMock}>
+                                <StripeOCSPaymentMethod {...props} />
+                            </ThemeContext.Provider>
                         </Formik>
                     </AccordionContext.Provider>
                 </LocaleContext.Provider>
@@ -142,9 +168,10 @@ describe('when using Stripe OCS payment', () => {
         expect(initializePayment).toHaveBeenCalledWith({
             gatewayId,
             methodId,
-            integrations: [createStripeOCSPaymentStrategy],
+            integrations: [createStripeOCSPaymentStrategy, createStripeCSPaymentStrategy],
             [gatewayId]: {
                 containerId: expectedContainerId,
+                currencySelectorContainerId: expectedCurrencySelectorContainerId,
                 layout: defaultAccordionLayout,
                 appearance: {
                     variables: { color: '#cccccc' },
@@ -173,9 +200,10 @@ describe('when using Stripe OCS payment', () => {
         expect(initializePayment).toHaveBeenCalledWith({
             gatewayId,
             methodId,
-            integrations: [createStripeOCSPaymentStrategy],
+            integrations: [createStripeOCSPaymentStrategy, createStripeCSPaymentStrategy],
             [gatewayId]: {
                 containerId: expectedContainerId,
+                currencySelectorContainerId: expectedCurrencySelectorContainerId,
                 layout: defaultAccordionLayout,
                 appearance: {
                     variables: { color: '#cccccc' },
@@ -199,6 +227,7 @@ describe('when using Stripe OCS payment', () => {
                 gatewayId: method.gateway,
                 [gatewayId]: {
                     containerId: expectedContainerId,
+                    currencySelectorContainerId: expectedCurrencySelectorContainerId,
                     layout: defaultAccordionLayout,
                     appearance: {
                         variables: { color: '#cccccc' },
@@ -228,6 +257,7 @@ describe('when using Stripe OCS payment', () => {
                 gatewayId: method.gateway,
                 [gatewayId]: {
                     containerId: expectedContainerId,
+                    currencySelectorContainerId: expectedCurrencySelectorContainerId,
                     layout: defaultAccordionLayout,
                     appearance: {
                         variables: { color: '#cccccc' },
@@ -265,6 +295,15 @@ describe('when using Stripe OCS payment', () => {
         expect(hidePaymentSubmitButtonMock).toHaveBeenCalledWith(method, false);
     });
 
+    it('should not initialize method if payment not required', () => {
+        jest.spyOn(checkoutState.data, 'isPaymentDataRequired').mockReturnValue(false);
+
+        render(<PaymentMethodTest {...defaultProps} method={method} />);
+
+        expect(screen.queryByTestId('stripe-accordion-skeleton')).not.toBeInTheDocument();
+        expect(checkoutService.initializePayment).not.toHaveBeenCalled();
+    });
+
     describe('# Stripe OCS accordion layout', () => {
         it('should initialize with auto layout when isCustomChecklistItem is false', () => {
             method = {
@@ -282,6 +321,7 @@ describe('when using Stripe OCS payment', () => {
                     gatewayId: method.gateway,
                     [gatewayId]: {
                         containerId: expectedContainerId,
+                        currencySelectorContainerId: expectedCurrencySelectorContainerId,
                         layout: {
                             ...defaultAccordionLayout,
                             type: 'auto',
@@ -316,6 +356,7 @@ describe('when using Stripe OCS payment', () => {
                     gatewayId: method.gateway,
                     [gatewayId]: {
                         containerId: expectedContainerId,
+                        currencySelectorContainerId: expectedCurrencySelectorContainerId,
                         layout: {
                             ...defaultAccordionLayout,
                             type: 'accordion',
@@ -332,6 +373,10 @@ describe('when using Stripe OCS payment', () => {
                     },
                 }),
             );
+            expect(getAppearanceForOCSElementMock).toHaveBeenCalledWith(
+                expectedContainerId,
+                CheckoutTheme.DEFAULT,
+            );
         });
 
         it('accordion collapsed when selected different payment method', () => {
@@ -345,6 +390,7 @@ describe('when using Stripe OCS payment', () => {
                     gatewayId: method.gateway,
                     [gatewayId]: {
                         containerId: expectedContainerId,
+                        currencySelectorContainerId: expectedCurrencySelectorContainerId,
                         layout: {
                             ...defaultAccordionLayout,
                             defaultCollapsed: true,
@@ -372,6 +418,7 @@ describe('when using Stripe OCS payment', () => {
                     gatewayId: method.gateway,
                     [gatewayId]: {
                         containerId: expectedContainerId,
+                        currencySelectorContainerId: expectedCurrencySelectorContainerId,
                         layout: defaultAccordionLayout,
                         appearance: {
                             variables: { color: '#cccccc' },
@@ -384,6 +431,43 @@ describe('when using Stripe OCS payment', () => {
                         togglePreloader: expect.any(Function),
                     },
                 }),
+            );
+        });
+
+        it('should initialize with accordion layout for themeV2', () => {
+            themeContextValueMock = {
+                themeV2: true,
+            };
+
+            render(<PaymentMethodTest {...defaultProps} method={method} />);
+
+            expect(checkoutService.initializePayment).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    methodId: method.id,
+                    gatewayId: method.gateway,
+                    [gatewayId]: {
+                        containerId: expectedContainerId,
+                        currencySelectorContainerId: expectedCurrencySelectorContainerId,
+                        layout: {
+                            ...defaultAccordionLayout,
+                            type: 'accordion',
+                            spacedAccordionItems: true,
+                        },
+                        appearance: {
+                            variables: { color: '#cccccc' },
+                        },
+                        fonts: [{ cssSrc: 'fontSrc' }],
+                        onError: expect.any(Function),
+                        render: expect.any(Function),
+                        paymentMethodSelect: expect.any(Function),
+                        handleClosePaymentMethod: expect.any(Function),
+                        togglePreloader: expect.any(Function),
+                    },
+                }),
+            );
+            expect(getAppearanceForOCSElementMock).toHaveBeenCalledWith(
+                expectedContainerId,
+                CheckoutTheme.THEME_V2,
             );
         });
     });
@@ -460,6 +544,196 @@ describe('when using Stripe OCS payment', () => {
             rerender(<PaymentMethodTest {...defaultProps} method={method} />);
 
             expect(collapseElementMock).not.toHaveBeenCalled();
+        });
+
+        it('forwards Stripe errors to onUnhandledError', () => {
+            const onUnhandledErrorMock = jest.fn();
+            const stripeError = new Error('Stripe initialization failed');
+
+            jest.spyOn(checkoutService, 'initializePayment').mockImplementation(
+                (options: WithStripeOCSPaymentInitializeOptions) => {
+                    options.stripeocs?.onError?.(stripeError);
+
+                    return Promise.resolve(checkoutState);
+                },
+            );
+
+            render(
+                <PaymentMethodTest
+                    {...defaultProps}
+                    method={method}
+                    onUnhandledError={onUnhandledErrorMock}
+                />,
+            );
+
+            expect(onUnhandledErrorMock).toHaveBeenCalledWith(stripeError);
+        });
+    });
+
+    describe('# Delayed BC accordion toggle', () => {
+        beforeEach(() => {
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        it('schedules a delayed onToggle when the Stripe-selected method differs from the BC selectedItemId', () => {
+            accordionContextValues = {
+                onToggle: onToggleMock,
+                selectedItemId: 'nonStripeItem',
+            };
+
+            let paymentMethodSelectRef: ((id: string) => void) | undefined;
+
+            jest.spyOn(checkoutService, 'initializePayment').mockImplementation(
+                (options: WithStripeOCSPaymentInitializeOptions) => {
+                    paymentMethodSelectRef = options.stripeocs?.paymentMethodSelect;
+
+                    return Promise.resolve(checkoutState);
+                },
+            );
+
+            const { rerender } = render(<PaymentMethodTest {...defaultProps} method={method} />);
+
+            act(() => {
+                paymentMethodSelectRef?.('selectedStripeMethodId');
+            });
+
+            const newOnToggleMock = jest.fn();
+
+            accordionContextValues = {
+                onToggle: newOnToggleMock,
+                selectedItemId: 'nonStripeItem',
+            };
+            rerender(<PaymentMethodTest {...defaultProps} method={method} />);
+
+            act(() => {
+                jest.advanceTimersByTime(100);
+            });
+
+            expect(newOnToggleMock).toHaveBeenCalledWith('selectedStripeMethodId');
+        });
+
+        it('cancels a pending delayed onToggle when onToggle changes again before it fires', () => {
+            accordionContextValues = {
+                onToggle: onToggleMock,
+                selectedItemId: 'nonStripeItem',
+            };
+
+            let paymentMethodSelectRef: ((id: string) => void) | undefined;
+
+            jest.spyOn(checkoutService, 'initializePayment').mockImplementation(
+                (options: WithStripeOCSPaymentInitializeOptions) => {
+                    paymentMethodSelectRef = options.stripeocs?.paymentMethodSelect;
+
+                    return Promise.resolve(checkoutState);
+                },
+            );
+
+            const { rerender } = render(<PaymentMethodTest {...defaultProps} method={method} />);
+
+            act(() => {
+                paymentMethodSelectRef?.('selectedStripeMethodId');
+            });
+
+            const firstOnToggleMock = jest.fn();
+
+            accordionContextValues = {
+                onToggle: firstOnToggleMock,
+                selectedItemId: 'nonStripeItem',
+            };
+            rerender(<PaymentMethodTest {...defaultProps} method={method} />);
+
+            const secondOnToggleMock = jest.fn();
+
+            accordionContextValues = {
+                onToggle: secondOnToggleMock,
+                selectedItemId: 'nonStripeItem',
+            };
+            rerender(<PaymentMethodTest {...defaultProps} method={method} />);
+
+            act(() => {
+                jest.advanceTimersByTime(100);
+            });
+
+            expect(firstOnToggleMock).not.toHaveBeenCalled();
+            expect(secondOnToggleMock).toHaveBeenCalledWith('selectedStripeMethodId');
+        });
+
+        it('does not schedule onToggle when selected payment method already matches selectedItemId', () => {
+            let paymentMethodSelectRef: ((id: string) => void) | undefined;
+
+            jest.spyOn(checkoutService, 'initializePayment').mockImplementation(
+                (options: WithStripeOCSPaymentInitializeOptions) => {
+                    paymentMethodSelectRef = options.stripeocs?.paymentMethodSelect;
+
+                    return Promise.resolve(checkoutState);
+                },
+            );
+
+            const { rerender } = render(<PaymentMethodTest {...defaultProps} method={method} />);
+
+            act(() => {
+                paymentMethodSelectRef?.(methodSelectorPrefix);
+            });
+
+            const newOnToggleMock = jest.fn();
+
+            accordionContextValues = {
+                onToggle: newOnToggleMock,
+                selectedItemId: methodSelectorPrefix,
+            };
+            rerender(<PaymentMethodTest {...defaultProps} method={method} />);
+
+            act(() => {
+                jest.advanceTimersByTime(100);
+            });
+
+            expect(newOnToggleMock).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('# Currency selector', () => {
+        beforeEach(() => {
+            jest.spyOn(checkoutService, 'initializePayment').mockImplementation(
+                (options: WithStripeOCSPaymentInitializeOptions) => {
+                    options.stripeocs?.togglePreloader?.(false);
+
+                    return Promise.resolve(checkoutState);
+                },
+            );
+        });
+
+        it('should render currency selector styles for non-themeV2', () => {
+            themeContextValueMock = { themeV2: false };
+
+            render(<PaymentMethodTest {...defaultProps} method={method} />);
+
+            expect(screen.queryByTestId('stripe-accordion-skeleton')).not.toBeInTheDocument();
+            expect(checkoutService.initializePayment).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    [gatewayId]: expect.objectContaining({
+                        currencySelectorContainerId: expectedCurrencySelectorContainerId,
+                    }),
+                }),
+            );
+        });
+
+        it('should render currency selector styles for themeV2', () => {
+            themeContextValueMock = { themeV2: true };
+
+            render(<PaymentMethodTest {...defaultProps} method={method} />);
+
+            expect(screen.queryByTestId('stripe-accordion-skeleton')).not.toBeInTheDocument();
+            expect(checkoutService.initializePayment).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    [gatewayId]: expect.objectContaining({
+                        currencySelectorContainerId: expectedCurrencySelectorContainerId,
+                    }),
+                }),
+            );
         });
     });
 });

@@ -1,7 +1,6 @@
 import React, { type FunctionComponent, useEffect } from 'react';
 
-import { useLocale } from '@bigcommerce/checkout/locale';
-import { useCheckout, usePaymentFormContext } from '@bigcommerce/checkout/payment-integration-api';
+import { useCheckout, useLocale, usePaymentFormContext } from '@bigcommerce/checkout/contexts';
 import { CheckboxFormField } from '@bigcommerce/checkout/ui';
 
 import { OwnershipTypes } from '../constants';

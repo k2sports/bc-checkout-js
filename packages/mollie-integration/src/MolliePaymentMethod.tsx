@@ -13,6 +13,7 @@ import React, {
     useState,
 } from 'react';
 
+import { LocaleContext, PaymentFormContext } from '@bigcommerce/checkout/contexts';
 import {
     getHostedInstrumentValidationSchema,
     HostedCreditCardValidation,
@@ -27,9 +28,7 @@ import {
     isInstrumentCardCodeRequiredSelector,
     isInstrumentCardNumberRequiredSelector,
 } from '@bigcommerce/checkout/instrument-utils';
-import { LocaleContext } from '@bigcommerce/checkout/locale';
 import {
-    PaymentFormContext,
     type PaymentMethodProps,
     type PaymentMethodResolveId,
     toResolvableComponent,

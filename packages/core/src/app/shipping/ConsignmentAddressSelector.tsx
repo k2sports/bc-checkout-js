@@ -1,16 +1,26 @@
-import { type Address, type ConsignmentCreateRequestBody } from "@bigcommerce/checkout-sdk";
-import React, { useState } from "react";
+import { type Address, type ConsignmentCreateRequestBody } from '@bigcommerce/checkout-sdk';
+import React, { useState } from 'react';
 
-import { TranslatedString } from "@bigcommerce/checkout/locale";
-import { useCheckout } from "@bigcommerce/checkout/payment-integration-api";
+import { TranslatedString } from '@bigcommerce/checkout/locale';
+import { B2BSessionStorage } from '@bigcommerce/checkout/utility';
 
-import { AddressFormModal, type AddressFormValues, AddressSelect, AddressType, isValidAddress, mapAddressFromFormValues } from "../address";
-import { ErrorModal } from "../common/error";
-import { EMPTY_ARRAY } from "../common/utility";
+import {
+    AddressFormModal,
+    type AddressFormValues,
+    AddressSelect,
+    AddressType,
+    isValidAddress,
+    mapAddressFromFormValues,
+    stripExtraFieldsFromAddress,
+} from '../address';
+import { ErrorModal } from '../common/error';
+import { EMPTY_ARRAY } from '../common/utility';
+import { mapAddressExtraFieldsFromFormValues } from '../formFields';
 
-import { AssignItemFailedError, AssignItemInvalidAddressError } from "./errors";
-import GuestCustomerAddressSelector from "./GuestCustomerAddressSelector";
-import { type MultiShippingConsignmentData } from "./MultishippingType";
+import { AssignItemFailedError, AssignItemInvalidAddressError } from './errors';
+import GuestCustomerAddressSelector from './GuestCustomerAddressSelector';
+import { useShipping } from './hooks/useShipping';
+import { type MultiShippingConsignmentData } from './MultishippingType';
 import { setRecommendedOrMissingShippingOption } from './utils';
 
 interface ConsignmentAddressSelectorProps {
@@ -34,27 +44,16 @@ const ConsignmentAddressSelector = ({
     const [createCustomerAddressError, setCreateCustomerAddressError] = useState<Error>();
 
     const {
-        checkoutState: {
-            data: {
-                getCustomer,
-                getConfig,
-                getConsignments: getPreviousConsignments,
-                getShippingAddressFields: getFields,
-            },
-        },
-        checkoutService: {
-            updateConsignment,
-            createCustomerAddress,
-            selectConsignmentShippingOption,
-        },
-    } = useCheckout();
+        getFields,
+        selectConsignmentShippingOption,
+        updateConsignment,
+        createCustomerAddress,
+        customer,
+        validateMaxLength,
+        getConsignments: getPreviousConsignments,
+    } = useShipping();
 
-    const customer = getCustomer();
-    const config = getConfig();
-
-    if (!config || !customer) {
-        return null;
-    }
+    const storageKey = B2BSessionStorage.getConsignmentKey(consignment?.id ?? '');
 
     // TODO: add filter for addresses
     const addresses = customer.addresses || EMPTY_ARRAY;
@@ -62,14 +61,16 @@ const ConsignmentAddressSelector = ({
     const isGuest = customer.isGuest;
 
     const handleSelectAddress = async (address: Address) => {
-        if (!isValidAddress(address, getFields(address.countryCode))) {
+        if (!isValidAddress(address, getFields(address.countryCode), validateMaxLength)) {
             return onUnhandledError(new AssignItemInvalidAddressError());
         }
 
+        const addressWithoutExtraFields = stripExtraFieldsFromAddress(address);
+
         if (!consignment) {
             setConsignmentRequest?.({
-                address,
-                shippingAddress: address,
+                address: addressWithoutExtraFields,
+                shippingAddress: addressWithoutExtraFields,
                 lineItems: [],
             });
 
@@ -81,9 +82,12 @@ const ConsignmentAddressSelector = ({
                 data: { getConsignments },
             } = await updateConsignment({
                 id: consignment.id,
-                address,
-                shippingAddress: address,
-                lineItems: consignment.lineItems.map(({ id, quantity }) => ({ itemId: id, quantity })),
+                address: addressWithoutExtraFields,
+                shippingAddress: addressWithoutExtraFields,
+                lineItems: consignment.lineItems.map(({ id, quantity }) => ({
+                    itemId: id,
+                    quantity,
+                })),
             });
 
             const currentConsignments = getConsignments();
@@ -100,20 +104,23 @@ const ConsignmentAddressSelector = ({
                 onUnhandledError(new AssignItemFailedError(error));
             }
         }
-    }
+    };
 
     const handleUseNewAddress = () => {
         setIsOpenNewAddressModal(true);
-    }
+    };
 
     const handleCloseAddAddressForm = () => {
         setIsOpenNewAddressModal(false);
-    }
+    };
 
     const handleSaveAddress = async (addressFormValues: AddressFormValues) => {
-        const address = mapAddressFromFormValues(addressFormValues);
+        const address = mapAddressFromFormValues(addressFormValues, storageKey);
 
-        await handleSelectAddress(address);
+        await handleSelectAddress({
+            ...address,
+            extraFields: mapAddressExtraFieldsFromFormValues(addressFormValues.extraFields),
+        });
 
         if (!isGuest) {
             try {
@@ -126,11 +133,11 @@ const ConsignmentAddressSelector = ({
         }
 
         setIsOpenNewAddressModal(false);
-    }
+    };
 
     const handleCloseErrorModal = () => {
         setCreateCustomerAddressError(undefined);
-    }
+    };
 
     return (
         <>
@@ -153,13 +160,15 @@ const ConsignmentAddressSelector = ({
                 onRequestClose={handleCloseAddAddressForm}
                 onSaveAddress={handleSaveAddress}
                 selectedAddress={isGuest ? selectedAddress : undefined}
+                storageKey={storageKey}
             />
-            {isGuest
-                ? <GuestCustomerAddressSelector
+            {isGuest ? (
+                <GuestCustomerAddressSelector
                     onUseNewAddress={handleUseNewAddress}
                     selectedAddress={selectedAddress}
                 />
-                : <AddressSelect
+            ) : (
+                <AddressSelect
                     addresses={addresses}
                     onSelectAddress={handleSelectAddress}
                     onUseNewAddress={handleUseNewAddress}
@@ -168,9 +177,9 @@ const ConsignmentAddressSelector = ({
                     showSingleLineAddress
                     type={AddressType.Shipping}
                 />
-            }
+            )}
         </>
-    )
-}
+    );
+};
 
 export default ConsignmentAddressSelector;

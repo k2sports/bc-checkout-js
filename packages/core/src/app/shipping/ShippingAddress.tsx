@@ -23,6 +23,7 @@ export interface ShippingAddressProps {
     methodId?: string;
     shippingAddress?: Address;
     hasRequestedShippingOptions: boolean;
+    validateMaxLength: boolean;
     deinitialize(options: ShippingRequestOptions): Promise<CheckoutSelectors>;
     initialize(options: ShippingInitializeOptions): Promise<CheckoutSelectors>;
     onAddressSelect(address: Address): void;
@@ -39,6 +40,7 @@ const ShippingAddress: FunctionComponent<ShippingAddressProps> = (props) => {
         onAddressSelect,
         onFieldChange,
         onUseNewAddress,
+        validateMaxLength,
         isLoading,
         shippingAddress,
         hasRequestedShippingOptions,
@@ -62,16 +64,11 @@ const ShippingAddress: FunctionComponent<ShippingAddressProps> = (props) => {
                 methodId={methodId}
                 shippingAddress={shippingAddress}
             />
-        )
+        );
     }
 
     if (methodId === 'amazonpay' && shippingAddress) {
-        return (
-            <AmazonPayShippingAddress
-                {...props}
-                shippingAddress={shippingAddress}
-            />
-        );
+        return <AmazonPayShippingAddress {...props} shippingAddress={shippingAddress} />;
     }
 
     return (
@@ -83,6 +80,7 @@ const ShippingAddress: FunctionComponent<ShippingAddressProps> = (props) => {
             onAddressSelect={onAddressSelect}
             onFieldChange={handleFieldChange}
             onUseNewAddress={onUseNewAddress}
+            validateMaxLength={validateMaxLength}
         />
     );
 };

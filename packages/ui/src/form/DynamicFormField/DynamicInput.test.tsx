@@ -1,7 +1,7 @@
 import { createLanguageService } from '@bigcommerce/checkout-sdk';
 import React, { type FunctionComponent } from 'react';
 
-import { LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/locale';
+import { LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/contexts';
 import { render, screen, waitFor } from '@bigcommerce/checkout/test-utils';
 
 import DynamicFormFieldType from './DynamicFormFieldType';
@@ -141,7 +141,7 @@ describe('DynamicInput', () => {
         render(
             <DynamicInputTest
                 defaultValue="foo"
-                fieldType={DynamicFormFieldType.DROPDOWM}
+                fieldType={DynamicFormFieldType.DROPDOWN}
                 id="field_33"
                 name="select"
                 options={[

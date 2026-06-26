@@ -1,7 +1,7 @@
 import { type CheckoutService, createCheckoutService } from '@bigcommerce/checkout-sdk';
 import React from 'react';
 
-import { CheckoutProvider } from '@bigcommerce/checkout/payment-integration-api';
+import { CheckoutProvider } from '@bigcommerce/checkout/contexts';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getCheckout } from '../checkout/checkouts.mock';
@@ -26,14 +26,14 @@ describe('PaymentRedeemables', () => {
             </CheckoutProvider>,
         );
 
-        const link = screen.getByRole('link', { name: 'Coupon/Gift Certificate' });
+        const link = screen.getByRole('link', { name: 'Coupon / gift certificate' });
 
         expect(screen.getByRole('group')).toBeInTheDocument();
-        expect(screen.getByRole('group')).toHaveClass("form-fieldset redeemable-payments");
-        expect(link).toHaveAttribute("aria-controls", "redeemable-collapsable");
-        expect(link).toHaveAttribute("aria-expanded", "false");
-        expect(link).toHaveAttribute("href", "#");
-        expect(link).toHaveAttribute("data-test", "redeemable-label");
-        expect(link).toHaveClass("redeemable-label");
+        expect(screen.getByRole('group')).toHaveClass('form-fieldset redeemable-payments');
+        expect(link).toHaveAttribute('aria-controls', 'redeemable-collapsable');
+        expect(link).toHaveAttribute('aria-expanded', 'false');
+        expect(link).toHaveAttribute('href', '#');
+        expect(link).toHaveAttribute('data-test', 'redeemable-label');
+        expect(link).toHaveClass('redeemable-label');
     });
 });

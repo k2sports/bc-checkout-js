@@ -1,13 +1,29 @@
-import { type CustomerInitializeOptions, type CustomerRequestOptions } from "@bigcommerce/checkout-sdk";
-import { createBigCommercePaymentsFastlaneCustomerStrategy, createBigCommercePaymentsVenmoCustomerStrategy } from "@bigcommerce/checkout-sdk/integrations/bigcommerce-payments";
-import { createBoltCustomerStrategy } from "@bigcommerce/checkout-sdk/integrations/bolt";
-import { createBraintreeFastlaneCustomerStrategy, createBraintreePaypalCreditCustomerStrategy, createBraintreePaypalCustomerStrategy, createBraintreeVisaCheckoutCustomerStrategy } from "@bigcommerce/checkout-sdk/integrations/braintree";
-import { createPayPalCommerceFastlaneCustomerStrategy, createPayPalCommerceVenmoCustomerStrategy } from "@bigcommerce/checkout-sdk/integrations/paypal-commerce";
-import { createStripeLinkV2CustomerStrategy, createStripeUPECustomerStrategy } from "@bigcommerce/checkout-sdk/integrations/stripe";
-import React, { type FunctionComponent, useCallback } from "react";
+import {
+    type CustomerInitializeOptions,
+    type CustomerRequestOptions,
+} from '@bigcommerce/checkout-sdk';
+import {
+    createBigCommercePaymentsFastlaneCustomerStrategy,
+    createBigCommercePaymentsVenmoCustomerStrategy,
+} from '@bigcommerce/checkout-sdk/integrations/bigcommerce-payments';
+import { createBoltCustomerStrategy } from '@bigcommerce/checkout-sdk/integrations/bolt';
+import {
+    createBraintreeFastlaneCustomerStrategy,
+    createBraintreePaypalCreditCustomerStrategy,
+    createBraintreePaypalCustomerStrategy,
+    createBraintreeVisaCheckoutCustomerStrategy,
+} from '@bigcommerce/checkout-sdk/integrations/braintree';
+import {
+    createPayPalCommerceFastlaneCustomerStrategy,
+    createPayPalCommerceVenmoCustomerStrategy,
+} from '@bigcommerce/checkout-sdk/integrations/paypal-commerce';
+import {
+    createStripeLinkV2CustomerStrategy,
+    createStripeUPECustomerStrategy,
+} from '@bigcommerce/checkout-sdk/integrations/stripe';
+import React, { type FunctionComponent, useCallback } from 'react';
 
-import CheckoutButton from "./CheckoutButton";
-import { ApplePayButton } from "./customWalletButton";
+import CheckoutButton from './CheckoutButton';
 
 interface CheckoutButtonV1ResolverProps {
     methodId: string;
@@ -19,7 +35,7 @@ interface CheckoutButtonV1ResolverProps {
 }
 
 const CheckoutButtonV1Resolver: FunctionComponent<CheckoutButtonV1ResolverProps> = ({
-    isShowingWalletButtonsOnTop= false,
+    isShowingWalletButtonsOnTop = false,
     initialize,
     onError,
     methodId,
@@ -30,7 +46,7 @@ const CheckoutButtonV1Resolver: FunctionComponent<CheckoutButtonV1ResolverProps>
             return initialize({
                 ...options,
                 integrations: [
-                    ...options.integrations ?? [],
+                    ...(options.integrations ?? []),
                     createBigCommercePaymentsFastlaneCustomerStrategy,
                     createBigCommercePaymentsVenmoCustomerStrategy,
                     createBoltCustomerStrategy,
@@ -48,19 +64,8 @@ const CheckoutButtonV1Resolver: FunctionComponent<CheckoutButtonV1ResolverProps>
         [initialize],
     );
 
-    switch (methodId) {
-        case 'applepay':
-            return <ApplePayButton
-                containerId={`${methodId}CheckoutButton`}
-                initialize={initialize}
-                key={methodId}
-                methodId={methodId}
-                onError={onError}
-                {...rest}
-            />;
-    }
-
-    return <CheckoutButton
+    return (
+        <CheckoutButton
             containerId={`${methodId}CheckoutButton`}
             initialize={initializeWithIntegrations}
             isShowingWalletButtonsOnTop={isShowingWalletButtonsOnTop}
@@ -68,7 +73,8 @@ const CheckoutButtonV1Resolver: FunctionComponent<CheckoutButtonV1ResolverProps>
             methodId={methodId}
             onError={onError}
             {...rest}
-        />;
+        />
+    );
 };
 
 export default CheckoutButtonV1Resolver;

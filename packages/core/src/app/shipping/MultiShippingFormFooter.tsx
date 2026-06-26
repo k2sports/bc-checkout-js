@@ -1,12 +1,9 @@
 import React, { type FunctionComponent } from 'react';
 
 import { TranslatedString } from '@bigcommerce/checkout/locale';
-import { useThemeContext } from '@bigcommerce/checkout/ui';
+import { Alert, AlertType, Button, ButtonVariant, Form } from '@bigcommerce/checkout/ui';
 
 import { OrderComments } from '../orderComments';
-import { Alert, AlertType } from '../ui/alert';
-import { Button, ButtonVariant } from '../ui/button';
-import { Form } from '../ui/form';
 
 export interface ShippingFormFooterProps {
     shouldShowOrderComments: boolean;
@@ -21,8 +18,6 @@ const MultiShippingFormFooter: FunctionComponent<ShippingFormFooterProps> = ({
     isLoading,
     cartHasChanged,
 }) => {
-    const { themeV2 } = useThemeContext();
-
     return (
         <Form>
             {cartHasChanged && (
@@ -36,7 +31,7 @@ const MultiShippingFormFooter: FunctionComponent<ShippingFormFooterProps> = ({
 
             <div className="form-actions">
                 <Button
-                    className={themeV2 ? 'body-bold' : ''}
+                    className="body-bold"
                     disabled={shouldDisableSubmit}
                     id="checkout-shipping-continue"
                     isLoading={isLoading}

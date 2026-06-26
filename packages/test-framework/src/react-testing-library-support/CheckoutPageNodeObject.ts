@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable no-case-declarations */
 import {
     type Address,
@@ -15,6 +14,7 @@ import { type SetupServer, setupServer } from 'msw/node';
 import { act } from 'react';
 
 import {
+    addressExtraFields,
     applepayMethod,
     checkout,
     CheckoutPreset,
@@ -292,6 +292,20 @@ export class CheckoutPageNodeObject {
                 void checkoutService.hydrateInitialState({
                     ...initialState,
                     checkout: { ...checkoutWithShipping, ...overrides?.checkout },
+                });
+                break;
+
+            case CheckoutPreset.CheckoutWithShippingAndAddressExtraFields:
+                this.server.use(
+                    rest.get('/api/storefront/checkout/*', (_, res, ctx) =>
+                        res(ctx.json(checkoutWithShipping)),
+                    ),
+                );
+
+                void checkoutService.hydrateInitialState({
+                    ...initialState,
+                    checkout: { ...checkoutWithShipping, ...overrides?.checkout },
+                    extraFields: { address: addressExtraFields, order: [] },
                 });
                 break;
 

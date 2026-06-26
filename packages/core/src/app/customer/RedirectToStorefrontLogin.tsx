@@ -1,8 +1,8 @@
 import React from 'react';
 
+import { useCheckout } from '@bigcommerce/checkout/contexts';
 import { TranslatedString } from '@bigcommerce/checkout/locale';
-import { useCheckout } from '@bigcommerce/checkout/payment-integration-api';
-import { Button, ButtonVariant, useThemeContext } from '@bigcommerce/checkout/ui';
+import { Button, ButtonVariant } from '@bigcommerce/checkout/ui';
 
 interface RedirectToStorefrontLoginProps {
     isDisabled: boolean;
@@ -13,10 +13,7 @@ export const RedirectToStorefrontLogin: React.FC<RedirectToStorefrontLoginProps>
     isDisabled,
     isLoading,
 }) => {
-    const { themeV2 } = useThemeContext();
-    const { checkoutState: { data: { getConfig } } } = useCheckout();
-
-    const config = getConfig();
+    const { selectedState: config } = useCheckout(({ data }) => data.getConfig());
 
     if (!config) {
         return null;
@@ -26,11 +23,11 @@ export const RedirectToStorefrontLogin: React.FC<RedirectToStorefrontLoginProps>
 
     const handleRedirect = () => {
         return window.location.assign(`${loginLink}?redirectTo=${checkoutLink}`);
-    }
+    };
 
     return (
         <Button
-            className={themeV2 ? 'body-bold' : ''}
+            className="body-bold"
             disabled={isDisabled}
             id="checkout-customer-continue"
             isLoading={isLoading}

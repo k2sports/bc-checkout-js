@@ -1,18 +1,31 @@
-import { type CheckoutSelectors, type CheckoutService, createCheckoutService } from '@bigcommerce/checkout-sdk';
+import {
+    type CheckoutSelectors,
+    type CheckoutService,
+    createCheckoutService,
+} from '@bigcommerce/checkout-sdk';
 import { render, screen } from '@testing-library/react';
 import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React from 'react';
 
-import { createLocaleContext, LocaleContext, type LocaleContextType } from '@bigcommerce/checkout/locale';
-import { CheckoutContext } from '@bigcommerce/checkout/payment-integration-api';
+import {
+    CapabilitiesContext,
+    CheckoutContext,
+    defaultCapabilities,
+    LocaleContext,
+    type LocaleContextType,
+    ThemeProvider,
+} from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { usePayPalFastlaneAddress } from '@bigcommerce/checkout/paypal-fastlane-integration';
 import { getAddress, getCustomer } from '@bigcommerce/checkout/test-mocks';
-import { ThemeProvider } from '@bigcommerce/checkout/ui';
 
 import { getStoreConfig } from '../config/config.mock';
 
-import { PayPalFastlaneShippingAddress, type PayPalFastlaneShippingAddressProps } from './PayPalFastlaneShippingAddress';
+import {
+    PayPalFastlaneShippingAddress,
+    type PayPalFastlaneShippingAddressProps,
+} from './PayPalFastlaneShippingAddress';
 
 jest.mock('@bigcommerce/checkout/paypal-fastlane-integration', () => ({
     ...jest.requireActual('@bigcommerce/checkout/paypal-fastlane-integration'),
@@ -33,10 +46,12 @@ describe('PayPalFastlaneShippingAddress', () => {
         checkoutService = createCheckoutService();
         checkoutState = checkoutService.getState();
 
-        const paypalFastlaneAddresses = [{
-            ...getAddress(),
-            address1: 'PP Fastlane address'
-        }];
+        const paypalFastlaneAddresses = [
+            {
+                ...getAddress(),
+                address1: 'PP Fastlane address',
+            },
+        ];
 
         (usePayPalFastlaneAddress as jest.Mock).mockReturnValue({
             isPayPalFastlaneEnabled: true,
@@ -87,24 +102,30 @@ describe('PayPalFastlaneShippingAddress', () => {
                         { code: 'CA', name: 'California' },
                         { code: 'TX', name: 'Texas' },
                     ],
-                }
+                },
             ],
+            validateMaxLength: false,
         };
 
-        jest.spyOn(checkoutState.data,'getCustomer').mockReturnValue(getCustomer());
-    })
+        jest.spyOn(checkoutState.data, 'getCustomer').mockReturnValue(getCustomer());
+    });
 
     it('renders PayPalFastlaneShippingAddress edit button', async () => {
         render(
             <Formik initialValues={{}} onSubmit={noop}>
                 <LocaleContext.Provider value={localeContext}>
-                    <CheckoutContext.Provider value={{ checkoutState, checkoutService }}>
+                    <CheckoutContext.Provider
+                        value={{
+                            checkoutState,
+                            checkoutService,
+                        }}
+                    >
                         <ThemeProvider>
                             <PayPalFastlaneShippingAddress {...defaultProps} />
                         </ThemeProvider>
                     </CheckoutContext.Provider>
                 </LocaleContext.Provider>
-            </Formik>
+            </Formik>,
         );
 
         const fastlaneEditButton = await screen.findByTestId('step-edit-button');
@@ -118,23 +139,33 @@ describe('PayPalFastlaneShippingAddress', () => {
         render(
             <Formik initialValues={{}} onSubmit={noop}>
                 <LocaleContext.Provider value={localeContext}>
-                    <CheckoutContext.Provider value={{ checkoutState, checkoutService }}>
+                    <CheckoutContext.Provider
+                        value={{
+                            checkoutState,
+                            checkoutService,
+                        }}
+                    >
                         <ThemeProvider>
-                            <PayPalFastlaneShippingAddress {...defaultProps} initialize={initializeMock} />
+                            <PayPalFastlaneShippingAddress
+                                {...defaultProps}
+                                initialize={initializeMock}
+                            />
                         </ThemeProvider>
                     </CheckoutContext.Provider>
                 </LocaleContext.Provider>
-            </Formik>
+            </Formik>,
         );
 
         expect(initializeMock).toHaveBeenCalled();
     });
 
     it('renders regular shipping form if shouldShowPayPalFastlaneShippingForm false', async () => {
-        const paypalFastlaneAddresses = [{
-            ...getAddress(),
-            address1: 'PP Fastlane address'
-        }];
+        const paypalFastlaneAddresses = [
+            {
+                ...getAddress(),
+                address1: 'PP Fastlane address',
+            },
+        ];
 
         (usePayPalFastlaneAddress as jest.Mock).mockReturnValue({
             isPayPalFastlaneEnabled: true,
@@ -145,13 +176,20 @@ describe('PayPalFastlaneShippingAddress', () => {
         render(
             <Formik initialValues={{}} onSubmit={noop}>
                 <LocaleContext.Provider value={localeContext}>
-                    <CheckoutContext.Provider value={{ checkoutState, checkoutService }}>
-                        <ThemeProvider>
-                            <PayPalFastlaneShippingAddress {...defaultProps} />
-                        </ThemeProvider>
+                    <CheckoutContext.Provider
+                        value={{
+                            checkoutState,
+                            checkoutService,
+                        }}
+                    >
+                        <CapabilitiesContext.Provider value={defaultCapabilities}>
+                            <ThemeProvider>
+                                <PayPalFastlaneShippingAddress {...defaultProps} />
+                            </ThemeProvider>
+                        </CapabilitiesContext.Provider>
                     </CheckoutContext.Provider>
                 </LocaleContext.Provider>
-            </Formik>
+            </Formik>,
         );
 
         try {

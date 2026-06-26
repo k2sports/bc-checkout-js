@@ -6,15 +6,13 @@ import { Formik } from 'formik';
 import React, { type FunctionComponent } from 'react';
 
 import {
-    createLocaleContext,
     LocaleContext,
     type LocaleContextType,
-} from '@bigcommerce/checkout/locale';
-import {
     PaymentFormContext,
     type PaymentFormService,
-    type PaymentMethodProps,
-} from '@bigcommerce/checkout/payment-integration-api';
+} from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
+import { type PaymentMethodProps } from '@bigcommerce/checkout/payment-integration-api';
 import {
     getCheckout as getCheckoutMock,
     getPaymentFormServiceMock,

@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 
-import { useExtensions } from '@bigcommerce/checkout/checkout-extension';
-import { useCheckout } from '@bigcommerce/checkout/payment-integration-api';
+import { useExtensions } from '@bigcommerce/checkout/contexts';
+import { getLanguageService } from '@bigcommerce/checkout/locale';
+
+import { CustomError } from '../common/error';
 
 import { useShipping } from './hooks/useShipping';
 import isUsingMultiShipping from './isUsingMultiShipping';
@@ -32,33 +34,23 @@ const ShippingForm = ({
     setIsMultishippingMode,
 }: ShippingFormProps) => {
     const {
-        checkoutState: {
-            data: { getConfig },
-        },
-    } = useCheckout();
-    const {
         cart,
         consignments,
+        countries,
         customerMessage,
-        deleteConsignments,
-        deinitializeShippingMethod: deinitialize,
         getFields,
-        isLoading,
-        initializeShippingMethod: initialize,
-        isShippingStepPending,
+        hasMultiShippingEnabled,
+        isNoCountriesErrorOnCheckoutEnabled,
         methodId,
-        shouldShowOrderComments,
         shippingAddress,
-        signOut,
-        updateShippingAddress: updateAddress
+        validateMaxLength,
     } = useShipping();
-    const { extensionState: { shippingFormRenderTimestamp } } = useExtensions();
-
-    const config = getConfig();
+    const {
+        extensionState: { shippingFormRenderTimestamp },
+    } = useExtensions();
 
     useEffect(() => {
         if (shippingFormRenderTimestamp) {
-            const hasMultiShippingEnabled = config?.checkoutSettings?.hasMultiShippingEnabled ?? false;
             const isMultiShippingMode =
                 !!cart &&
                 !!consignments &&
@@ -69,41 +61,53 @@ const ShippingForm = ({
         }
     }, [shippingFormRenderTimestamp]);
 
+    useEffect(() => {
+        if (isInitialValueLoaded && countries.length === 0 && isNoCountriesErrorOnCheckoutEnabled) {
+            onUnhandledError(
+                new CustomError({
+                    name: 'no_countries_available',
+                    message: getLanguageService().translate(
+                        'shipping.no_countries_available_message',
+                    ),
+                    title: getLanguageService().translate(
+                        'shipping.no_countries_available_heading',
+                    ),
+                }),
+            );
+        }
+    }, [isInitialValueLoaded, countries.length]);
+
     const getMultiShippingForm = () => {
-        return <MultiShippingForm
-            cartHasChanged={cartHasChanged}
-            customerMessage={customerMessage}
-            defaultCountryCode={shippingAddress?.countryCode}
-            isLoading={isLoading}
-            onSubmit={onMultiShippingSubmit}
-            onUnhandledError={onUnhandledError}
-        />;
+        return (
+            <MultiShippingForm
+                cartHasChanged={cartHasChanged}
+                customerMessage={customerMessage}
+                defaultCountryCode={shippingAddress?.countryCode}
+                onSubmit={onMultiShippingSubmit}
+                onUnhandledError={onUnhandledError}
+            />
+        );
     };
+
+    if (isInitialValueLoaded && countries.length === 0 && isNoCountriesErrorOnCheckoutEnabled) {
+        return null;
+    }
 
     return isMultiShippingMode ? (
         getMultiShippingForm()
     ) : (
         <SingleShippingForm
             cartHasChanged={cartHasChanged}
-            consignments={consignments}
             customerMessage={customerMessage}
-            deinitialize={deinitialize}
-            deleteConsignments={deleteConsignments}
             getFields={getFields}
-            initialize={initialize}
             isBillingSameAsShipping={isBillingSameAsShipping}
             isInitialValueLoaded={isInitialValueLoaded}
-            isLoading={isLoading}
-            isMultiShippingMode={isMultiShippingMode}
-            isShippingStepPending={isShippingStepPending}
             methodId={methodId}
             onSubmit={onSingleShippingSubmit}
             onUnhandledError={onUnhandledError}
             shippingAddress={shippingAddress}
             shippingFormRenderTimestamp={shippingFormRenderTimestamp}
-            shouldShowOrderComments={shouldShowOrderComments}
-            signOut={signOut}
-            updateAddress={updateAddress}
+            validateMaxLength={validateMaxLength}
         />
     );
 };

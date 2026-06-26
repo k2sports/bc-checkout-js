@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { createLocaleContext, LocaleContext } from '@bigcommerce/checkout/locale';
+import { LocaleContext } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getStoreConfig } from '../../config/config.mock';
@@ -14,7 +15,7 @@ describe('CreditCardCodeTooltip', () => {
         render(
             <LocaleContext.Provider value={localeContext}>
                 <CreditCardCodeTooltip />
-            </LocaleContext.Provider>
+            </LocaleContext.Provider>,
         );
 
         expect(screen.getByText('CVV visa, mc, disc')).toBeInTheDocument();

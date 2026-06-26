@@ -18,6 +18,9 @@
       "custom_required_error": "{label} is required",
       "custom_min_error": "{label} should be no less than {min} characters",
       "custom_max_error": "{label} should be no more than {max} characters",
+      "custom_min_number_error": "{label} must be greater than or equal to {min}",
+      "custom_max_number_error": "{label} must be less than or equal to {max}",
+      "custom_range_error": "{label} must be between {min} and {max}",
       "invalid_characters_error": "{label} contains invalid characters",
       "custom_valid_error": "{label} is not valid",
       "edit_address_action": "Edit address",
@@ -30,10 +33,12 @@
       "last_name_label": "Last Name",
       "last_name_required_error": "Last Name is required",
       "phone_number_label": "Phone Number",
+      "phone_number_invalid_error": "Entered phone number is not valid",
       "phone_number_required_error": "Phone Number is required",
       "postal_code_label": "Postal Code",
       "postal_code_required_error": "Postal Code is required",
       "save_in_addressbook": "Save this address in my address book.",
+      "search_addresses": "Search addresses",
       "select_country_action": "Select a country",
       "select_state_action": "Select a state",
       "state_label": "State/Province",
@@ -45,6 +50,7 @@
     "billing": {
       "billing_address_heading": "Billing Address",
       "billing_heading": "Billing",
+      "no_billing_addresses_warning": "Sorry, you have no billing address to choose from, please go to your address book to create an address or contact your site admin.",
       "save_billing_address_error": "An error occurred while saving the billing address to your price quote. Please try again.",
       "billing_address_amazonpay": "Managed by Amazon Pay",
       "use_shipping_address_label": "My billing address is the same as my shipping address."
@@ -57,6 +63,8 @@
       "discount_text": "Discount",
       "downloads_action": "Go to Downloads",
       "edit_cart_action": "Edit Cart",
+      "back_to_invoices": "Back to Invoices",
+      "go_to_cart_action": "Cart",
       "edit_multi_shipping_cart_message": "New items will default to Shipping Destination #1. Reallocate if you want them shipped to other destinations.",
       "estimated_total_text": "Estimated Total",
       "free_text": "Free",
@@ -65,12 +73,21 @@
       "item": "item",
       "items": "items",
       "item_count_text": "{count, plural, one{1 Item} other{# Items} }",
+      "backorder_count_text": "{count} will be backordered",
+      "backorder_quantities_changed_heading": "The backorder quantities have changed for below items:",
+      "cart_stock_modal_destination": "Destination #{consignmentNumber}",
+      "ready_to_ship_count_text": "{count} ready to ship",
+      "bundled_item_label": "Bundle:",
+      "backorder_details": "Backorder details",
       "print_action": "Print",
+      "qty_label": "Qty: {quantity}",
       "remaining_text": "Remaining",
       "remove_action": "remove",
       "return_to_checkout": "RETURN TO CHECKOUT",
       "see_all_action": "See All",
       "see_less_action": "See Less",
+      "show_order_summary_action": "Show Order Summary",
+      "hide_order_summary_action": "Hide Order Summary",
       "shipping_text": "Shipping",
       "gift_wrapping_text": "Gift Wrapping",
       "show_details_action": "Show Details",
@@ -193,7 +210,6 @@
       "amazon_continue_action": "Continue with Amazon",
       "amazonpay_continue_action": "Continue with Amazon Pay",
       "amazon_name_text": "Amazon Pay",
-      "barclaycard_continue_action": "Continue",
       "bluesnap_v2_continue_action": "Continue",
       "bluesnap_direct_account_type_select": {
         "label": "Select an account type",
@@ -281,6 +297,8 @@
       "credit_card_number_required_error": "Credit Card Number is required",
       "credit_card_number_mismatch_error": "The card number entered does not match the card stored in your account",
       "credit_debit_card_text": "Credit/Debit Card",
+      "open_banking_display_name_text": "Open Banking",
+      "invoice_payment_comment_label": "Payment comment",
       "payment_methods_text": "Payment Methods",
       "redeemable_payments_text": "Redeemable Payments",
       "instrument_storage_options_text": "Payment Storage Options",
@@ -289,7 +307,6 @@
       "humm_not_processable_error": "Humm cannot process your payment for this order, please select another payment method.",
       "klarna_continue_action": "Continue with Klarna",
       "klarna_name_text": "Klarna",
-      "masterpass_name_text": "Masterpass",
       "mollie_unsupported_method_error": "This payment method cannot be used towards the purchase of digital products. Please contact customer support or try again.",
       "opy_continue_action": "Continue with {methodName}",
       "opy_widget_slogan": "Buy now. Pay smarter.",
@@ -307,6 +324,7 @@
       "payment_method_invalid_error": "There's a problem processing your payment. Please contact us for assistance or choose another payment method.",
       "payment_method_unavailable_error": "This payment provider is temporarily unavailable. Please try again later.",
       "payment_not_required_text": "Payment is not required for this order.",
+      "payment_methods_unavailable_error": "We're unable to load payment methods at the moment. Please try again later or contact the store for assistance.",
       "paypal_complete_action": "Complete order",
       "paypal_continue_action": "Continue with PayPal",
       "paypal_pay_later_complete_action": "Complete order",
@@ -317,7 +335,7 @@
       "paypal_description_text": "Pay using your PayPal account",
       "paypal_name_text": "PayPal",
       "paypal_credit_name_text": "Pay Later",
-      "place_order_action": "Buy Now",
+      "place_order_action": "Place Order",
       "place_order_error": "There was an error placing your order. Please contact us.",
       "place_order_error_heading": "Failed to place order",
       "postal_code_label": "Postal Code",
@@ -342,6 +360,7 @@
       "instrument_manage_delete_server_error": "There was an error when attempting to delete that stored payment method, please try again.",
       "instrument_manage_delete_auth_error": "There was a problem authorizing your request. Please try signing in again",
       "instrument_manage_delete_client_error": "There was an error when attempting to delete the stored payment method: payment method no longer exists or cannot be deleted.",
+      "auto_vaulting_disclaimer": "By providing your card information and placing this order, you agree that your card may be charged for future payments in accordance with the terms of the merchant.",
       "instrument_save_payment_method_label": "Save this card for future transactions",
       "instrument_save_as_default_payment_method_label": "Use this card as the default payment method for future transactions",
       "account_instrument_add_action": "Use a different account",
@@ -380,10 +399,13 @@
       "phone_number_label": "Phone Number",
       "errors": {
         "account_number_required_error": "Account Number is required",
+        "field_required_error": "{label} is required",
         "routing_number_required_error": "Routing Number is required",
         "phone_number_required_error": "Phone Number is required",
         "business_name_required_error": "Business Name is required",
         "only_numbers_error": "{label} must contain only numbers",
+        "disabled_PO_number_credit": "This purchase exceeds your available credit, please select an alternative payment method",
+        "disabled_PO_number_currency_mismatch": "Please use {currency} to utilize the {name}",
         "additional_action_required": "Please continue with additional actions.",
         "authorization_expired": "The authorization for this transaction has expired.",
         "authorization_revoked": "The authorization for this transaction has been revoked.",
@@ -445,6 +467,7 @@
         "three_d_secure_declined": "There has been an issue with your payment, please check your payment details or contact your card issuer.",
         "three_d_secure_failed": "The payment failed. Please try again or use a different payment option.",
         "three_d_secure_required": "Further authentication is required to process your payment. Please contact us.",
+        "three_d_secure_payment_failed": "The credit card information is invalid or failed 3D Secure verification. Please try another card or attempt the payment again later.",
         "token_error": "We're experiencing difficulty processing your transaction. Please try again later.",
         "transaction_declined": "Your payment was declined. Please try again.",
         "transaction_rejected": "Payment was declined. Please try again.",
@@ -471,6 +494,7 @@
       }
     },
     "redeemable": {
+      "auto_promotion": "Automatic discount",
       "applied_text": "Applied",
       "apply_action": "Apply",
       "apply_store_credit_after_action": "store credit to order",
@@ -481,11 +505,16 @@
       "coupon_location_error": "Your shipping address doesn't meet the location requirements for the coupon code you entered.",
       "coupon_min_order_total": "Your order does not meet the minimum total for this coupon code to be applied.",
       "coupon_text": "Coupon",
+      "coupon_placeholder": "Enter your code here",
+      "discounts_text": "Discounts",
       "gift_certificate_remaining_text": "Remaining",
       "gift_certificate_text": "Gift Certificate",
+      "manual_discount": "Manual discount",
+      "maximum_discount_applied_text": "Maximum discount applied",
       "remove_action": "Remove",
       "store_credit_available_text": "Your account currently has {storeCredit} total store credit available",
-      "toggle_action": "Coupon/Gift Certificate"
+      "toggle_action": "Coupon / gift certificate",
+      "total_savings_text": "You saved <span class=\"total-savings-highlight\">{totalDiscount}</span> in total!"
     },
     "remote": {
       "browser_unsupported": "The selected payment method requires a different web browser. Please choose another payment method.",
@@ -515,7 +544,8 @@
       "save_shipping_address_error": "An error occurred while saving the shipping address to your price quote. Please try again.",
       "save_shipping_option_error": "An error occurred while saving the shipping quote to your order. Please try again.",
       "select_shipping_address_text": "Please select a shipping address in order to see shipping quotes",
-      "shipping_address_heading": "Shipping Address",
+      "no_shipping_addresses_warning": "Sorry, you have no shipping address to choose from, please go to your address book to create an address or contact your site admin.",
+      "shipping_address_heading": "Shipping address",
       "multishipping_consignment_index_heading": "Destination #{consignmentNumber}",
       "multishipping_incomplete_consignment_error": "Please complete the address, item allocation, and method selection for Destination #{consignmentNumber}.",
       "multishipping_add_new_destination": "Add new destination",
@@ -543,6 +573,9 @@
       "multishipping_left_to_allocate_items_table_item": "Item",
       "multishipping_left_to_allocate_items_table_left_to_allocate": "Left to allocate",
       "multishipping_left_to_allocate_items_table_quantity": "Quantity",
+      "multishipping_backordered_quantity": "({count} will be backordered)",
+      "no_countries_available_heading": "We're having trouble loading your shipping country",
+      "no_countries_available_message": "Please refresh the page or try again in a moment. If the issue continues, contact our support team and we'll help complete your order.",
       "multishipping_item_split_tooltip_message": "These item quantities are split into a separate row due to a quantity-based promotion or custom price.",
       "ship_to_multi": "Ship to multiple addresses",
       "ship_to_single": "Ship to a single address",
@@ -590,13 +623,16 @@
       "agreement_with_link_text": "Yes, I agree with the <a href=\"{url}\" target=\"_blank\">terms and conditions</a>.",
       "terms_and_conditions_heading": "Terms and Conditions"
     },
-    "withdrawal_terms": {
-      "notice_with_link_text": "Please note our <a href=\"{url}\" target=\"_blank\">withdrawal policy</a>."
-    },
     "order_confirmation": {
       "mandate": {
         "adyenv3": {
-          "boletobancario": "Boleto Bancário Ticket"
+          "boletobancario": "Boleto Bancário Ticket",
+          "multibanco": {
+            "reference": "Payment reference",
+            "entity": "Entity number",
+            "expires_at": "Expiry date"
+          },
+          "oxxo": "OXXO Ticket"
         },
         "bluesnapdirect": {
           "sepa_direct_debit": "SEPA Direct Debit Mandate Reference: {mandate}"
@@ -635,7 +671,186 @@
       "thank_you_customer_heading": "Thank you {name}!",
       "thank_you_heading": "Thank you!",
       "continue_shopping": "Continue Shopping »",
-      "order_status_update_facebook_messenger_heading": "Get instant updates of your order to Messenger"
+      "order_status_update_facebook_messenger_heading": "Get instant updates of your order to Messenger",
+      "expired_token": {
+        "heading": "Link Expired",
+        "description": "For security, this link has expired.",
+        "resend_action": "Resend Secure Link",
+        "sending": "Sending...",
+        "resend_success": "A new link has been sent to your email address.",
+        "resend_error": "Failed to resend link. Please try again later."
+      },
+      "rate_limited": {
+        "heading": "Too Many Requests",
+        "message": "You've made too many attempts. Please wait a few minutes and try again."
+      }
+    },
+    "withdrawal_terms": {
+      "notice_with_link_text": "Please note our <a href=\"{url}\" target=\"_blank\">withdrawal policy</a>."
     }
+  },
+  "redeemable": {
+    "applied_text": "Applied",
+    "apply_action": "Apply",
+    "apply_store_credit_after_action": "store credit to order",
+    "apply_store_credit_before_action": "Apply",
+    "code_invalid_error": "The gift certificate or coupon code is invalid",
+    "code_label": "Gift Certificate or Coupon Code",
+    "code_required_error": "Please enter a gift certificate or coupon code",
+    "coupon_location_error": "Your shipping address doesn't meet the location requirements for the coupon code you entered.",
+    "coupon_min_order_total": "Your order does not meet the minimum total for this coupon code to be applied.",
+    "coupon_text": "Coupon",
+    "gift_certificate_remaining_text": "Remaining",
+    "gift_certificate_text": "Gift Certificate",
+    "remove_action": "Remove",
+    "store_credit_available_text": "Your account currently has {storeCredit} total store credit available",
+    "toggle_action": "Coupon/Gift Certificate"
+  },
+  "remote": {
+    "browser_unsupported": "The selected payment method requires a different web browser. Please choose another payment method.",
+    "connection_error": "Connection to remote checkout refused, please try later.",
+    "continue_with_text": "Or continue with",
+    "or_text": "OR",
+    "payment_method_error": "There was an error retrieving your remote payment method. Please try again.",
+    "select_different_card_action": "Select a different card",
+    "session_error": "Your remote session has expired. Please log in again.",
+    "shipping_address_error": "There was an error retrieving your remote shipping address. Please try again.",
+    "sign_in_action": "Sign in to {providerName}",
+    "sign_out_action": "Sign out of {providerName}",
+    "sign_out_after_action": "to view other payment methods",
+    "sign_in_required_error": "Remote sign in required before payment",
+    "sign_out_before_action": "",
+    "start_with_text": "Check out faster with:",
+    "powered_by": "Powered by"
+  },
+  "shipping": {
+    "cart_change_error": "An update to your shopping cart has been detected and your available shipping costs have been updated. Please re-select a shipping method to continue.",
+    "enter_shipping_address_text": "Please enter a shipping address in order to see shipping quotes",
+    "order_comment_label": "Order Comments",
+    "assign_item_error": "An error occurred while assigning item to address. Please try again",
+    "assign_item_invalid_address_error_heading": "Invalid Address",
+    "assign_item_invalid_address_error": "The selected address is not valid. Please go to your account page and update it.",
+    "unassign_item_error": "An error occurred while unassigning item to address.",
+    "save_shipping_address_error": "An error occurred while saving the shipping address to your price quote. Please try again.",
+    "save_shipping_option_error": "An error occurred while saving the shipping quote to your order. Please try again.",
+    "select_shipping_address_text": "Please select a shipping address in order to see shipping quotes",
+    "shipping_address_heading": "Shipping Address",
+    "multishipping_consignment_index_heading": "Destination #{consignmentNumber}",
+    "multishipping_incomplete_consignment_error": "Please complete the address, item allocation, and method selection for Destination #{consignmentNumber}.",
+    "multishipping_add_new_destination": "Add new destination",
+    "multishipping_address_heading": "Choose where to ship each item",
+    "multishipping_address_heading_guest": "Please sign in first",
+    "multishipping_guest_intro": "To ship your items to multiple addresses you need to",
+    "multishipping_guest_sign_in": "sign in to your account",
+    "multishipping_guest_create": "or <a href=\"{url}\" target=\"_blank\">create an account</a> prior to proceeding.",
+    "multishipping_item_to_allocate_message": "{count, plural, one{1 item left to allocate} other{{count} items left to allocate}}",
+    "multishipping_item_allocated_message": "{count, plural, one{1 item allocated} other{{count} items allocated}}",
+    "multishipping_item_reallocated_message": "Reallocate items",
+    "multishipping_item_hide_items_message": "Hide items",
+    "multishipping_item_show_items_message": "Show items",
+    "multishipping_left_to_allocate_message": "{count} left to allocate",
+    "multishipping_items_selected_message": "{count} items selected",
+    "multishipping_items_allocate_save": "Save",
+    "multishipping_items_allocate_allocate": "Allocate",
+    "multishipping_items_allocate_cancel": "Cancel",
+    "multishipping_items_allocate_clear_all": "Clear all",
+    "multishipping_items_allocate_select_all_items_left": "Select all items left",
+    "multishipping_all_items_allocated_message": "All items are allocated.",
+    "multishipping_no_item_allocated_message": "No item allocated",
+    "multishipping_allocate_items": "Allocate items",
+    "multishipping_digital_item_no_shipping_banner": "Shipping isn't required for digital products, thus it's not displayed here.",
+    "multishipping_left_to_allocate_items_table_item": "Item",
+    "multishipping_left_to_allocate_items_table_left_to_allocate": "Left to allocate",
+    "multishipping_left_to_allocate_items_table_quantity": "Quantity",
+    "multishipping_item_split_tooltip_message": "These item quantities are split into a separate row due to a quantity-based promotion or custom price.",
+    "ship_to_multi": "Ship to multiple addresses",
+    "ship_to_single": "Ship to a single address",
+    "ship_to_single_action": "Ship to a Single Address instead",
+    "ship_to_single_message": "If you proceed, all progress for multiple addresses will be lost. This action cannot be undone.",
+    "shipping_heading": "Shipping",
+    "shipping_method_label": "Shipping Method",
+    "shipping_option_expired_error": "The shipping price you were quoted is no longer valid. Click OK to see the most up-to-date shipping prices.",
+    "shipping_option_expired_heading": "Your shipping price has been updated",
+    "view_shipping_options_action": "See Other Options",
+    "quantity_required_error": "Quantity is required",
+    "quantity_invalid_error": "Quantity must be a number",
+    "quantity_max_error": "Quantity cannot exceed \"Left to allocate\" amount.",
+    "quantity_min_error": "Quantity cannot be less than 0",
+    "custom_item_quantity_error": "All quantities of this custom product must be allocated to the same destination, as it was created specifically for this draft order.",
+    "choose_shipping_address": "Choose a shipping address",
+    "multishipping_unavailable_action": "Multi-Address Shipping Unavailable",
+    "multishipping_unavailable_message": "Multi-address shipping is unavailable when a promotion adds a free item to your cart.",
+    "checkout_switched_to_single_shipping": "Your checkout has been automatically updated to use a single shipping address. Shipping to multiple addresses is unavailable when a promotional free item is in your cart.",
+    "guest_multishipping_no_shipping_address_message": "No shipping address entered",
+    "guest_multishipping_enter_shipping_address_action": "Enter shipping address"
+  },
+  "social": {
+    "share_action": "Share",
+    "share_heading": "Tell your friends about your purchase!",
+    "tweet_action": "Tweet"
+  },
+  "spam_protection": {
+    "verify_action": "Please click here to verify yourself as human before proceeding."
+  },
+  "privacy_policy": {
+    "required_error": "Please agree to the Privacy Policy.",
+    "label": "Yes, I agree with the <a href=\"{url}\" target=\"_blank\">privacy policy</a>.",
+    "heading": "Privacy Policy"
+  },
+  "privacy_policy_auto_consent": {
+    "label": "*By clicking continue, you agree to our  <a href=\"{url}\" target=\"_blank\">privacy policy</a>."
+  },
+  "tax": {
+    "inclusive_label": "Tax Included in Total:"
+  },
+  "terms_and_conditions": {
+    "agreement_required_error": "Please agree to the terms and conditions",
+    "agreement_text": "Yes, I agree with the above terms and conditions.",
+    "agreement_with_link_text": "Yes, I agree with the <a href=\"{url}\" target=\"_blank\">terms and conditions</a>.",
+    "terms_and_conditions_heading": "Terms and Conditions"
+  },
+  "order_confirmation": {
+    "mandate": {
+      "adyenv3": {
+        "boletobancario": "Boleto Bancário Ticket"
+      },
+      "bluesnapdirect": {
+        "sepa_direct_debit": "SEPA Direct Debit Mandate Reference: {mandate}"
+      },
+      "checkoutcom": {
+        "boleto": "Boleto Bancário Ticket",
+        "oxxo": "OXXO Ticket",
+        "sepa": "SEPA Direct Debit (via Checkout.com) Mandate Reference: {mandate}"
+      },
+      "stripev3": {
+        "iban": "SEPA Direct Debit Mandate"
+      },
+      "stripeupe": {
+        "au_becs_debit": "BECS Direct Debit Mandate",
+        "boleto": "Boleto Bancário Ticket",
+        "oxxo": "OXXO Ticket",
+        "sepa_debit": "SEPA Direct Debit Mandate"
+      },
+      "paypalcommercealternativemethods": {
+        "oxxo": "OXXO Ticket",
+        "ratepay": {
+          "account_holder_name": "Account Holder",
+          "iban": "Iban",
+          "payment_reference": "Payment Reference"
+        }
+      }
+    },
+    "order_number_text": "Your order number is <strong>{orderNumber}</strong>",
+    "order_pending_review_text": "Your order was sent to us but is currently awaiting payment. Once we receive the payment for your order, it will be completed. If you've already provided payment details then we will process your order manually and send you an email when it's completed.",
+    "order_pending_status_text": "We've received your order and are processing your payment. Once the payment is verified, your order will be completed. We will send you an email when it's completed. Please note, this process may take a few minutes depending on the processing times of your chosen method. If you have any questions about your purchase, email us at <a href=\"mailto:{supportEmail}?Subject=Order {orderNumber}\" target=\"_top\">{supportEmail}</a>.",
+    "order_incomplete_status_text": "We've received your order and payment. Your order is now being processed by our system. Please note, processing may take a few minutes. If you have any questions about your purchase, email us at <a href=\"mailto:{supportEmail}?Subject=Order {orderNumber}\" target=\"_top\">{supportEmail}</a>.",
+    "order_with_downloadable_digital_items_text": "You can download your digital purchases by clicking the links on this page, or by logging into your account at any time. There is also a download link in your confirmation email, which should be arriving shortly.",
+    "order_with_support_number_text": "An email will be sent containing information about your purchase. If you have any questions about your purchase, email us at <a href=\"mailto:{supportEmail}?Subject=Order {orderNumber}\" target=\"_top\">{supportEmail}</a> or call us at <a href=\"tel://{supportPhoneNumber}\">{supportPhoneNumber}</a>.",
+    "order_without_downloadable_digital_items_text": "Once we receive your payment, we'll send a confirmation email with a link to download your digital purchases.",
+    "order_without_support_number_text": "An email will be sent containing information about your purchase. If you have any questions about your purchase, email us at <a href=\"mailto:{supportEmail}?Subject=Order {orderNumber}\" target=\"_top\">{supportEmail}</a>.",
+    "thank_you_customer_heading": "Thank you {name}!",
+    "thank_you_heading": "Thank you!",
+    "continue_shopping": "Continue Shopping »",
+    "order_status_update_facebook_messenger_heading": "Get instant updates of your order to Messenger"
   }
 }

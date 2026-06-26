@@ -11,18 +11,16 @@ import { Formik } from 'formik';
 import { noop } from 'lodash';
 import React, { type FunctionComponent } from 'react';
 
-import { type CreditCardPaymentMethodValues } from '@bigcommerce/checkout/credit-card-integration';
-import {
-    createLocaleContext,
-    LocaleContext,
-    type LocaleContextType,
-} from '@bigcommerce/checkout/locale';
 import {
     CheckoutProvider,
+    LocaleContext,
+    type LocaleContextType,
     PaymentFormContext,
     type PaymentFormService,
-    type PaymentMethodProps,
-} from '@bigcommerce/checkout/payment-integration-api';
+} from '@bigcommerce/checkout/contexts';
+import { type CreditCardPaymentMethodValues } from '@bigcommerce/checkout/credit-card-integration';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
+import { type PaymentMethodProps } from '@bigcommerce/checkout/payment-integration-api';
 import {
     getCart,
     getCheckout,

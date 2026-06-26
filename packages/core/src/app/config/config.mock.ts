@@ -15,6 +15,7 @@ export function getStoreConfig(): StoreConfig {
             checkoutUserExperienceSettings: {
                 walletButtonsOnTop: false,
                 floatingLabelEnabled: false,
+                checkoutV2Theme: false,
             },
             enableOrderComments: true,
             enableTermsAndConditions: false,
@@ -35,6 +36,7 @@ export function getStoreConfig(): StoreConfig {
             isSignInEmailEnabled: false,
             orderTermsAndConditions: '',
             orderTermsAndConditionsLink: '',
+            orderTermsAndConditionsLocation: '',
             orderTermsAndConditionsType: '',
             privacyPolicyUrl: '',
             providerWithCustomCheckout: null,
@@ -45,7 +47,7 @@ export function getStoreConfig(): StoreConfig {
             realtimeShippingProviders: ['Fedex', 'UPS', 'USPS'],
             requiresMarketingConsent: false,
             features: {
-                "CHECKOUT-7962.update_font_style_on_checkout_page": false,
+                'CHECKOUT-7962.update_font_style_on_checkout_page': false,
             },
             remoteCheckoutProviders: [],
         },
@@ -53,6 +55,7 @@ export function getStoreConfig(): StoreConfig {
             code: 'USD',
             decimalPlaces: '2',
             decimalSeparator: '.',
+            isTransactional: true,
             symbolLocation: 'left',
             symbol: '$',
             thousandsSeparator: ',',

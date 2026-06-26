@@ -11,7 +11,7 @@ import {
     CheckoutContext,
     PaymentFormContext,
     type PaymentFormService,
-} from '@bigcommerce/checkout/payment-integration-api';
+} from '@bigcommerce/checkout/contexts';
 import {
     getCart,
     getCheckout,

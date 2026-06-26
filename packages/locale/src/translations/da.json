@@ -18,6 +18,9 @@
             "custom_required_error": "{label} er påkrævet",
             "custom_min_error": "{label} bør ikke være mindre end {min} tegn",
             "custom_max_error": "{label} må ikke være mere end {max} tegn",
+            "custom_min_number_error": "{label} skal være større end eller lig med {min}",
+            "custom_max_number_error": "{label} skal være mindre end eller lig med {max}",
+            "custom_range_error": "{label} skal være mellem {min} og {max}",
             "invalid_characters_error": "{label} indeholder ugyldige tegn",
             "custom_valid_error": "{label} er ikke gyldig",
             "edit_address_action": "Rediger adresse",
@@ -30,10 +33,12 @@
             "last_name_label": "Efternavn",
             "last_name_required_error": "Efternavnet er påkrævet",
             "phone_number_label": "Telefonnummer",
+            "phone_number_invalid_error": "Det indtastede telefonnummer er ikke gyldigt",
             "phone_number_required_error": "Telefonnummeret er påkrævet",
             "postal_code_label": "Postnummer",
             "postal_code_required_error": "Postnummeret er påkrævet",
             "save_in_addressbook": "Gem denne adresse i min adressebog.",
+            "search_addresses": "Søg adresser",
             "select_country_action": "Vælg et land",
             "select_state_action": "Vælg en stat",
             "state_label": "Landsdel/kommune",
@@ -45,6 +50,7 @@
         "billing": {
             "billing_address_heading": "Faktureringsadresse",
             "billing_heading": "Fakturering",
+            "no_billing_addresses_warning": "Beklager, men du har ingen faktureringsadresse at vælge. Gå til din adressebog for at oprette en adresse, eller kontakt din webstedsadministrator.",
             "save_billing_address_error": "Der opstod en fejl under lagring af faktureringsadressen i dit pristilbud. Prøv igen.",
             "billing_address_amazonpay": "Administreret af Amazon Pay",
             "use_shipping_address_label": "Min faktureringsadresse er den samme som min leveringsadresse."
@@ -57,6 +63,8 @@
             "discount_text": "Rabat",
             "downloads_action": "Gå til downloads",
             "edit_cart_action": "Rediger indkøbskurv",
+            "back_to_invoices": "Tilbage til fakturaer",
+            "go_to_cart_action": "Indkøbskurv",
             "edit_multi_shipping_cart_message": "Nye varer vil som standard blive sendt til forsendelsesdestination nr. 1. Tildel dem igen, hvis du vil have dem sendt til andre destinationer.",
             "estimated_total_text": "Anslået samlet beløb",
             "free_text": "Gratis",
@@ -65,12 +73,22 @@
             "item": "Vare",
             "items": "Varer",
             "item_count_text": "{count, plural, one{1 vare} other{# varer} }",
+            "backorder_count_text": "{count} vil være i restordre",
+            "backorder_quantities_changed_heading": "Restordremængderne er ændret for nedenstående varer:",
+            "cart_stock_modal_destination": "Destinationsnr. {consignmentNumber}",
+            "ready_to_ship_count_text": "{count} klar til afsendelse",
+            "bundled_item_label": "Pakke:",
+            "show_backorder_details": "Vis oplysninger om restordre",
+            "hide_backorder_details": "Skjul oplysninger om restordre",
             "print_action": "Udskriv",
+            "qty_label": "Antal: {quantity}",
             "remaining_text": "Resterende",
             "remove_action": "Fjern",
             "return_to_checkout": "TILBAGE TIL KASSEN",
             "see_all_action": "Se alt",
             "see_less_action": "Se mindre",
+            "show_order_summary_action": "Vis ordreoversigt",
+            "hide_order_summary_action": "Skjul ordreoversigt",
             "shipping_text": "Forsendelse",
             "gift_wrapping_text": "Gaveindpakning",
             "show_details_action": "Vis detaljer",
@@ -193,7 +211,6 @@
             "amazon_continue_action": "Fortsæt med Amazon",
             "amazonpay_continue_action": "Fortsæt med Amazon Pay",
             "amazon_name_text": "Amazon Pay",
-            "barclaycard_continue_action": "Fortsæt",
             "bluesnap_v2_continue_action": "Fortsæt",
             "bluesnap_direct_account_type_select": {
                 "label": "Vælg en kontotype",
@@ -281,6 +298,8 @@
             "credit_card_number_required_error": "Kreditkortnummeret er påkrævet",
             "credit_card_number_mismatch_error": "Det indtastede kortnummer stemmer ikke overens med det kort, der er gemt på din konto",
             "credit_debit_card_text": "Betalingskort",
+            "open_banking_display_name_text": "Open Banking",
+            "invoice_payment_comment_label": "Betalingskommentar",
             "payment_methods_text": "Betalingsmetoder",
             "redeemable_payments_text": "Indløselige betalinger",
             "instrument_storage_options_text": "Muligheder for gemning af betalinger",
@@ -289,7 +308,6 @@
             "humm_not_processable_error": "Humm kan ikke behandle din betaling for denne ordre. Vælg en anden betalingsmetode.",
             "klarna_continue_action": "Fortsæt med Klarna",
             "klarna_name_text": "Klarna",
-            "masterpass_name_text": "Masterpass",
             "mollie_unsupported_method_error": "Denne betalingsmetode kan ikke bruges til køb af digitale produkter. Kontakt kundesupport, eller prøv igen.",
             "opy_continue_action": "Fortsæt med {methodName}",
             "opy_widget_slogan": "Køb nu. Betal smartere.",
@@ -307,6 +325,7 @@
             "payment_method_invalid_error": "Der er et problem med at behandle din betaling. Kontakt os for at få hjælp, eller vælg en anden betalingsmetode.",
             "payment_method_unavailable_error": "Denne betalingsudbyder er midlertidigt utilgængelig. Prøv igen senere.",
             "payment_not_required_text": "Der kræves ikke betaling for denne ordre.",
+            "payment_methods_unavailable_error": "Vi kan ikke indlæse betalingsmetoder i øjeblikket. Prøv igen senere, eller kontakt butikken for at få hjælp.",
             "paypal_complete_action": "Gennemfør ordre",
             "paypal_continue_action": "Fortsæt med PayPal",
             "paypal_pay_later_complete_action": "Gennemfør ordre",
@@ -380,10 +399,13 @@
             "phone_number_label": "Telefonnummer",
             "errors": {
                 "account_number_required_error": "Kontonummer er påkrævet",
+                "field_required_error": "{label} er påkrævet",
                 "routing_number_required_error": "Routingnummer er påkrævet",
                 "phone_number_required_error": "Telefonnummeret er påkrævet",
                 "business_name_required_error": "Virksomhedsnavn er påkrævet",
                 "only_numbers_error": "{label} må kun indeholde tal",
+                "disabled_PO_number_credit": "Dette køb overstiger din tilgængelige kredit. Vælg en anden betalingsmetode",
+                "disabled_PO_number_currency_mismatch": "Brug {currency} for at bruge {name}",
                 "additional_action_required": "Fortsæt med yderligere handlinger.",
                 "authorization_expired": "Godkendelsen af denne transaktion er udløbet.",
                 "authorization_revoked": "Godkendelsen af denne transaktion er blevet tilbagekaldt.",
@@ -445,6 +467,7 @@
                 "three_d_secure_declined": "Der har været et problem med din betaling. Tjek dine betalingsoplysninger, eller kontakt din kortudsteder.",
                 "three_d_secure_failed": "Betalingen mislykkedes. Prøv igen, eller brug en anden betalingsmulighed.",
                 "three_d_secure_required": "Yderligere godkendelse er påkrævet for at behandle din betaling. Kontakt os.",
+                "three_d_secure_payment_failed": "Kreditkortoplysningerne er ugyldige eller 3D Secure-verificeringen mislykkedes. Prøv et andet kort, eller forsøg at betale igen senere.",
                 "token_error": "Vi oplever problemer med at behandle din transaktion. Prøv igen senere.",
                 "transaction_declined": "Din betaling blev afvist. Prøv igen.",
                 "transaction_rejected": "Betalingen blev afvist. Prøv igen.",
@@ -471,6 +494,7 @@
             }
         },
         "redeemable": {
+            "auto_promotion": "Automatisk rabat",
             "applied_text": "Anvendt",
             "apply_action": "Anvend",
             "apply_store_credit_after_action": "butikskredit for at bestille",
@@ -481,11 +505,16 @@
             "coupon_location_error": "Din leveringsadresse opfylder ikke placeringskravene for den kuponkode, du har indtastet.",
             "coupon_min_order_total": "Din ordre opfylder ikke minimumsbeløbet for, at denne kuponkode kan anvendes.",
             "coupon_text": "Kupon",
+            "coupon_placeholder": "Indtast din kode her",
+            "discounts_text": "Rabatter",
             "gift_certificate_remaining_text": "Resterende",
             "gift_certificate_text": "Gavekort",
+            "manual_discount": "Manuel rabat",
+            "maximum_discount_applied_text": "Maksimal rabat anvendt",
             "remove_action": "Fjern",
             "store_credit_available_text": "Din konto har i øjeblikket {storeCredit} butikskredit i alt tilgængelig",
-            "toggle_action": "Kupon/gavekort"
+            "toggle_action": "Kupon/gavekort",
+            "total_savings_text": "Du har sparet <span class=\"total-savings-highlight\">{totalDiscount}</span> i alt!"
         },
         "remote": {
             "browser_unsupported": "Den valgte betalingsmetode kræver en anden webbrowser. Vælg en anden betalingsmetode.",
@@ -515,6 +544,7 @@
             "save_shipping_address_error": "Der opstod en fejl under lagring af leveringsadressen i dit pristilbud. Prøv igen.",
             "save_shipping_option_error": "Der opstod en fejl under lagring af forsendelsestilbuddet til din ordre. Prøv igen.",
             "select_shipping_address_text": "Vælg en forsendelsesadresse for at se forsendelsesprisen",
+            "no_shipping_addresses_warning": "Beklager, men du har ingen leveringsadresse at vælge. Gå venligst til din adressebog for at oprette en adresse, eller kontakt din webstedsadministrator.",
             "shipping_address_heading": "Leveringsadresse",
             "multishipping_consignment_index_heading": "Destinationsnr. {consignmentNumber}",
             "multishipping_incomplete_consignment_error": "Udfyld adressen, varetildeling og metodevalg for destinationsnr.{consignmentNumber}.",
@@ -543,6 +573,9 @@
             "multishipping_left_to_allocate_items_table_item": "Vare",
             "multishipping_left_to_allocate_items_table_left_to_allocate": "Tilbage at tildele",
             "multishipping_left_to_allocate_items_table_quantity": "Antal",
+            "multishipping_backordered_quantity": "({count} vil være i restordre)",
+            "no_countries_available_heading": "Vi har problemer med at indlæse dit leveringsland",
+            "no_countries_available_message": "Opdater siden, eller prøv igen om et øjeblik. Hvis problemet fortsætter, skal du kontakte vores supportteam. Så hjælper vi dig med at fuldføre din ordre.",
             "multishipping_item_split_tooltip_message": "Disse varemængder er opdelt i en separat række på grund af en mængdebaseret kampagne eller brugerdefineret pris.",
             "ship_to_multi": "Send til flere adresser",
             "ship_to_single": "Send til en enkelt adresse",
@@ -593,7 +626,13 @@
         "order_confirmation": {
             "mandate": {
                 "adyenv3": {
-                    "boletobancario": "Boleto Bancário-kvittering"
+                    "boletobancario": "Boleto Bancário-kvittering",
+                    "multibanco": {
+                        "reference": "Betalingsreference",
+                        "entity": "Enhedsnummer",
+                        "expires_at": "Udløbsdato"
+                    },
+                    "oxxo": "OXXO-kvittering"
                 },
                 "bluesnapdirect": {
                     "sepa_direct_debit": "SEPA Direct Debit fuldmagtsreference: {mandate}"
@@ -632,7 +671,19 @@
             "thank_you_customer_heading": "Tak, {name}.",
             "thank_you_heading": "Tak.",
             "continue_shopping": "Shop videre »",
-            "order_status_update_facebook_messenger_heading": "Få øjeblikkelige opdateringer af din ordre på Messenger"
+            "order_status_update_facebook_messenger_heading": "Få øjeblikkelige opdateringer af din ordre på Messenger",
+            "expired_token": {
+                "heading": "Linket er udløbet",
+                "description": "Af sikkerhedsmæssige årsager er dette link udløbet.",
+                "resend_action": "Send det sikre link igen",
+                "sending": "Sender...",
+                "resend_success": "Et nyt link er blevet sendt til din e-mailadresse.",
+                "resend_error": "Kunne ikke sende linket igen. Prøv igen senere."
+            },
+            "rate_limited": {
+                "heading": "For mange anmodninger",
+                "message": "Du har prøvet for mange gange. Vent et par minutter, og prøv igen."
+            }
         }
     }
 }

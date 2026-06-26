@@ -1,7 +1,8 @@
 import { type CurrencyService } from '@bigcommerce/checkout-sdk';
 import React from 'react';
 
-import { createLocaleContext, LocaleContext } from '@bigcommerce/checkout/locale';
+import { LocaleContext } from '@bigcommerce/checkout/contexts';
+import { createLocaleContext } from '@bigcommerce/checkout/locale';
 import { render, screen } from '@bigcommerce/checkout/test-utils';
 
 import { getStoreConfig } from '../config/config.mock';
@@ -21,7 +22,9 @@ describe('OrderSummaryDiscount', () => {
             );
 
             expect(screen.getByText('Foo')).toBeInTheDocument();
-            expect(screen.getByText(`-${currencyService.toCustomerCurrency(10)}`)).toBeInTheDocument();
+            expect(
+                screen.getByText(`-${currencyService.toCustomerCurrency(10)}`),
+            ).toBeInTheDocument();
             expect(screen.queryByTestId('cart-price-remaining')).not.toBeInTheDocument();
             expect(screen.queryByText('ABCDFE')).not.toBeInTheDocument();
         });
@@ -41,8 +44,12 @@ describe('OrderSummaryDiscount', () => {
             );
 
             expect(screen.getByText('Gift Certificate')).toBeInTheDocument();
-            expect(screen.getByText(`-${currencyService.toCustomerCurrency(10)}`)).toBeInTheDocument();
-            expect(screen.getByTestId('cart-price-remaining')).toHaveTextContent(`Remaining: ${currencyService.toCustomerCurrency(2)}`);
+            expect(
+                screen.getByText(`-${currencyService.toCustomerCurrency(10)}`),
+            ).toBeInTheDocument();
+            expect(screen.getByTestId('cart-price-remaining')).toHaveTextContent(
+                `Remaining: ${currencyService.toCustomerCurrency(2)}`,
+            );
             expect(screen.getByText('ABCDFE')).toBeInTheDocument();
         });
     });

@@ -1,7 +1,7 @@
 import { noop } from 'lodash';
 import React, { type ReactNode } from 'react';
 
-import * as paymentIntegrationApi from '@bigcommerce/checkout/payment-integration-api';
+import * as contexts from '@bigcommerce/checkout/contexts';
 import { fireEvent, render, screen } from '@bigcommerce/checkout/test-utils';
 
 jest.mock('react-transition-group', () => ({
@@ -9,30 +9,31 @@ jest.mock('react-transition-group', () => ({
 }));
 
 jest.mock('../currency', () => ({
-    ShopperCurrency: ({ amount }: {amount: number}) => <div data-test="ShopperCurrency">{amount}</div>
+    ShopperCurrency: ({ amount }: { amount: number }) => (
+        <div data-test="ShopperCurrency">{amount}</div>
+    ),
 }));
 
 import OrderSummaryPrice, { type OrderSummaryPriceProps } from './OrderSummaryPrice';
 
 describe('OrderSummaryPrice', () => {
     const useCheckoutMock = (isSubmittingOrder: boolean) => {
-        jest.spyOn(paymentIntegrationApi, 'useCheckout').mockImplementation(
+        jest.spyOn(contexts, 'useCheckout').mockImplementation(
             jest.fn().mockImplementation(() => ({
                 checkoutState: {
-                    data: { getConfig:noop },
+                    data: { getConfig: noop },
                     statuses: {
                         isSubmittingOrder: () => isSubmittingOrder,
-                    }
-                }
-            }))
+                    },
+                },
+                selectedState: isSubmittingOrder,
+            })),
         );
     };
 
-    const renderTestComponent = (
-        props: OrderSummaryPriceProps & { children?: ReactNode }
-    ) => {
+    const renderTestComponent = (props: OrderSummaryPriceProps & { children?: ReactNode }) => {
         return render(<OrderSummaryPrice {...props} />);
-    }
+    };
 
     describe('when has non-zero amount', () => {
         const amount = 10;
@@ -67,7 +68,9 @@ describe('OrderSummaryPrice', () => {
                 expect(baseElement).toMatchSnapshot();
 
                 expect(screen.getByText('(EUR)')).toBeInTheDocument();
-                expect(screen.getByTestId('cart-price-value-superscript')).toHaveTextContent('superscript');
+                expect(screen.getByTestId('cart-price-value-superscript')).toHaveTextContent(
+                    'superscript',
+                );
             });
         });
     });
