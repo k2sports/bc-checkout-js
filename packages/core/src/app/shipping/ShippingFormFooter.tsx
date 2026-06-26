@@ -4,92 +4,95 @@ import React, { type FunctionComponent } from 'react';
 import { Extension } from '@bigcommerce/checkout/checkout-extension';
 import { TranslatedString } from '@bigcommerce/checkout/locale';
 import {
-    Alert,
-    AlertType,
-    Button,
-    ButtonVariant,
-    Fieldset,
-    Legend,
+  Alert,
+  AlertType,
+  Button,
+  ButtonVariant,
+  Fieldset,
+  Legend,
 } from '@bigcommerce/checkout/ui';
 
 import { OrderComments } from '../orderComments';
 
 import { ShippingOptions } from './shippingOption';
+import LoopReturnsOption from '../eoc/loop/LoopReturnsOption'; // custom import
 
 export interface ShippingFormFooterProps {
-    cartHasChanged: boolean;
-    defaultShippingExpectationMessage?: string;
-    isMultiShippingMode: boolean;
-    shouldShowOrderComments: boolean;
-    shouldShowShippingOptions?: boolean;
-    shouldDisableSubmit: boolean;
-    isInitialValueLoaded: boolean;
-    isLoading: boolean;
-    shippingFormRenderTimestamp?: number;
+  cartHasChanged: boolean;
+  defaultShippingExpectationMessage?: string;
+  isMultiShippingMode: boolean;
+  shouldShowOrderComments: boolean;
+  shouldShowShippingOptions?: boolean;
+  shouldDisableSubmit: boolean;
+  isInitialValueLoaded: boolean;
+  isLoading: boolean;
+  shippingFormRenderTimestamp?: number;
 }
 
 const ShippingFormFooter: FunctionComponent<ShippingFormFooterProps> = ({
-    cartHasChanged,
-    defaultShippingExpectationMessage,
-    isMultiShippingMode,
-    shouldShowOrderComments,
-    shouldShowShippingOptions = true,
-    shouldDisableSubmit,
-    isInitialValueLoaded,
-    isLoading,
-    shippingFormRenderTimestamp,
+  cartHasChanged,
+  defaultShippingExpectationMessage,
+  isMultiShippingMode,
+  shouldShowOrderComments,
+  shouldShowShippingOptions = true,
+  shouldDisableSubmit,
+  isInitialValueLoaded,
+  isLoading,
+  shippingFormRenderTimestamp,
 }) => {
-    return (
-        <>
-            <Extension region={ExtensionRegion.ShippingShippingAddressFormAfter} />
-            <Fieldset
-                id="checkout-shipping-options"
-                legend={
-                    <>
-                        <Legend>
-                            <TranslatedString id="shipping.shipping_method_label" />
-                        </Legend>
-                        {defaultShippingExpectationMessage && (
-                            <p className="shipping-ExpectationMessage">
-                                {defaultShippingExpectationMessage}
-                            </p>
-                        )}
+  return (
+    <>
+      <Extension region={ExtensionRegion.ShippingShippingAddressFormAfter} />
+      <Fieldset
+        id="checkout-shipping-options"
+        legend={
+          <>
+            <Legend>
+              <TranslatedString id="shipping.shipping_method_label" />
+            </Legend>
+            {defaultShippingExpectationMessage && (
+              <p className="shipping-ExpectationMessage">{defaultShippingExpectationMessage}</p>
+            )}
 
-                        {cartHasChanged && (
-                            <Alert type={AlertType.Error}>
-                                <strong>
-                                    <TranslatedString id="shipping.cart_change_error" />
-                                </strong>
-                            </Alert>
-                        )}
-                    </>
-                }
-            >
-                <ShippingOptions
-                    isInitialValueLoaded={isInitialValueLoaded}
-                    isMultiShippingMode={isMultiShippingMode}
-                    isUpdatingAddress={isLoading}
-                    shippingFormRenderTimestamp={shippingFormRenderTimestamp}
-                    shouldShowShippingOptions={shouldShowShippingOptions}
-                />
-            </Fieldset>
+            {cartHasChanged && (
+              <Alert type={AlertType.Error}>
+                <strong>
+                  <TranslatedString id="shipping.cart_change_error" />
+                </strong>
+              </Alert>
+            )}
+          </>
+        }
+      >
+        <ShippingOptions
+          isInitialValueLoaded={isInitialValueLoaded}
+          isMultiShippingMode={isMultiShippingMode}
+          isUpdatingAddress={isLoading}
+          shippingFormRenderTimestamp={shippingFormRenderTimestamp}
+          shouldShowShippingOptions={shouldShowShippingOptions}
+        />
+      </Fieldset>
 
-            {shouldShowOrderComments && <OrderComments />}
+      {/* custom component start */}
+      <LoopReturnsOption />
+      {/* custom component end */}
 
-            <div className="form-actions">
-                <Button
-                    className="body-bold"
-                    disabled={shouldDisableSubmit}
-                    id="checkout-shipping-continue"
-                    isLoading={isLoading}
-                    type="submit"
-                    variant={ButtonVariant.Primary}
-                >
-                    <TranslatedString id="common.continue_action" />
-                </Button>
-            </div>
-        </>
-    );
+      {shouldShowOrderComments && <OrderComments />}
+
+      <div className="form-actions">
+        <Button
+          className="body-bold"
+          disabled={shouldDisableSubmit}
+          id="checkout-shipping-continue"
+          isLoading={isLoading}
+          type="submit"
+          variant={ButtonVariant.Primary}
+        >
+          <TranslatedString id="common.continue_action" />
+        </Button>
+      </div>
+    </>
+  );
 };
 
 export default ShippingFormFooter;
