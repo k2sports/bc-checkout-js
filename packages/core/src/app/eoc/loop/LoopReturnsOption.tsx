@@ -6,7 +6,8 @@ import { createRequestSender } from '@bigcommerce/request-sender';
 import { ShopperCurrency } from '../../currency';
 
 const requestSender = createRequestSender({
-  host: 'https://fb0d-2601-600-9680-1890-ac23-a6a3-a852-d424.ngrok-free.app/api/v1/',
+  // host: 'https://fb0d-2601-600-9680-1890-ac23-a6a3-a852-d424.ngrok-free.app/api/v1/',
+  host: 'https://dev-eoc-checkout-helper.onrender.com/api/v1/',
 });
 
 interface LoopQuote {
