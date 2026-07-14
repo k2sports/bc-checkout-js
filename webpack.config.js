@@ -133,7 +133,7 @@ function appConfig(options, argv) {
         chunkFilename: `${outputFilename}.js`,
         chunkLoadingGlobal: 'webpackJsonpCheckout',
         library: LIBRARY_NAME,
-        // crossOriginLoading: 'anonymous',
+        crossOriginLoading: 'anonymous',
       },
       plugins: [
         new SubresourceIntegrityPlugin({
@@ -318,7 +318,7 @@ function loaderConfig(options, argv) {
         path: isProduction ? join(__dirname, 'dist') : join(__dirname, 'build'),
         filename: `[name]-${appVersion}.js`,
         library: LOADER_LIBRARY_NAME,
-        // crossOriginLoading: 'anonymous',
+        crossOriginLoading: 'anonymous',
         publicPath: '/',
       },
       plugins: [

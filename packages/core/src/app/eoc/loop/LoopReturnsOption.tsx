@@ -52,9 +52,6 @@ const LoopReturnsOption: FunctionComponent = () => {
 
   const cart = checkout?.cart;
 
-  console.log('cart', cart);
-  console.log('checkout', checkout);
-
   const dollarsToCents = (amount: number) => {
     return amount * 100;
   };
@@ -76,7 +73,7 @@ const LoopReturnsOption: FunctionComponent = () => {
   const labelContent = useMemo(
     () => (
       <p>
-        Free returns with for{' '}
+        Free returns for{' '}
         <ShopperCurrency amount={centsToDollars(loopQuote?.chargeInstructions?.amount || 0)} />
       </p>
     ),

@@ -13,21 +13,17 @@ const requestSender = createRequestSender({
 });
 
 async function setLoopOrderMetadata(order: Order): Promise<void> {
-  console.log('setLoopOrderMetadata', order);
-
-  // get order fees
+  // Get order fees
   const loopFee = order?.fees?.find((fee) => fee.source === 'loop');
 
   if (!loopFee) {
     return;
   }
 
-  // get cart metadata
+  // Get cart metadata
   const cartMetadataResp = await requestSender.post(
     `/checkout/bigcommerce/cart-metadata/${order.cartId}/loop_checkout_plus`,
   );
-
-  console.log('cartMetadataResp', cartMetadataResp);
 
   const loopCartMetadata = cartMetadataResp?.body as CartMetafield;
 
@@ -35,14 +31,9 @@ async function setLoopOrderMetadata(order: Order): Promise<void> {
     return;
   }
 
-  // set order metafields
+  // Set order metafields based on cart fields
   const loopData = JSON.parse(loopCartMetadata.value);
-
-  console.log('loopData', loopData);
-
   const metafieldKeys = Object.keys(loopData);
-
-  console.log('metafieldKeys', metafieldKeys);
 
   // only do this if the metadata isnt set
   await Promise.all(
@@ -62,7 +53,6 @@ async function setLoopOrderMetadata(order: Order): Promise<void> {
     }),
   )
     .then((results) => {
-      // results is exactly ['Data Pack A', 'Data Pack B', 'Data Pack C']
       console.log(results);
     })
     .catch((error) => {
