@@ -6,7 +6,7 @@ import { createRequestSender } from '@bigcommerce/request-sender';
 import { ShopperCurrency } from '../../currency';
 
 const requestSender = createRequestSender({
-  // host: 'https://fb0d-2601-600-9680-1890-ac23-a6a3-a852-d424.ngrok-free.app/api/v1/',
+  // host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
   host: 'https://dev-eoc-checkout-helper.onrender.com/api/v1/',
 });
 
@@ -19,6 +19,14 @@ interface LoopQuote {
     method: string;
   };
   eligible: boolean;
+}
+
+interface CartMetadataResp {
+  body: {
+    data?: {
+      resource_id: string;
+    };
+  };
 }
 
 // todo:
@@ -42,6 +50,7 @@ const LoopReturnsOption: FunctionComponent = () => {
   const [isInitializing, setIsInitializing] = useState(false);
   const [loopQuote, setLoopQuote] = useState<LoopQuote | null>(null);
   const [customLoopFee, setCustomLoopFee] = useState<Fee | null>(null);
+  const [cartMetafieldId, setCartMetafieldId] = useState<string | null>(null);
 
   const {
     selectedState: { checkout },
@@ -103,27 +112,35 @@ const LoopReturnsOption: FunctionComponent = () => {
         console.log('orderFeesResp:: ', orderFeesResp);
 
         // Add loop data to cart metadata for future access
-        const cartMetadataResp = await requestSender.post('/checkout/bigcommerce/cart-metadata', {
-          body: {
-            checkoutId: checkout?.id,
-            metafield: {
-              permission_set: 'write_and_sf_access',
-              namespace: 'loop_checkout_plus',
-              key: 'loop_checkout_plus',
-              value: JSON.stringify({
-                session_id: loopQuote.sessionId,
-                accepted_offer_mode: loopQuote.mode,
-                fee_amount: loopQuote.chargeInstructions.amount,
-                fee_currency: loopQuote.chargeInstructions.currencyCode,
-              }),
+        const cartMetadataResp: CartMetadataResp = await requestSender.post(
+          '/checkout/bigcommerce/cart-metadata',
+          {
+            body: {
+              checkoutId: checkout?.id,
+              metafield: {
+                permission_set: 'write_and_sf_access',
+                namespace: 'loop_checkout_plus',
+                key: 'loop_checkout_plus',
+                value: JSON.stringify({
+                  session_id: loopQuote.sessionId,
+                  accepted_offer_mode: loopQuote.mode,
+                  fee_amount: loopQuote.chargeInstructions.amount,
+                  fee_currency: loopQuote.chargeInstructions.currencyCode,
+                }),
+              },
             },
           },
-        });
+        );
 
         console.log('cartMetadataResp:: ', cartMetadataResp);
+        setCartMetafieldId(cartMetadataResp?.body?.data?.resource_id || null);
       } else {
         // TODO: delete fee and cart metadata if unchecked
         console.log('TODO: delete fee and cart metadata');
+
+        if (cartMetafieldId) {
+          // todo: delete metadata
+        }
       }
     } catch (error) {
       console.error('Error sending data to BC API:', error);
