@@ -1,5 +1,12 @@
-import React, { type FunctionComponent, memo, useEffect, useMemo, useState } from 'react';
-import { CheckboxFormField, Fieldset, Legend, LoadingOverlay } from '@bigcommerce/checkout/ui';
+import React, {
+  ChangeEvent,
+  type FunctionComponent,
+  memo,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { Legend, LoadingOverlay } from '@bigcommerce/checkout/ui';
 import { useCheckout } from '@bigcommerce/checkout/contexts';
 import { Fee, LineItem } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
@@ -51,6 +58,7 @@ const LoopReturnsOption: FunctionComponent = () => {
   const [loopQuote, setLoopQuote] = useState<LoopQuote | null>(null);
   const [customLoopFee, setCustomLoopFee] = useState<Fee | null>(null);
   const [cartMetafieldId, setCartMetafieldId] = useState<string | null>(null);
+  const [isLoopChecked, setIsLoopChecked] = useState(false);
 
   const {
     selectedState: { checkout },
@@ -69,27 +77,29 @@ const LoopReturnsOption: FunctionComponent = () => {
     return amount / 100;
   };
 
-  const legend = useMemo(
-    () => (
-      <Legend>
-        {/* <TranslatedString id="shipping.order_comment_label" /> */}
-        Returns Coverage
-      </Legend>
-    ),
-    [],
-  );
+  // const legend = useMemo(
+  //   () => (
+  //     <Legend>
+  //       {/* <TranslatedString id="shipping.order_comment_label" /> */}
+  //       Returns Coverage
+  //     </Legend>
+  //   ),
+  //   [],
+  // );
 
-  const labelContent = useMemo(
-    () => (
-      <p>
-        Free returns for{' '}
-        <ShopperCurrency amount={centsToDollars(loopQuote?.chargeInstructions?.amount || 0)} />
-      </p>
-    ),
-    [loopQuote],
-  );
+  // const labelContent = useMemo(
+  //   () => (
+  //     <p>
+  //       Free returns for{' '}
+  //       <ShopperCurrency amount={centsToDollars(loopQuote?.chargeInstructions?.amount || 0)} />
+  //     </p>
+  //   ),
+  //   [loopQuote],
+  // );
 
-  const onChange = async (isChecked: boolean) => {
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const isChecked = event.target.checked;
+    setIsLoopChecked(isChecked);
     console.log('Loop Returns Option checked::', { isChecked, loopQuote, customLoopFee });
 
     try {
@@ -218,29 +228,31 @@ const LoopReturnsOption: FunctionComponent = () => {
   const loopReturnsOption = useMemo(
     () =>
       isLoopEnabled ? (
-        <Fieldset
-          legend={legend}
-          testId="checkout-shipping-loop-returns"
-          additionalClassName="loop-returns"
-        >
+        <form>
           <LoadingOverlay isLoading={isInitializing}>
-            <CheckboxFormField
-              id="loopReturnsOption"
-              labelContent={labelContent}
-              name="loopReturnsOption"
-              onChange={onChange}
-            />
-            {/* <CheckboxInput
-                    checked={!!field.value}
-                    disabled={disabled}
-                    id={id || field.name}
-                    label={labelContent}
-                    testId={testId}
-                /> */}
+            <fieldset>
+              <Legend>Returns Coverage</Legend>
+
+              <label htmlFor="loopReturnsOption">
+                <input
+                  id="loopReturnsOption"
+                  name="loopReturnsOption"
+                  type="checkbox"
+                  checked={isLoopChecked}
+                  onChange={handleChange}
+                />
+                <p>
+                  Free returns for{' '}
+                  <ShopperCurrency
+                    amount={centsToDollars(loopQuote?.chargeInstructions?.amount || 0)}
+                  />
+                </p>
+              </label>
+            </fieldset>
           </LoadingOverlay>
-        </Fieldset>
+        </form>
       ) : null,
-    [isLoopEnabled, isInitializing, loopQuote, customLoopFee],
+    [isLoopEnabled, isInitializing, loopQuote, customLoopFee, isLoopChecked],
   );
 
   return loopReturnsOption;
