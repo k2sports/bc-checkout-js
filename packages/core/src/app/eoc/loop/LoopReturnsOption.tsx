@@ -11,6 +11,8 @@ import { useCheckout } from '@bigcommerce/checkout/contexts';
 import { Fee, LineItem } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
 import { ShopperCurrency } from '../../currency';
+import { CartMetadataResp, CartMetafield } from './types';
+import { removeOrderFees } from './checkoutHelpers';
 
 const requestSender = createRequestSender({
   // host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
@@ -26,14 +28,6 @@ interface LoopQuote {
     method: string;
   };
   eligible: boolean;
-}
-
-interface CartMetadataResp {
-  body: {
-    data?: {
-      resource_id: string;
-    };
-  };
 }
 
 // todo:
@@ -128,6 +122,7 @@ const LoopReturnsOption: FunctionComponent = () => {
             body: {
               checkoutId: checkout?.id,
               metafield: {
+                id: cartMetafieldId,
                 permission_set: 'write_and_sf_access',
                 namespace: 'loop_checkout_plus',
                 key: 'loop_checkout_plus',
@@ -148,9 +143,41 @@ const LoopReturnsOption: FunctionComponent = () => {
         // TODO: delete fee and cart metadata if unchecked
         console.log('TODO: delete fee and cart metadata');
 
-        if (cartMetafieldId) {
-          // todo: delete metadata
+        if (checkout?.id) {
+          await removeOrderFees(checkout.id, customLoopFee, cartMetafieldId);
         }
+        // if (cartMetafieldId) {
+        //   // todo: delete metadata
+        //   const cartMetadataResp: CartMetadataResp = await requestSender.delete(
+        //     '/checkout/bigcommerce/delete-cart-metadata',
+        //     {
+        //       body: {
+        //         checkoutId: checkout?.id,
+        //         metafield: {
+        //           id: cartMetafieldId,
+        //         },
+        //       },
+        //     },
+        //   );
+        //   console.log('clear cart metafield', cartMetadataResp);
+        setCartMetafieldId(null);
+        // }
+
+        // if (customLoopFee) {
+        //   const orderFeesResp = await requestSender.delete(
+        //     '/checkout/bigcommerce/delete-order-fees',
+        //     {
+        //       body: {
+        //         checkoutId: checkout?.id,
+        //         fee: {
+        //           id: customLoopFee?.id,
+        //         },
+        //       },
+        //     },
+        //   );
+        //   console.log('clear order fee', orderFeesResp);
+        setCustomLoopFee(null);
+        // }
       }
     } catch (error) {
       console.error('Error sending data to BC API:', error);
@@ -210,11 +237,19 @@ const LoopReturnsOption: FunctionComponent = () => {
         });
         setLoopQuote(data.body as LoopQuote);
 
+        // Get cart metadata
+        const cartMetadataResp = await requestSender.post(
+          `/checkout/bigcommerce/cart-metadata/${checkout?.id}/loop_checkout_plus`,
+        );
+        const loopCartMetadata = cartMetadataResp?.body as CartMetafield;
+        setCartMetafieldId(loopCartMetadata?.id);
+
         // Get & set loop fee if it's been applied
         const currentCustomLoopFee = checkout?.fees?.find(
           (fee) => fee.name === 'loop_return_coverage',
         );
         setCustomLoopFee(currentCustomLoopFee || null);
+        setIsLoopChecked(currentCustomLoopFee ? true : false);
       } catch (error) {
         // hide loop
       } finally {
@@ -252,7 +287,7 @@ const LoopReturnsOption: FunctionComponent = () => {
           </LoadingOverlay>
         </form>
       ) : null,
-    [isLoopEnabled, isInitializing, loopQuote, customLoopFee, isLoopChecked],
+    [isLoopEnabled, isInitializing, loopQuote, customLoopFee, isLoopChecked, cartMetafieldId],
   );
 
   return loopReturnsOption;

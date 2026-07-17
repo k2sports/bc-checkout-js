@@ -21,7 +21,7 @@ import getPaymentInstructions from '../getPaymentInstructions';
 import { ExpiredPermalinkView } from './ExpiredPermalinkView';
 import { OrderConfirmationPage } from './OrderConfirmationPage';
 import { RateLimitedPermalinkView } from './RateLimitedPermalinkView';
-import setLoopOrderMetadata from '../../eoc/loop/setOrderMetadata';
+import { setLoopOrderMetadata } from '../../eoc/loop/checkoutHelpers';
 
 const requestSender = createRequestSender();
 

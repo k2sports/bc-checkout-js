@@ -1,11 +1,8 @@
 /* eslint-disable prettier/prettier */
-import { type Order } from '@bigcommerce/checkout-sdk';
+import { type Fee, type Order } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
 
-interface CartMetafield {
-  id: string;
-  value: string;
-}
+import { type CartMetafield } from './types';
 
 const requestSender = createRequestSender({
   //   host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
@@ -60,4 +57,53 @@ async function setLoopOrderMetadata(order: Order): Promise<void> {
     });
 }
 
-export default setLoopOrderMetadata;
+async function removeOrderFees(
+  checkoutId: string,
+  customLoopFee: Fee | null,
+  cartMetafieldId: string | null,
+) {
+  const promises = [];
+
+  if (customLoopFee) {
+    promises.push(
+      requestSender.delete('/checkout/bigcommerce/delete-order-fees', {
+        body: {
+          checkoutId,
+          fee: {
+            id: customLoopFee?.id,
+          },
+        },
+      }),
+    );
+
+    // console.log('clear order fee', orderFeesResp);
+    // setCustomLoopFee(null);
+  }
+
+  if (cartMetafieldId) {
+    // todo: delete metadata
+    promises.push(
+      requestSender.delete('/checkout/bigcommerce/delete-cart-metadata', {
+        body: {
+          checkoutId,
+          metafield: {
+            id: cartMetafieldId,
+          },
+        },
+      }),
+    );
+
+    // console.log('clear cart metafield', cartMetadataResp);
+    // setCartMetafieldId(null);
+  }
+
+  await Promise.all(promises)
+    .then((results) => {
+      console.log(results);
+    })
+    .catch((error) => {
+      console.error('An error occurred:', error);
+    });
+}
+
+export { setLoopOrderMetadata, removeOrderFees };
