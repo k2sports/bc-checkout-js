@@ -10,3 +10,14 @@ export interface CartMetadataResp {
     };
   };
 }
+
+export interface LoopQuote {
+  sessionId: string;
+  mode: string[];
+  chargeInstructions: {
+    amount: number;
+    currencyCode: string;
+    method: string;
+  };
+  eligible: boolean;
+}

@@ -1,13 +1,78 @@
 /* eslint-disable prettier/prettier */
-import { type Fee, type Order } from '@bigcommerce/checkout-sdk';
+import {
+  type Cart,
+  type Checkout,
+  type Fee,
+  type LineItem,
+  type Order,
+} from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
 
-import { type CartMetafield } from './types';
+import { type CartMetafield, type LoopQuote } from './types';
+
+export const LOOP_NAMESPACE = 'loop_checkout_plus';
 
 const requestSender = createRequestSender({
   //   host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
   host: 'https://dev-eoc-checkout-helper.onrender.com/api/v1/',
 });
+
+function dollarsToCents(amount: number) {
+  return amount * 100;
+}
+
+function centsToDollars(amount: number) {
+  return amount / 100;
+}
+
+async function getLoopQuote(cart: Cart, checkout: Checkout): Promise<LoopQuote> {
+  const currencyCode = cart?.currency.code;
+  const allItems = Object.values(cart?.lineItems || {}).flat();
+  const cartItems = allItems?.map((item: LineItem) => ({
+    id: item.id,
+    productId: String(item.productId),
+    quantity: item.quantity,
+    unitPrice: {
+      amount: dollarsToCents(item.listPrice),
+      currencyCode,
+    },
+    totalPrice: {
+      amount: dollarsToCents(item.extendedSalePrice),
+      currencyCode,
+    },
+    originalTotalPrice: {
+      amount: dollarsToCents(item.extendedListPrice),
+      currencyCode,
+    },
+    title: item.name,
+  }));
+
+  const reqBody = {
+    platform: 'bigcommerce',
+    region: 'US',
+    cartId: cart?.id,
+    cart: {
+      lines: cartItems,
+      itemCount: cartItems?.length ? cartItems.reduce((acc, item) => acc + item.quantity, 0) : 0,
+      subtotalAmount: dollarsToCents(checkout?.subtotal || 0),
+      totalDiscountAmount: dollarsToCents(checkout?.totalDiscount || 0),
+      discountedSubtotalAmount: dollarsToCents(checkout?.subtotal || 0),
+      totalTaxAmount: dollarsToCents(checkout?.taxTotal || 0),
+      totalAmount: dollarsToCents(checkout?.grandTotal || 0),
+      currencyCode,
+    },
+  };
+
+  // Get loop coverage options based on cart
+  const loopQuoteResp = await requestSender.post('/checkout/loop/analyze', {
+    body: reqBody,
+  });
+  const loopQuoteData = loopQuoteResp.body as LoopQuote;
+
+  console.log('loopQuoteData', loopQuoteData);
+
+  return loopQuoteData;
+}
 
 async function setLoopOrderMetadata(order: Order): Promise<void> {
   // Get order fees
@@ -19,7 +84,7 @@ async function setLoopOrderMetadata(order: Order): Promise<void> {
 
   // Get cart metadata
   const cartMetadataResp = await requestSender.post(
-    `/checkout/bigcommerce/cart-metadata/${order.cartId}/loop_checkout_plus`,
+    `/checkout/bigcommerce/cart-metadata/${order.cartId}/${LOOP_NAMESPACE}`,
   );
 
   const loopCartMetadata = cartMetadataResp?.body as CartMetafield;
@@ -39,7 +104,7 @@ async function setLoopOrderMetadata(order: Order): Promise<void> {
         body: {
           orderId: order.orderId,
           metafield: {
-            namespace: 'loop_checkout_plus',
+            namespace: LOOP_NAMESPACE,
             key,
             value:
               key === 'accepted_offer_mode' ? JSON.stringify(loopData[key]) : String(loopData[key]),
@@ -57,31 +122,27 @@ async function setLoopOrderMetadata(order: Order): Promise<void> {
     });
 }
 
-async function removeOrderFees(
+async function removeLoopOrderFees(
   checkoutId: string,
-  customLoopFee: Fee | null,
+  loopOrderFee: Fee | null,
   cartMetafieldId: string | null,
 ) {
   const promises = [];
 
-  if (customLoopFee) {
+  if (loopOrderFee) {
     promises.push(
       requestSender.delete('/checkout/bigcommerce/delete-order-fees', {
         body: {
           checkoutId,
           fee: {
-            id: customLoopFee?.id,
+            id: loopOrderFee?.id,
           },
         },
       }),
     );
-
-    // console.log('clear order fee', orderFeesResp);
-    // setCustomLoopFee(null);
   }
 
   if (cartMetafieldId) {
-    // todo: delete metadata
     promises.push(
       requestSender.delete('/checkout/bigcommerce/delete-cart-metadata', {
         body: {
@@ -92,9 +153,6 @@ async function removeOrderFees(
         },
       }),
     );
-
-    // console.log('clear cart metafield', cartMetadataResp);
-    // setCartMetafieldId(null);
   }
 
   await Promise.all(promises)
@@ -106,4 +164,4 @@ async function removeOrderFees(
     });
 }
 
-export { setLoopOrderMetadata, removeOrderFees };
+export { setLoopOrderMetadata, removeLoopOrderFees, centsToDollars, dollarsToCents, getLoopQuote };

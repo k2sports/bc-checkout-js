@@ -8,27 +8,22 @@ import React, {
 } from 'react';
 import { Legend, LoadingOverlay } from '@bigcommerce/checkout/ui';
 import { useCheckout } from '@bigcommerce/checkout/contexts';
-import { Fee, LineItem } from '@bigcommerce/checkout-sdk';
+import { Fee } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
 import { ShopperCurrency } from '../../currency';
-import { CartMetadataResp, CartMetafield } from './types';
-import { removeOrderFees } from './checkoutHelpers';
+import { CartMetadataResp, CartMetafield, LoopQuote } from './types';
+import {
+  centsToDollars,
+  dollarsToCents,
+  getLoopQuote,
+  LOOP_NAMESPACE,
+  removeLoopOrderFees,
+} from './checkoutHelpers';
 
 const requestSender = createRequestSender({
   // host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
   host: 'https://dev-eoc-checkout-helper.onrender.com/api/v1/',
 });
-
-interface LoopQuote {
-  sessionId: string;
-  mode: string[];
-  chargeInstructions: {
-    amount: number;
-    currencyCode: string;
-    method: string;
-  };
-  eligible: boolean;
-}
 
 // todo:
 // 1. check if loop is enabled in checkout settings
@@ -38,6 +33,7 @@ interface LoopQuote {
 // 5, if quote is same as current fee, check and show quote
 // 6. if checked, add to order, reload checkout
 // 7. if order changes, redo steps 3-6
+// to do: check eligible
 
 // other things:
 // if you go back to email step and login, does it force you to redo the shipping step?
@@ -50,7 +46,7 @@ const LoopReturnsOption: FunctionComponent = () => {
   const isLoopEnabled = true; //checkoutSettings?.withdrawalTermsUrl;
   const [isInitializing, setIsInitializing] = useState(false);
   const [loopQuote, setLoopQuote] = useState<LoopQuote | null>(null);
-  const [customLoopFee, setCustomLoopFee] = useState<Fee | null>(null);
+  const [loopOrderFee, setLoopOrderFee] = useState<Fee | null>(null);
   const [cartMetafieldId, setCartMetafieldId] = useState<string | null>(null);
   const [isLoopChecked, setIsLoopChecked] = useState(false);
 
@@ -62,14 +58,6 @@ const LoopReturnsOption: FunctionComponent = () => {
   }));
 
   const cart = checkout?.cart;
-
-  const dollarsToCents = (amount: number) => {
-    return amount * 100;
-  };
-
-  const centsToDollars = (amount: number) => {
-    return amount / 100;
-  };
 
   // const legend = useMemo(
   //   () => (
@@ -94,18 +82,19 @@ const LoopReturnsOption: FunctionComponent = () => {
   const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
     setIsLoopChecked(isChecked);
-    console.log('Loop Returns Option checked::', { isChecked, loopQuote, customLoopFee });
+    console.log('Loop Returns Option checked::', { isChecked, loopQuote, loopOrderFee });
 
     try {
       if (isChecked && loopQuote?.chargeInstructions?.amount) {
+        console.log('UPDATE, checked option');
         // Apply custom fee to checkout
         const orderFeesResp = await requestSender.post('/checkout/bigcommerce/update-order-fees', {
           body: {
             checkoutId: checkout?.id,
             fee: {
-              id: customLoopFee?.id,
+              id: loopOrderFee?.id,
               type: 'custom_fee',
-              name: 'loop_return_coverage',
+              name: LOOP_NAMESPACE,
               display_name: 'Returns Coverage',
               cost: centsToDollars(loopQuote.chargeInstructions.amount), // convert cents to dollars
               source: 'loop',
@@ -124,8 +113,8 @@ const LoopReturnsOption: FunctionComponent = () => {
               metafield: {
                 id: cartMetafieldId,
                 permission_set: 'write_and_sf_access',
-                namespace: 'loop_checkout_plus',
-                key: 'loop_checkout_plus',
+                namespace: LOOP_NAMESPACE,
+                key: LOOP_NAMESPACE,
                 value: JSON.stringify({
                   session_id: loopQuote.sessionId,
                   accepted_offer_mode: loopQuote.mode,
@@ -140,44 +129,13 @@ const LoopReturnsOption: FunctionComponent = () => {
         console.log('cartMetadataResp:: ', cartMetadataResp);
         setCartMetafieldId(cartMetadataResp?.body?.data?.resource_id || null);
       } else {
-        // TODO: delete fee and cart metadata if unchecked
-        console.log('TODO: delete fee and cart metadata');
-
+        // Delete fee and cart metadata if unchecked
         if (checkout?.id) {
-          await removeOrderFees(checkout.id, customLoopFee, cartMetafieldId);
+          console.log('DELETE, unchecked option');
+          await removeLoopOrderFees(checkout.id, loopOrderFee, cartMetafieldId);
         }
-        // if (cartMetafieldId) {
-        //   // todo: delete metadata
-        //   const cartMetadataResp: CartMetadataResp = await requestSender.delete(
-        //     '/checkout/bigcommerce/delete-cart-metadata',
-        //     {
-        //       body: {
-        //         checkoutId: checkout?.id,
-        //         metafield: {
-        //           id: cartMetafieldId,
-        //         },
-        //       },
-        //     },
-        //   );
-        //   console.log('clear cart metafield', cartMetadataResp);
         setCartMetafieldId(null);
-        // }
-
-        // if (customLoopFee) {
-        //   const orderFeesResp = await requestSender.delete(
-        //     '/checkout/bigcommerce/delete-order-fees',
-        //     {
-        //       body: {
-        //         checkoutId: checkout?.id,
-        //         fee: {
-        //           id: customLoopFee?.id,
-        //         },
-        //       },
-        //     },
-        //   );
-        //   console.log('clear order fee', orderFeesResp);
-        setCustomLoopFee(null);
-        // }
+        setLoopOrderFee(null);
       }
     } catch (error) {
       console.error('Error sending data to BC API:', error);
@@ -192,66 +150,48 @@ const LoopReturnsOption: FunctionComponent = () => {
       try {
         setIsInitializing(false);
 
-        const currencyCode = cart?.currency.code;
-        const allItems = Object.values(cart?.lineItems || {}).flat();
-        const cartItems = allItems?.map((item: LineItem) => ({
-          id: item.id,
-          productId: String(item.productId),
-          quantity: item.quantity,
-          unitPrice: {
-            amount: dollarsToCents(item.listPrice),
-            currencyCode: currencyCode,
-          },
-          totalPrice: {
-            amount: dollarsToCents(item.extendedSalePrice),
-            currencyCode: currencyCode,
-          },
-          originalTotalPrice: {
-            amount: dollarsToCents(item.extendedListPrice),
-            currencyCode: currencyCode,
-          },
-          title: item.name,
-        }));
+        if (!cart || !checkout || !checkout?.id) {
+          // disable loop
+          return;
+        }
 
-        const reqBody = {
-          platform: 'bigcommerce',
-          region: 'US',
-          cartId: cart?.id,
-          cart: {
-            lines: cartItems,
-            itemCount: cartItems?.length
-              ? cartItems.reduce((acc, item) => acc + item.quantity, 0)
-              : 0,
-            subtotalAmount: dollarsToCents(checkout?.subtotal || 0),
-            totalDiscountAmount: dollarsToCents(checkout?.totalDiscount || 0),
-            discountedSubtotalAmount: dollarsToCents(checkout?.subtotal || 0),
-            totalTaxAmount: dollarsToCents(checkout?.taxTotal || 0),
-            totalAmount: dollarsToCents(checkout?.grandTotal || 0),
-            currencyCode: currencyCode,
-          },
-        };
-
-        // Get loop coverage options based on cart
-        const data = await requestSender.post('/checkout/loop/analyze', {
-          body: reqBody,
-        });
-        setLoopQuote(data.body as LoopQuote);
+        const loopQuoteData = await getLoopQuote(cart, checkout);
+        setLoopQuote(loopQuoteData);
 
         // Get cart metadata
         const cartMetadataResp = await requestSender.post(
-          `/checkout/bigcommerce/cart-metadata/${checkout?.id}/loop_checkout_plus`,
+          `/checkout/bigcommerce/cart-metadata/${checkout?.id}/${LOOP_NAMESPACE}`,
         );
         const loopCartMetadata = cartMetadataResp?.body as CartMetafield;
-        setCartMetafieldId(loopCartMetadata?.id);
+        console.log('loopCartMetadata', loopCartMetadata);
 
         // Get & set loop fee if it's been applied
-        const currentCustomLoopFee = checkout?.fees?.find(
-          (fee) => fee.name === 'loop_return_coverage',
-        );
-        setCustomLoopFee(currentCustomLoopFee || null);
-        setIsLoopChecked(currentCustomLoopFee ? true : false);
+        console.log('HMMM checkout', checkout);
+        const appliedLoopOrderFee = checkout?.fees?.find((fee) => fee.name === LOOP_NAMESPACE);
+        console.log('appliedLoopOrderFee', appliedLoopOrderFee);
+
+        if (
+          appliedLoopOrderFee &&
+          dollarsToCents(appliedLoopOrderFee?.cost) !== loopQuoteData?.chargeInstructions?.amount
+        ) {
+          console.log(
+            'REMOVE loop, loop or quote dont match',
+            appliedLoopOrderFee?.cost,
+            loopQuoteData?.chargeInstructions?.amount,
+          );
+          await removeLoopOrderFees(checkout?.id, appliedLoopOrderFee, loopCartMetadata?.id);
+          setLoopOrderFee(null);
+          setIsLoopChecked(false);
+          setCartMetafieldId(null);
+          checkoutService.loadCheckout();
+        } else {
+          setLoopOrderFee(appliedLoopOrderFee || null);
+          setIsLoopChecked(appliedLoopOrderFee ? true : false);
+          setCartMetafieldId(loopCartMetadata?.id || null);
+        }
       } catch (error) {
         // hide loop
+        console.log('ERROR initializing', error);
       } finally {
         setIsInitializing(false);
       }
@@ -287,7 +227,15 @@ const LoopReturnsOption: FunctionComponent = () => {
           </LoadingOverlay>
         </form>
       ) : null,
-    [isLoopEnabled, isInitializing, loopQuote, customLoopFee, isLoopChecked, cartMetafieldId],
+    [
+      isLoopEnabled,
+      isInitializing,
+      loopQuote,
+      loopOrderFee,
+      isLoopChecked,
+      cartMetafieldId,
+      checkout,
+    ],
   );
 
   return loopReturnsOption;
