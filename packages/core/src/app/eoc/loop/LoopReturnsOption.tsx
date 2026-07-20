@@ -29,11 +29,11 @@ const requestSender = createRequestSender({
 // 1. check if loop is enabled in checkout settings
 // 2. check if loop fee was already added
 // 3. analyze cart and get quote from loop api
-// 4. if quote is different than current fee, remove and uncheck?
+// 4. if quote is different than current fee, remove fee and uncheck
+// 4. if quote is not eligible, remove fee and hide checkbox
 // 5, if quote is same as current fee, check and show quote
 // 6. if checked, add to order, reload checkout
 // 7. if order changes, redo steps 3-6
-// to do: check eligible
 
 // other things:
 // if you go back to email step and login, does it force you to redo the shipping step?
@@ -170,16 +170,22 @@ const LoopReturnsOption: FunctionComponent = () => {
         const appliedLoopOrderFee = checkout?.fees?.find((fee) => fee.name === LOOP_NAMESPACE);
         console.log('appliedLoopOrderFee', appliedLoopOrderFee);
 
+        // If order isn't eligible for Loop or quote changed then remove order fee and cart metadata
         if (
-          appliedLoopOrderFee &&
-          dollarsToCents(appliedLoopOrderFee?.cost) !== loopQuoteData?.chargeInstructions?.amount
+          !loopQuoteData.eligible ||
+          (appliedLoopOrderFee &&
+            dollarsToCents(appliedLoopOrderFee?.cost) !== loopQuoteData?.chargeInstructions?.amount)
         ) {
           console.log(
             'REMOVE loop, loop or quote dont match',
             appliedLoopOrderFee?.cost,
             loopQuoteData?.chargeInstructions?.amount,
           );
-          await removeLoopOrderFees(checkout?.id, appliedLoopOrderFee, loopCartMetadata?.id);
+          await removeLoopOrderFees(
+            checkout?.id,
+            appliedLoopOrderFee || null,
+            loopCartMetadata?.id,
+          );
           setLoopOrderFee(null);
           setIsLoopChecked(false);
           setCartMetafieldId(null);
@@ -207,22 +213,25 @@ const LoopReturnsOption: FunctionComponent = () => {
           <LoadingOverlay isLoading={isInitializing}>
             <fieldset>
               <Legend>Returns Coverage</Legend>
-
-              <label htmlFor="loopReturnsOption">
-                <input
-                  id="loopReturnsOption"
-                  name="loopReturnsOption"
-                  type="checkbox"
-                  checked={isLoopChecked}
-                  onChange={handleChange}
-                />
-                <p>
-                  Free returns for{' '}
-                  <ShopperCurrency
-                    amount={centsToDollars(loopQuote?.chargeInstructions?.amount || 0)}
+              {loopQuote?.eligible ? (
+                <label htmlFor="loopReturnsOption">
+                  <input
+                    id="loopReturnsOption"
+                    name="loopReturnsOption"
+                    type="checkbox"
+                    checked={isLoopChecked}
+                    onChange={handleChange}
                   />
-                </p>
-              </label>
+                  <p>
+                    Free returns for{' '}
+                    <ShopperCurrency
+                      amount={centsToDollars(loopQuote?.chargeInstructions?.amount || 0)}
+                    />
+                  </p>
+                </label>
+              ) : (
+                <p>Your order is not eligible for free returns coverage</p>
+              )}
             </fieldset>
           </LoadingOverlay>
         </form>
