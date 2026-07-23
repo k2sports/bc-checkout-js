@@ -8,6 +8,13 @@ export interface ManageShippingMethods {
   showRecommendedMethod?: boolean;
   hideFreeShippingGroups?: number[];
   withdrawalTermsUrl?: string;
+  enableLoop: boolean;
+  loopHideGroups: number[];
+  loopUpchargeGroups: number[];
+  loopUpchargeRate?: string;
+  loopModalText?: string;
+  loopFormTitle?: string;
+  loopFieldLabel?: string;
 }
 
 enum OrderPermalinkStatus {
@@ -39,7 +46,7 @@ function isCustomCheckoutWindow(window: Window): window is CustomCheckoutWindow 
     throw new Error('Checkout config is missing.');
   }
 
-  console.log('Manage Shipping Methods v3.0.0', window.checkoutConfig);
+  console.log('Manage Shipping Methods v3.0.0:::', window.checkoutConfig);
 
   const { renderOrderConfirmation, renderCheckout } = await loadFiles();
 

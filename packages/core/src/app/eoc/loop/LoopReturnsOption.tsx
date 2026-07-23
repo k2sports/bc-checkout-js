@@ -6,7 +6,15 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { Legend, LoadingOverlay } from '@bigcommerce/checkout/ui';
+import {
+  Button,
+  ButtonSize,
+  ButtonVariant,
+  Legend,
+  LoadingOverlay,
+  Modal,
+  ModalHeader,
+} from '@bigcommerce/checkout/ui';
 import { useCheckout } from '@bigcommerce/checkout/contexts';
 import { Fee } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
@@ -19,6 +27,9 @@ import {
   LOOP_NAMESPACE,
   removeLoopOrderFees,
 } from './checkoutHelpers';
+import { CustomCheckoutWindow, ManageShippingMethods } from '../../auto-loader';
+import './LoopReturnsOption.scss';
+import IconInfo from '@bigcommerce/checkout/ui/icon/IconInfo';
 
 const requestSender = createRequestSender({
   // host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
@@ -39,16 +50,13 @@ const requestSender = createRequestSender({
 // if you go back to email step and login, does it force you to redo the shipping step?
 
 const LoopReturnsOption: FunctionComponent = () => {
-  // const customCheckoutWindow: CustomCheckoutWindow = window as unknown as CustomCheckoutWindow;
-  // const checkoutSettings: ManageShippingMethods | undefined =
-  //   customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
-
-  const isLoopEnabled = true; //checkoutSettings?.withdrawalTermsUrl;
+  const [checkoutSettings, setCheckoutSettings] = useState<ManageShippingMethods | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [loopQuote, setLoopQuote] = useState<LoopQuote | null>(null);
   const [loopOrderFee, setLoopOrderFee] = useState<Fee | null>(null);
   const [cartMetafieldId, setCartMetafieldId] = useState<string | null>(null);
   const [isLoopChecked, setIsLoopChecked] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   const {
     selectedState: { checkout },
@@ -57,27 +65,9 @@ const LoopReturnsOption: FunctionComponent = () => {
     checkout: data.getCheckout(),
   }));
 
-  const cart = checkout?.cart;
-
-  // const legend = useMemo(
-  //   () => (
-  //     <Legend>
-  //       {/* <TranslatedString id="shipping.order_comment_label" /> */}
-  //       Returns Coverage
-  //     </Legend>
-  //   ),
-  //   [],
-  // );
-
-  // const labelContent = useMemo(
-  //   () => (
-  //     <p>
-  //       Free returns for{' '}
-  //       <ShopperCurrency amount={centsToDollars(loopQuote?.chargeInstructions?.amount || 0)} />
-  //     </p>
-  //   ),
-  //   [loopQuote],
-  // );
+  const onRequestClose = () => {
+    setIsInfoModalOpen((prevState) => !prevState);
+  };
 
   const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
@@ -149,13 +139,19 @@ const LoopReturnsOption: FunctionComponent = () => {
       console.log('Loop Returns Option component mounted');
       try {
         setIsInitializing(false);
+        const customCheckoutWindow: CustomCheckoutWindow =
+          window as unknown as CustomCheckoutWindow;
+        const checkoutSettings: ManageShippingMethods | undefined =
+          customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
+        setCheckoutSettings(checkoutSettings || null);
+        console.log('checkoutSettings', checkoutSettings);
 
-        if (!cart || !checkout || !checkout?.id) {
+        if (!checkout || !checkout?.cart || !checkout?.id || !checkoutSettings?.enableLoop) {
           // disable loop
           return;
         }
 
-        const loopQuoteData = await getLoopQuote(cart, checkout);
+        const loopQuoteData = await getLoopQuote(checkout.cart, checkout);
         setLoopQuote(loopQuoteData);
 
         // Get cart metadata
@@ -208,42 +204,73 @@ const LoopReturnsOption: FunctionComponent = () => {
 
   const loopReturnsOption = useMemo(
     () =>
-      isLoopEnabled ? (
-        <form>
-          <LoadingOverlay isLoading={isInitializing}>
-            <fieldset>
-              <Legend>Returns Coverage</Legend>
-              {loopQuote?.eligible ? (
-                <label htmlFor="loopReturnsOption">
-                  <input
-                    id="loopReturnsOption"
-                    name="loopReturnsOption"
-                    type="checkbox"
-                    checked={isLoopChecked}
-                    onChange={handleChange}
-                  />
-                  <p>
-                    Free returns for{' '}
-                    <ShopperCurrency
-                      amount={centsToDollars(loopQuote?.chargeInstructions?.amount || 0)}
-                    />
-                  </p>
-                </label>
-              ) : (
-                <p>Your order is not eligible for free returns coverage</p>
-              )}
-            </fieldset>
-          </LoadingOverlay>
-        </form>
+      checkoutSettings?.enableLoop ? (
+        <>
+          <form className="loop-returns-option-form">
+            <LoadingOverlay isLoading={isInitializing}>
+              <fieldset>
+                <div className="loop-legend">
+                  <Legend>{checkoutSettings?.loopFormTitle || 'Returns Coverage'}</Legend>
+                  <Button
+                    variant={ButtonVariant.Secondary}
+                    size={ButtonSize.Tiny}
+                    onClick={onRequestClose}
+                  >
+                    <IconInfo />
+                  </Button>
+                </div>
+                {loopQuote?.eligible ? (
+                  <div className="form-body">
+                    <div className="form-field">
+                      <input
+                        id="loopReturnsOption"
+                        name="loopReturnsOption"
+                        type="checkbox"
+                        checked={isLoopChecked}
+                        onChange={handleChange}
+                        className="form-checkbox optimizedCheckout-form-checkbox 
+                    floating-form-field-input"
+                      />
+                      <label
+                        htmlFor="loopReturnsOption"
+                        className="form-label optimizedCheckout-form-label body-regular"
+                      >
+                        <span className="body-regular">
+                          {checkoutSettings?.loopFieldLabel || 'Free returns for '}
+                          <ShopperCurrency
+                            amount={centsToDollars(loopQuote?.chargeInstructions?.amount || 0)}
+                          />
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <p>Your order is not eligible for free returns coverage</p>
+                )}
+              </fieldset>
+            </LoadingOverlay>
+          </form>
+          <Modal
+            header={
+              <ModalHeader>{checkoutSettings?.loopFormTitle || 'Returns Coverage'}</ModalHeader>
+            }
+            isOpen={isInfoModalOpen}
+            onRequestClose={onRequestClose}
+            shouldShowCloseButton={true}
+          >
+            {checkoutSettings?.loopModalText}
+          </Modal>
+        </>
       ) : null,
     [
-      isLoopEnabled,
+      checkoutSettings,
       isInitializing,
       loopQuote,
       loopOrderFee,
       isLoopChecked,
       cartMetafieldId,
       checkout,
+      isInfoModalOpen,
     ],
   );
 
