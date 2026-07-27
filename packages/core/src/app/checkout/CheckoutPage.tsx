@@ -709,7 +709,6 @@ const Checkout = ({
       data-test="checkout-page-container"
       id="checkout-page-container"
     >
-      HELLO from EOC Custom Checkout v1
       <div className="layout optimizedCheckout-contentPrimary">
         {state.isCartEmpty ? (
           <EmptyCartMessage loginUrl={loginUrl} waitInterval={3000} />

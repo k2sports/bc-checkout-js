@@ -30,6 +30,7 @@ import {
 import { CustomCheckoutWindow, ManageShippingMethods } from '../../auto-loader';
 import './LoopReturnsOption.scss';
 import IconInfo from '@bigcommerce/checkout/ui/icon/IconInfo';
+import DOMPurify from 'dompurify';
 
 const requestSender = createRequestSender({
   // host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
@@ -57,6 +58,7 @@ const LoopReturnsOption: FunctionComponent = () => {
   const [cartMetafieldId, setCartMetafieldId] = useState<string | null>(null);
   const [isLoopChecked, setIsLoopChecked] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isLoopAvailable, setIsLoopAvailable] = useState(true);
 
   const {
     selectedState: { checkout },
@@ -135,10 +137,11 @@ const LoopReturnsOption: FunctionComponent = () => {
   };
 
   useEffect(() => {
+    console.log('Use effect is triggered', checkout);
     const initializeLoop = async () => {
-      console.log('Loop Returns Option component mounted');
+      console.log('Loop Returns Option component initializing');
       try {
-        setIsInitializing(false);
+        setIsInitializing(true);
         const customCheckoutWindow: CustomCheckoutWindow =
           window as unknown as CustomCheckoutWindow;
         const checkoutSettings: ManageShippingMethods | undefined =
@@ -148,11 +151,10 @@ const LoopReturnsOption: FunctionComponent = () => {
 
         if (!checkout || !checkout?.cart || !checkout?.id || !checkoutSettings?.enableLoop) {
           // disable loop
+          setIsInitializing(false);
+          setIsLoopAvailable(false);
           return;
         }
-
-        const loopQuoteData = await getLoopQuote(checkout.cart, checkout);
-        setLoopQuote(loopQuoteData);
 
         // Get cart metadata
         const cartMetadataResp = await requestSender.post(
@@ -162,9 +164,38 @@ const LoopReturnsOption: FunctionComponent = () => {
         console.log('loopCartMetadata', loopCartMetadata);
 
         // Get & set loop fee if it's been applied
-        console.log('HMMM checkout', checkout);
+        console.log('checkout', checkout);
         const appliedLoopOrderFee = checkout?.fees?.find((fee) => fee.name === LOOP_NAMESPACE);
         console.log('appliedLoopOrderFee', appliedLoopOrderFee);
+
+        console.log('Customer Group Id:', checkout?.customer?.customerGroup?.id);
+        console.log('Disable Loop for these customer groups:', checkoutSettings.loopHideGroups);
+
+        // Check if Loop is disabled for the customer's group
+        if (
+          checkout?.customer?.customerGroup?.id &&
+          checkoutSettings.loopHideGroups?.includes(checkout?.customer?.customerGroup?.id)
+        ) {
+          console.log('Loop is disbled for the current customer group');
+          await removeLoopOrderFees(
+            checkout?.id,
+            appliedLoopOrderFee || null,
+            loopCartMetadata?.id,
+          );
+
+          setIsLoopAvailable(false);
+          setLoopOrderFee(null);
+          setIsLoopChecked(false);
+          setCartMetafieldId(null);
+          setIsInitializing(false);
+          checkoutService.loadCheckout();
+          return;
+        } else {
+          setIsLoopAvailable(true);
+        }
+
+        const loopQuoteData = await getLoopQuote(checkout.cart, checkout);
+        setLoopQuote(loopQuoteData);
 
         // If order isn't eligible for Loop or quote changed then remove order fee and cart metadata
         if (
@@ -199,12 +230,14 @@ const LoopReturnsOption: FunctionComponent = () => {
       }
     };
 
-    void initializeLoop();
-  }, []);
+    if (!isInitializing) {
+      void initializeLoop();
+    }
+  }, [checkout?.cart, checkout?.customer, checkout?.subtotal]);
 
   const loopReturnsOption = useMemo(
     () =>
-      checkoutSettings?.enableLoop ? (
+      checkoutSettings?.enableLoop && isLoopAvailable ? (
         <>
           <form className="loop-returns-option-form">
             <LoadingOverlay isLoading={isInitializing}>
@@ -219,7 +252,7 @@ const LoopReturnsOption: FunctionComponent = () => {
                     <IconInfo />
                   </Button>
                 </div>
-                {loopQuote?.eligible ? (
+                {loopQuote && loopQuote?.eligible ? (
                   <div className="form-body">
                     <div className="form-field">
                       <input
@@ -258,7 +291,11 @@ const LoopReturnsOption: FunctionComponent = () => {
             onRequestClose={onRequestClose}
             shouldShowCloseButton={true}
           >
-            {checkoutSettings?.loopModalText}
+            <div
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(checkoutSettings?.loopModalText || ''),
+              }}
+            />
           </Modal>
         </>
       ) : null,
@@ -271,6 +308,7 @@ const LoopReturnsOption: FunctionComponent = () => {
       cartMetafieldId,
       checkout,
       isInfoModalOpen,
+      isLoopAvailable,
     ],
   );
 

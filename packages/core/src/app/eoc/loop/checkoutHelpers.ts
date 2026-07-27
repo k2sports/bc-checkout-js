@@ -115,10 +115,10 @@ async function setLoopOrderMetadata(order: Order): Promise<void> {
     }),
   )
     .then((results) => {
-      console.log(results);
+      console.log('setLoopOrderMetadata results:', results);
     })
     .catch((error) => {
-      console.error('An error occurred:', error);
+      console.error('setLoopOrderMetadata errors:', error);
     });
 }
 
@@ -155,12 +155,18 @@ async function removeLoopOrderFees(
     );
   }
 
+  if (!promises?.length) {
+    console.log('removeLoopOrderFees: nothing to remove');
+
+    return;
+  }
+
   await Promise.all(promises)
     .then((results) => {
-      console.log(results);
+      console.log('removeLoopOrderFees results:', results);
     })
     .catch((error) => {
-      console.error('An error occurred:', error);
+      console.error('removeLoopOrderFees errors:', error);
     });
 }
 
