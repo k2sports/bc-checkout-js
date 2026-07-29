@@ -3,6 +3,11 @@ import type { BrowserOptions } from '@sentry/browser';
 
 import { loadFiles } from './loader';
 
+export interface LoopUpcharge {
+  id: string;
+  loopUpchargeGroup: number[];
+  loopUpchargeRate: string;
+}
 export interface ManageShippingMethods {
   isEnabled: boolean;
   showRecommendedMethod?: boolean;
@@ -10,8 +15,7 @@ export interface ManageShippingMethods {
   withdrawalTermsUrl?: string;
   enableLoop: boolean;
   loopHideGroups: number[];
-  loopUpchargeGroups: number[];
-  loopUpchargeRate?: string;
+  loopUpchargeRates?: LoopUpcharge[];
   loopModalText?: string;
   loopFormTitle?: string;
   loopFieldLabel?: string;

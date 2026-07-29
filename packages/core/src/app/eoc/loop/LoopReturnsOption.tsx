@@ -168,14 +168,12 @@ const LoopReturnsOption: FunctionComponent = () => {
         const appliedLoopOrderFee = checkout?.fees?.find((fee) => fee.name === LOOP_NAMESPACE);
         console.log('appliedLoopOrderFee', appliedLoopOrderFee);
 
-        console.log('Customer Group Id:', checkout?.customer?.customerGroup?.id);
+        const customerGroupId = checkout?.customer?.customerGroup?.id;
+        console.log('Customer Group Id:', customerGroupId);
         console.log('Disable Loop for these customer groups:', checkoutSettings.loopHideGroups);
 
         // Check if Loop is disabled for the customer's group
-        if (
-          checkout?.customer?.customerGroup?.id &&
-          checkoutSettings.loopHideGroups?.includes(checkout?.customer?.customerGroup?.id)
-        ) {
+        if (customerGroupId && checkoutSettings.loopHideGroups?.includes(customerGroupId)) {
           console.log('Loop is disbled for the current customer group');
           await removeLoopOrderFees(
             checkout?.id,
@@ -194,7 +192,34 @@ const LoopReturnsOption: FunctionComponent = () => {
           setIsLoopAvailable(true);
         }
 
+        // 1. check if there are upcharges for the customer's group
+        const customerGroupUpcharge =
+          customerGroupId && checkoutSettings?.loopUpchargeRates
+            ? checkoutSettings?.loopUpchargeRates?.find((config) =>
+                config.loopUpchargeGroup?.includes(customerGroupId),
+              )
+            : undefined;
+        // 2. apply upcharge to loop fee
+        // 3. if fee is set then compare new loop fee to existing order fee
+        // 3a. if fee doesn't match then remove fee
+
         const loopQuoteData = await getLoopQuote(checkout.cart, checkout);
+
+        if (customerGroupUpcharge && loopQuoteData) {
+          console.log('loop amount', loopQuoteData.chargeInstructions.amount);
+          console.log(
+            'upcharge amount',
+            dollarsToCents(Number(customerGroupUpcharge.loopUpchargeRate)),
+          );
+          const newRate =
+            loopQuoteData.chargeInstructions.amount +
+            dollarsToCents(Number(customerGroupUpcharge.loopUpchargeRate));
+
+          loopQuoteData.chargeInstructions.amount = newRate;
+          console.log(' new combined rate', newRate);
+        }
+
+        console.log('loopQuoteData', loopQuoteData);
         setLoopQuote(loopQuoteData);
 
         // If order isn't eligible for Loop or quote changed then remove order fee and cart metadata
