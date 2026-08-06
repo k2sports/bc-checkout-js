@@ -1,3 +1,4 @@
+// EOC Override: This file has been modified to add Loop Returns Option
 import { ExtensionRegion } from '@bigcommerce/checkout-sdk/essential';
 import React, { lazy } from 'react';
 
@@ -6,7 +7,7 @@ import { useThemeContext } from '@bigcommerce/checkout/contexts';
 import { CartSummarySkeleton, LazyContainer, MobileView } from '@bigcommerce/checkout/ui';
 
 import { retry } from '../../common/utility';
-import LoopReturnsOption from '../../eoc/loop/LoopReturnsOption';
+import LoopReturnsOption from '../../eoc/loop/LoopReturnsOption'; // eoc custom import
 
 const CartSummaryComponent = lazy(() =>
   retry(

@@ -25,9 +25,84 @@ function centsToDollars(amount: number) {
   return amount / 100;
 }
 
-async function getLoopQuote(cart: Cart, checkout: Checkout): Promise<LoopQuote> {
+function getCartMetadataAmount(loopCartMetadata: CartMetafield | null): number | null {
+  if (!loopCartMetadata || !loopCartMetadata?.value) {
+    return null;
+  }
+
+  const cartMetadataObject = JSON.parse(loopCartMetadata?.value || '');
+
+  return cartMetadataObject?.fee_amount || null;
+}
+
+function shouldRemoveLoopFee(
+  loopQuoteData: LoopQuote | null,
+  appliedLoopOrderFee: Fee | undefined,
+  loopCartMetadata: CartMetafield | null,
+): boolean {
+  if (!appliedLoopOrderFee && !loopCartMetadata?.value) {
+    return false; // Nothing to remove
+  }
+
+  // Remove order fee and cart metadata:
+  // IF no loop quote or order isn't eligible for Loop
+  if (!loopQuoteData || !loopQuoteData?.eligible) {
+    console.log('REMOVE quote does not exist or is not eligible', loopQuoteData);
+
+    return true;
+  }
+
+  // IF quote changed from applied fee
+  if (
+    appliedLoopOrderFee &&
+    dollarsToCents(appliedLoopOrderFee?.cost) !== loopQuoteData?.chargeInstructions?.amount
+  ) {
+    console.log(
+      'REMOVE quote does not match applied fee',
+      loopQuoteData?.chargeInstructions?.amount,
+      appliedLoopOrderFee?.cost,
+    );
+
+    return true;
+  }
+
+  // IF fee but no cart metadata
+  if (appliedLoopOrderFee && !loopCartMetadata?.value) {
+    console.log(
+      'REMOVE fee is applied but cart metadata is missing',
+      appliedLoopOrderFee,
+      loopCartMetadata,
+    );
+
+    return true;
+  }
+
+  const cartMetadataObject = JSON.parse(loopCartMetadata?.value || '');
+  const cartMetadataAmount = cartMetadataObject?.fee_amount || 0;
+
+  // IF fee does not match cart metadata
+  if (appliedLoopOrderFee && appliedLoopOrderFee?.cost !== centsToDollars(cartMetadataAmount)) {
+    console.log(
+      'REMOVE fee does not match cart metadata amount',
+      appliedLoopOrderFee,
+      cartMetadataAmount,
+    );
+
+    return true;
+  }
+
+  // IF cart meta data amount does not match loop quote
+  if (cartMetadataAmount !== loopQuoteData?.chargeInstructions?.amount) {
+    return true;
+  }
+
+  return false;
+}
+
+async function getLoopQuote(cart: Cart, checkout: Checkout): Promise<LoopQuote | null> {
   const currencyCode = cart?.currency.code;
-  const allItems = Object.values(cart?.lineItems || {}).flat();
+  // const allItems = Object.values(cart?.lineItems || {}).flat();
+  const allItems = cart?.lineItems?.physicalItems || [];
   const cartItems = allItems?.map((item: LineItem) => ({
     id: item.id,
     productId: String(item.productId),
@@ -67,11 +142,9 @@ async function getLoopQuote(cart: Cart, checkout: Checkout): Promise<LoopQuote> 
   const loopQuoteResp = await requestSender.post('/checkout/loop/analyze', {
     body: reqBody,
   });
-  const loopQuoteData = loopQuoteResp.body as LoopQuote;
+  // const loopQuoteData = loopQuoteResp.body as LoopQuote;
 
-  console.log('loopQuoteData', loopQuoteData);
-
-  return loopQuoteData;
+  return loopQuoteResp?.body ? (loopQuoteResp.body as LoopQuote) : null;
 }
 
 async function setLoopOrderMetadata(order: Order): Promise<void> {
@@ -170,4 +243,12 @@ async function removeLoopOrderFees(
     });
 }
 
-export { setLoopOrderMetadata, removeLoopOrderFees, centsToDollars, dollarsToCents, getLoopQuote };
+export {
+  setLoopOrderMetadata,
+  removeLoopOrderFees,
+  centsToDollars,
+  dollarsToCents,
+  getLoopQuote,
+  shouldRemoveLoopFee,
+  getCartMetadataAmount,
+};

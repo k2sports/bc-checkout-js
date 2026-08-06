@@ -1,3 +1,4 @@
+// EOC Override: This file has been modified to add Loop Returns order metadata
 import {
   type EmbeddedCheckoutMessenger,
   type EmbeddedCheckoutMessengerOptions,
@@ -21,7 +22,7 @@ import getPaymentInstructions from '../getPaymentInstructions';
 import { ExpiredPermalinkView } from './ExpiredPermalinkView';
 import { OrderConfirmationPage } from './OrderConfirmationPage';
 import { RateLimitedPermalinkView } from './RateLimitedPermalinkView';
-import { setLoopOrderMetadata } from '../../eoc/loop/checkoutHelpers';
+import { setLoopOrderMetadata } from '../../eoc/loop/checkoutHelpers'; // eoc custom import
 
 const requestSender = createRequestSender();
 
@@ -142,9 +143,8 @@ export const OrderConfirmation = ({
       .catch(handleUnhandledError);
   }, [permalinkStatus]);
 
+  // EOC custom start
   useEffect(() => {
-    console.log('isLoadingOrder', isLoadingOrder);
-    console.log('order', order);
     const handleLoad = async () => {
       if (order) {
         await setLoopOrderMetadata(order);
@@ -155,6 +155,7 @@ export const OrderConfirmation = ({
       handleLoad();
     }
   }, [order, isLoadingOrder]);
+  // EOC custom end
 
   if (permalinkStatus === OrderPermalinkStatus.Expired) {
     return <ExpiredPermalinkView onResendClick={handleResendGuestToken} />;

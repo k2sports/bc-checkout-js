@@ -2,6 +2,7 @@ import React, {
   ChangeEvent,
   type FunctionComponent,
   memo,
+  // useCallback,
   useEffect,
   useMemo,
   useState,
@@ -23,21 +24,24 @@ import { CartMetadataResp, CartMetafield, LoopQuote } from './types';
 import {
   centsToDollars,
   dollarsToCents,
+  getCartMetadataAmount,
   getLoopQuote,
   LOOP_NAMESPACE,
   removeLoopOrderFees,
+  shouldRemoveLoopFee,
 } from './checkoutHelpers';
 import { CustomCheckoutWindow, ManageShippingMethods } from '../../auto-loader';
 import './LoopReturnsOption.scss';
 import IconInfo from '@bigcommerce/checkout/ui/icon/IconInfo';
 import DOMPurify from 'dompurify';
+// import ErrorModal from '../../common/error/ErrorModal';
 
 const requestSender = createRequestSender({
   // host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
   host: 'https://dev-eoc-checkout-helper.onrender.com/api/v1/',
 });
 
-// todo:
+// done:
 // 1. check if loop is enabled in checkout settings
 // 2. check if loop fee was already added
 // 3. analyze cart and get quote from loop api
@@ -45,10 +49,8 @@ const requestSender = createRequestSender({
 // 4. if quote is not eligible, remove fee and hide checkbox
 // 5, if quote is same as current fee, check and show quote
 // 6. if checked, add to order, reload checkout
-// 7. if order changes, redo steps 3-6
-
-// other things:
-// if you go back to email step and login, does it force you to redo the shipping step?
+// 7. if order/cart/customer changes, redo steps 3-6
+// 8. if cart metadata same as loop quote but no fee, then add the fee
 
 const LoopReturnsOption: FunctionComponent = () => {
   const [checkoutSettings, setCheckoutSettings] = useState<ManageShippingMethods | null>(null);
@@ -56,10 +58,11 @@ const LoopReturnsOption: FunctionComponent = () => {
   const [loopQuote, setLoopQuote] = useState<LoopQuote | null>(null);
   const [loopOrderFee, setLoopOrderFee] = useState<Fee | null>(null);
   const [cartMetafieldId, setCartMetafieldId] = useState<string | null>(null);
-  const [isLoopChecked, setIsLoopChecked] = useState(false);
+  const [isLoopFieldChecked, setIsLoopFieldChecked] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isLoopAvailable, setIsLoopAvailable] = useState(true);
-
+  const [error, setError] = useState<Error | undefined>();
+  console.log('error so it doesnt yell at me', error);
   const {
     selectedState: { checkout },
     checkoutService,
@@ -67,13 +70,17 @@ const LoopReturnsOption: FunctionComponent = () => {
     checkout: data.getCheckout(),
   }));
 
+  // const reloadWindow = useCallback((): void => {
+  //   window.location.reload();
+  // }, []);
+
   const onRequestClose = () => {
     setIsInfoModalOpen((prevState) => !prevState);
   };
 
   const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
-    setIsLoopChecked(isChecked);
+    setIsLoopFieldChecked(isChecked);
     console.log('Loop Returns Option checked::', { isChecked, loopQuote, loopOrderFee });
 
     try {
@@ -131,6 +138,7 @@ const LoopReturnsOption: FunctionComponent = () => {
       }
     } catch (error) {
       console.error('Error sending data to BC API:', error);
+      setError(error as Error);
     } finally {
       checkoutService.loadCheckout();
     }
@@ -162,6 +170,7 @@ const LoopReturnsOption: FunctionComponent = () => {
         );
         const loopCartMetadata = cartMetadataResp?.body as CartMetafield;
         console.log('loopCartMetadata', loopCartMetadata);
+        const loopCartMetadataAmount = getCartMetadataAmount(loopCartMetadata);
 
         // Get & set loop fee if it's been applied
         console.log('checkout', checkout);
@@ -183,7 +192,7 @@ const LoopReturnsOption: FunctionComponent = () => {
 
           setIsLoopAvailable(false);
           setLoopOrderFee(null);
-          setIsLoopChecked(false);
+          setIsLoopFieldChecked(false);
           setCartMetafieldId(null);
           setIsInitializing(false);
           checkoutService.loadCheckout();
@@ -192,19 +201,19 @@ const LoopReturnsOption: FunctionComponent = () => {
           setIsLoopAvailable(true);
         }
 
-        // 1. check if there are upcharges for the customer's group
+        // Check if there are upcharges for the customer's group
         const customerGroupUpcharge =
           customerGroupId && checkoutSettings?.loopUpchargeRates
             ? checkoutSettings?.loopUpchargeRates?.find((config) =>
                 config.loopUpchargeGroup?.includes(customerGroupId),
               )
             : undefined;
-        // 2. apply upcharge to loop fee
-        // 3. if fee is set then compare new loop fee to existing order fee
-        // 3a. if fee doesn't match then remove fee
+        console.log('Upcharge for these customer groups:', customerGroupUpcharge);
 
+        // Get loop quote
         const loopQuoteData = await getLoopQuote(checkout.cart, checkout);
 
+        // Apply upcharge if applicable
         if (customerGroupUpcharge && loopQuoteData) {
           console.log('loop amount', loopQuoteData.chargeInstructions.amount);
           console.log(
@@ -222,34 +231,54 @@ const LoopReturnsOption: FunctionComponent = () => {
         console.log('loopQuoteData', loopQuoteData);
         setLoopQuote(loopQuoteData);
 
-        // If order isn't eligible for Loop or quote changed then remove order fee and cart metadata
-        if (
-          !loopQuoteData.eligible ||
-          (appliedLoopOrderFee &&
-            dollarsToCents(appliedLoopOrderFee?.cost) !== loopQuoteData?.chargeInstructions?.amount)
-        ) {
-          console.log(
-            'REMOVE loop, loop or quote dont match',
-            appliedLoopOrderFee?.cost,
-            loopQuoteData?.chargeInstructions?.amount,
-          );
+        if (shouldRemoveLoopFee(loopQuoteData, appliedLoopOrderFee, loopCartMetadata)) {
           await removeLoopOrderFees(
             checkout?.id,
             appliedLoopOrderFee || null,
             loopCartMetadata?.id,
           );
           setLoopOrderFee(null);
-          setIsLoopChecked(false);
+          setIsLoopFieldChecked(false);
           setCartMetafieldId(null);
           checkoutService.loadCheckout();
-        } else {
-          setLoopOrderFee(appliedLoopOrderFee || null);
-          setIsLoopChecked(appliedLoopOrderFee ? true : false);
-          setCartMetafieldId(loopCartMetadata?.id || null);
+          setIsInitializing(false);
+
+          return;
         }
+
+        // Set order fee if cart metadata exists and matched loop quote
+        if (
+          loopQuoteData?.chargeInstructions?.amount &&
+          !appliedLoopOrderFee &&
+          loopCartMetadataAmount === loopQuoteData.chargeInstructions.amount
+        ) {
+          console.log('Cart meta data set, apply order fee');
+          await requestSender.post('/checkout/bigcommerce/update-order-fees', {
+            body: {
+              checkoutId: checkout?.id,
+              fee: {
+                id: loopOrderFee?.id,
+                type: 'custom_fee',
+                name: LOOP_NAMESPACE,
+                display_name: 'Returns Coverage',
+                cost: centsToDollars(loopQuoteData.chargeInstructions.amount), // convert cents to dollars
+                source: 'loop',
+              },
+            },
+          });
+
+          checkoutService.loadCheckout();
+          setIsInitializing(false);
+          return;
+        }
+
+        setLoopOrderFee(appliedLoopOrderFee || null);
+        setIsLoopFieldChecked(appliedLoopOrderFee ? true : false);
+        setCartMetafieldId(loopCartMetadata?.id || null);
       } catch (error) {
         // hide loop
         console.log('ERROR initializing', error);
+        setError(error as Error);
       } finally {
         setIsInitializing(false);
       }
@@ -284,7 +313,7 @@ const LoopReturnsOption: FunctionComponent = () => {
                         id="loopReturnsOption"
                         name="loopReturnsOption"
                         type="checkbox"
-                        checked={isLoopChecked}
+                        checked={isLoopFieldChecked}
                         onChange={handleChange}
                         className="form-checkbox optimizedCheckout-form-checkbox 
                     floating-form-field-input"
@@ -322,6 +351,12 @@ const LoopReturnsOption: FunctionComponent = () => {
               }}
             />
           </Modal>
+          {/* <ErrorModal
+            error={error}
+            message="Please refresh and try again."
+            onClose={reloadWindow}
+            shouldShowErrorCode={false}
+          /> */}
         </>
       ) : null,
     [
@@ -329,7 +364,7 @@ const LoopReturnsOption: FunctionComponent = () => {
       isInitializing,
       loopQuote,
       loopOrderFee,
-      isLoopChecked,
+      isLoopFieldChecked,
       cartMetafieldId,
       checkout,
       isInfoModalOpen,

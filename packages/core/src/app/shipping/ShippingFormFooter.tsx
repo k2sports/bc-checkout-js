@@ -15,8 +15,6 @@ import {
 import { OrderComments } from '../orderComments';
 
 import { ShippingOptions } from './shippingOption';
-// import LoopReturnsOption from '../eoc/loop/LoopReturnsOption'; // custom import
-
 export interface ShippingFormFooterProps {
   cartHasChanged: boolean;
   defaultShippingExpectationMessage?: string;
@@ -72,10 +70,6 @@ const ShippingFormFooter: FunctionComponent<ShippingFormFooterProps> = ({
           shouldShowShippingOptions={shouldShowShippingOptions}
         />
       </Fieldset>
-
-      {/* custom component start */}
-      {/* <LoopReturnsOption /> */}
-      {/* custom component end */}
 
       {shouldShowOrderComments && <OrderComments />}
 

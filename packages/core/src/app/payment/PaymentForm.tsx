@@ -1,4 +1,4 @@
-// EOC Override: This file has been modified to add a Withdrawal Terms Notice
+// EOC Override: This file has been modified to add a Withdrawal Terms Notice and Loop Returns Option
 import {
   type Capabilities,
   ExtensionRegion,
@@ -18,7 +18,13 @@ import {
   type WithLanguageProps,
 } from '@bigcommerce/checkout/locale';
 import { type PaymentFormValues } from '@bigcommerce/checkout/payment-integration-api';
-import { Fieldset, Form, FormContext, Legend } from '@bigcommerce/checkout/ui';
+import {
+  Fieldset,
+  Form,
+  FormContext,
+  isMobileView as isMobileViewUI,
+  Legend,
+} from '@bigcommerce/checkout/ui';
 import { B2BSessionStorage } from '@bigcommerce/checkout/utility';
 
 import { getTranslateAddressError } from '../address';
@@ -43,7 +49,8 @@ import PaymentSubmitButton from './PaymentSubmitButton';
 import { ProvidersSectionOnTopOfPaymentsList } from './ProvidersSectionOnTopOfPaymentsList';
 import SpamProtectionField from './SpamProtectionField';
 import { StoreCreditField, StoreCreditOverlay } from './storeCredit';
-import WithdrawalTermsNotice from '../eoc/WithdrawalTermsNotice'; // custom import
+import WithdrawalTermsNotice from '../eoc/WithdrawalTermsNotice'; // eoc custom import
+import LoopReturnsOption from '../eoc/loop/LoopReturnsOption'; // eoc custom import
 
 export interface PaymentFormProps {
   additionalField?: Capabilities['payment']['additionalField'];
@@ -158,8 +165,14 @@ const PaymentForm: FunctionComponent<
     );
   }
 
+  const isMobileView = isMobileViewUI(); // eoc custom const
+
   return (
     <Form className="checkout-form" testId="payment-form">
+      {/* custom component start */}
+      {isMobileView && <LoopReturnsOption />}
+      {/* custom component end */}
+
       {usableStoreCredit > 0 && !disableStoreCredit && (
         <StoreCreditField
           availableStoreCredit={availableStoreCredit}

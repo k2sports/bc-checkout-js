@@ -3,6 +3,7 @@ $color-highlight: #4496f6;
 $color-highlightDark: darken($color-highlight, 15%);
 
 .loop-returns-option-form {
+  margin-bottom: 20px;
   padding: spacing('base');
   border: 1px solid color('greys', 'light');
   fieldset {

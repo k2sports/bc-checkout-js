@@ -7,7 +7,7 @@ import React, { type ReactElement, useEffect } from 'react';
 import { useAnalytics } from '@bigcommerce/checkout/contexts';
 import { TranslatedString } from '@bigcommerce/checkout/locale';
 
-import getFilteredShippingOptions from '../getFilteredShippingOptions'; // custom import
+import getFilteredShippingOptions from '../getFilteredShippingOptions'; // eoc custom import
 import { withFormikExtended } from '../../common/form';
 import getRecommendedShippingOption from '../getRecommendedShippingOption';
 import { getShippingOptionIds } from '../utils';
