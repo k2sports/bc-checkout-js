@@ -12,6 +12,11 @@ import { type CartMetafield, type LoopQuote } from './types';
 
 export const LOOP_NAMESPACE = 'loop_checkout_plus';
 
+interface CheckoutResponse {
+  error: boolean;
+  message?: string;
+}
+
 const requestSender = createRequestSender({
   //   host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
   host: 'https://dev-eoc-checkout-helper.onrender.com/api/v1/',
@@ -147,12 +152,15 @@ async function getLoopQuote(cart: Cart, checkout: Checkout): Promise<LoopQuote |
   return loopQuoteResp?.body ? (loopQuoteResp.body as LoopQuote) : null;
 }
 
-async function setLoopOrderMetadata(order: Order): Promise<void> {
+async function setLoopOrderMetadata(order: Order): Promise<CheckoutResponse> {
+  let hasError = false;
   // Get order fees
   const loopFee = order?.fees?.find((fee) => fee.source === 'loop');
 
   if (!loopFee) {
-    return;
+    return {
+      error: hasError,
+    };
   }
 
   // Get cart metadata
@@ -163,7 +171,9 @@ async function setLoopOrderMetadata(order: Order): Promise<void> {
   const loopCartMetadata = cartMetadataResp?.body as CartMetafield;
 
   if (!loopCartMetadata?.id || !loopCartMetadata?.value) {
-    return;
+    return {
+      error: hasError,
+    };
   }
 
   // Set order metafields based on cart fields
@@ -192,14 +202,21 @@ async function setLoopOrderMetadata(order: Order): Promise<void> {
     })
     .catch((error) => {
       console.error('setLoopOrderMetadata errors:', error);
+      hasError = true;
     });
+
+  return {
+    error: hasError,
+    message: 'An error occured when setting the order metadata for Loop fees',
+  };
 }
 
 async function removeLoopOrderFees(
   checkoutId: string,
   loopOrderFee: Fee | null,
   cartMetafieldId: string | null,
-) {
+): Promise<CheckoutResponse> {
+  let hasError = false;
   const promises = [];
 
   if (loopOrderFee) {
@@ -231,7 +248,9 @@ async function removeLoopOrderFees(
   if (!promises?.length) {
     console.log('removeLoopOrderFees: nothing to remove');
 
-    return;
+    return {
+      error: hasError,
+    };
   }
 
   await Promise.all(promises)
@@ -240,7 +259,13 @@ async function removeLoopOrderFees(
     })
     .catch((error) => {
       console.error('removeLoopOrderFees errors:', error);
+      hasError = true;
     });
+
+  return {
+    error: hasError,
+    message: 'An error occured when removing Loop fees from the order',
+  };
 }
 
 export {

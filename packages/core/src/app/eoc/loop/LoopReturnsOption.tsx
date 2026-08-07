@@ -2,7 +2,7 @@ import React, {
   ChangeEvent,
   type FunctionComponent,
   memo,
-  // useCallback,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -34,7 +34,7 @@ import { CustomCheckoutWindow, ManageShippingMethods } from '../../auto-loader';
 import './LoopReturnsOption.scss';
 import IconInfo from '@bigcommerce/checkout/ui/icon/IconInfo';
 import DOMPurify from 'dompurify';
-// import ErrorModal from '../../common/error/ErrorModal';
+import ErrorModal from '../../common/error/ErrorModal';
 
 const requestSender = createRequestSender({
   // host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
@@ -61,8 +61,7 @@ const LoopReturnsOption: FunctionComponent = () => {
   const [isLoopFieldChecked, setIsLoopFieldChecked] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isLoopAvailable, setIsLoopAvailable] = useState(true);
-  const [error, setError] = useState<Error | undefined>();
-  console.log('error so it doesnt yell at me', error);
+  const [modalError, setModalError] = useState<Error | undefined>();
   const {
     selectedState: { checkout },
     checkoutService,
@@ -70,9 +69,10 @@ const LoopReturnsOption: FunctionComponent = () => {
     checkout: data.getCheckout(),
   }));
 
-  // const reloadWindow = useCallback((): void => {
-  //   window.location.reload();
-  // }, []);
+  const reloadWindow = useCallback((): void => {
+    console.log('can we just close this??');
+    // window.location.reload();
+  }, []);
 
   const onRequestClose = () => {
     setIsInfoModalOpen((prevState) => !prevState);
@@ -131,14 +131,17 @@ const LoopReturnsOption: FunctionComponent = () => {
         // Delete fee and cart metadata if unchecked
         if (checkout?.id) {
           console.log('DELETE, unchecked option');
-          await removeLoopOrderFees(checkout.id, loopOrderFee, cartMetafieldId);
+          const removeResp = await removeLoopOrderFees(checkout.id, loopOrderFee, cartMetafieldId);
+          if (removeResp.error) {
+            setModalError(new Error(removeResp?.message));
+          }
         }
         setCartMetafieldId(null);
         setLoopOrderFee(null);
       }
     } catch (error) {
       console.error('Error sending data to BC API:', error);
-      setError(error as Error);
+      setModalError(error as Error);
     } finally {
       checkoutService.loadCheckout();
     }
@@ -184,11 +187,15 @@ const LoopReturnsOption: FunctionComponent = () => {
         // Check if Loop is disabled for the customer's group
         if (customerGroupId && checkoutSettings.loopHideGroups?.includes(customerGroupId)) {
           console.log('Loop is disbled for the current customer group');
-          await removeLoopOrderFees(
+          const removeResp = await removeLoopOrderFees(
             checkout?.id,
             appliedLoopOrderFee || null,
             loopCartMetadata?.id,
           );
+
+          if (removeResp.error) {
+            setModalError(new Error(removeResp?.message));
+          }
 
           setIsLoopAvailable(false);
           setLoopOrderFee(null);
@@ -232,11 +239,16 @@ const LoopReturnsOption: FunctionComponent = () => {
         setLoopQuote(loopQuoteData);
 
         if (shouldRemoveLoopFee(loopQuoteData, appliedLoopOrderFee, loopCartMetadata)) {
-          await removeLoopOrderFees(
+          const removeResp = await removeLoopOrderFees(
             checkout?.id,
             appliedLoopOrderFee || null,
             loopCartMetadata?.id,
           );
+
+          if (removeResp.error) {
+            setModalError(new Error(removeResp?.message));
+          }
+
           setLoopOrderFee(null);
           setIsLoopFieldChecked(false);
           setCartMetafieldId(null);
@@ -278,7 +290,7 @@ const LoopReturnsOption: FunctionComponent = () => {
       } catch (error) {
         // hide loop
         console.log('ERROR initializing', error);
-        setError(error as Error);
+        setModalError(error as Error);
       } finally {
         setIsInitializing(false);
       }
@@ -351,12 +363,12 @@ const LoopReturnsOption: FunctionComponent = () => {
               }}
             />
           </Modal>
-          {/* <ErrorModal
-            error={error}
+          <ErrorModal
+            error={modalError}
             message="Please refresh and try again."
             onClose={reloadWindow}
             shouldShowErrorCode={false}
-          /> */}
+          />
         </>
       ) : null,
     [
