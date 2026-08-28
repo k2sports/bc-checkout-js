@@ -24,10 +24,13 @@ import { CartMetadataResp, CartMetafield, LoopQuote } from './types';
 import {
   centsToDollars,
   dollarsToCents,
+  FEE_DISPLAY_NAME,
   getCartMetadataAmount,
   getLoopQuote,
+  getReturnsCartItem,
   LOOP_NAMESPACE,
   removeLoopOrderFees,
+  RETURNS_ITEM_SKU,
   shouldRemoveLoopFee,
 } from './checkoutHelpers';
 import { CustomCheckoutWindow, ManageShippingMethods } from '../../auto-loader';
@@ -71,6 +74,7 @@ const LoopReturnsOption: FunctionComponent = () => {
 
   const reloadWindow = useCallback((): void => {
     console.log('can we just close this??');
+    setModalError(undefined);
     // window.location.reload();
   }, []);
 
@@ -94,7 +98,7 @@ const LoopReturnsOption: FunctionComponent = () => {
               id: loopOrderFee?.id,
               type: 'custom_fee',
               name: LOOP_NAMESPACE,
-              display_name: 'Returns Coverage',
+              display_name: FEE_DISPLAY_NAME,
               cost: centsToDollars(loopQuote.chargeInstructions.amount), // convert cents to dollars
               source: 'loop',
             },
@@ -127,11 +131,40 @@ const LoopReturnsOption: FunctionComponent = () => {
 
         console.log('cartMetadataResp:: ', cartMetadataResp);
         setCartMetafieldId(cartMetadataResp?.body?.data?.resource_id || null);
+
+        // Add ghost item for netsuite support
+        const returnsItemId = getReturnsCartItem(checkout?.cart?.lineItems);
+        console.log('add returns item? ', returnsItemId);
+        if (!returnsItemId) {
+          const cartItemsResp = await requestSender.post('/checkout/bigcommerce/cart-items', {
+            body: {
+              checkoutId: checkout?.id,
+              items: {
+                custom_items: [
+                  {
+                    sku: RETURNS_ITEM_SKU,
+                    name: FEE_DISPLAY_NAME,
+                    list_price: 0,
+                    quantity: 1,
+                  },
+                ],
+                // version: checkout?.version,
+              },
+            },
+          });
+
+          console.log('cartItemsResp:: ', cartItemsResp);
+        }
       } else {
         // Delete fee and cart metadata if unchecked
         if (checkout?.id) {
           console.log('DELETE, unchecked option');
-          const removeResp = await removeLoopOrderFees(checkout.id, loopOrderFee, cartMetafieldId);
+          const removeResp = await removeLoopOrderFees(
+            checkout.id,
+            loopOrderFee,
+            cartMetafieldId,
+            checkout.cart.lineItems,
+          );
           if (removeResp.error) {
             setModalError(new Error(removeResp?.message));
           }
@@ -160,7 +193,7 @@ const LoopReturnsOption: FunctionComponent = () => {
         setCheckoutSettings(checkoutSettings || null);
         console.log('checkoutSettings', checkoutSettings);
 
-        if (!checkout || !checkout?.cart || !checkout?.id || !checkoutSettings?.enableLoop) {
+        if (!checkout || !checkout?.cart || !checkout?.id || !checkoutSettings?.enableReturns) {
           // disable loop
           setIsInitializing(false);
           setIsLoopAvailable(false);
@@ -182,15 +215,17 @@ const LoopReturnsOption: FunctionComponent = () => {
 
         const customerGroupId = checkout?.customer?.customerGroup?.id;
         console.log('Customer Group Id:', customerGroupId);
-        console.log('Disable Loop for these customer groups:', checkoutSettings.loopHideGroups);
+        console.log('Disable Loop for these customer groups:', checkoutSettings.returnsHideGroups);
 
         // Check if Loop is disabled for the customer's group
-        if (customerGroupId && checkoutSettings.loopHideGroups?.includes(customerGroupId)) {
+        if (customerGroupId && checkoutSettings.returnsHideGroups?.includes(customerGroupId)) {
           console.log('Loop is disbled for the current customer group');
           const removeResp = await removeLoopOrderFees(
             checkout?.id,
             appliedLoopOrderFee || null,
             loopCartMetadata?.id,
+            checkout.cart.lineItems,
+            // checkout.version,
           );
 
           if (removeResp.error) {
@@ -210,9 +245,9 @@ const LoopReturnsOption: FunctionComponent = () => {
 
         // Check if there are upcharges for the customer's group
         const customerGroupUpcharge =
-          customerGroupId && checkoutSettings?.loopUpchargeRates
-            ? checkoutSettings?.loopUpchargeRates?.find((config) =>
-                config.loopUpchargeGroup?.includes(customerGroupId),
+          customerGroupId && checkoutSettings?.returnsUpchargeRates
+            ? checkoutSettings?.returnsUpchargeRates?.find((config) =>
+                config.returnsUpchargeGroup?.includes(customerGroupId),
               )
             : undefined;
         console.log('Upcharge for these customer groups:', customerGroupUpcharge);
@@ -225,11 +260,11 @@ const LoopReturnsOption: FunctionComponent = () => {
           console.log('loop amount', loopQuoteData.chargeInstructions.amount);
           console.log(
             'upcharge amount',
-            dollarsToCents(Number(customerGroupUpcharge.loopUpchargeRate)),
+            dollarsToCents(Number(customerGroupUpcharge.returnsUpchargeRate)),
           );
           const newRate =
             loopQuoteData.chargeInstructions.amount +
-            dollarsToCents(Number(customerGroupUpcharge.loopUpchargeRate));
+            dollarsToCents(Number(customerGroupUpcharge.returnsUpchargeRate));
 
           loopQuoteData.chargeInstructions.amount = newRate;
           console.log(' new combined rate', newRate);
@@ -238,11 +273,20 @@ const LoopReturnsOption: FunctionComponent = () => {
         console.log('loopQuoteData', loopQuoteData);
         setLoopQuote(loopQuoteData);
 
-        if (shouldRemoveLoopFee(loopQuoteData, appliedLoopOrderFee, loopCartMetadata)) {
+        if (
+          shouldRemoveLoopFee(
+            loopQuoteData,
+            appliedLoopOrderFee,
+            loopCartMetadata,
+            checkout.cart.lineItems,
+          )
+        ) {
           const removeResp = await removeLoopOrderFees(
             checkout?.id,
             appliedLoopOrderFee || null,
             loopCartMetadata?.id,
+            checkout.cart.lineItems,
+            // checkout.version,
           );
 
           if (removeResp.error) {
@@ -303,13 +347,13 @@ const LoopReturnsOption: FunctionComponent = () => {
 
   const loopReturnsOption = useMemo(
     () =>
-      checkoutSettings?.enableLoop && isLoopAvailable ? (
+      checkoutSettings?.enableReturns && isLoopAvailable ? (
         <>
           <form className="loop-returns-option-form">
             <LoadingOverlay isLoading={isInitializing}>
               <fieldset>
                 <div className="loop-legend">
-                  <Legend>{checkoutSettings?.loopFormTitle || 'Returns Coverage'}</Legend>
+                  <Legend>{checkoutSettings?.returnsFormTitle || 'Returns Coverage'}</Legend>
                   <Button
                     variant={ButtonVariant.Secondary}
                     size={ButtonSize.Tiny}
@@ -335,7 +379,7 @@ const LoopReturnsOption: FunctionComponent = () => {
                         className="form-label optimizedCheckout-form-label body-regular"
                       >
                         <span className="body-regular">
-                          {checkoutSettings?.loopFieldLabel || 'Free returns for '}
+                          {checkoutSettings?.returnsFieldLabel || 'Free returns for '}
                           <ShopperCurrency
                             amount={centsToDollars(loopQuote?.chargeInstructions?.amount || 0)}
                           />
@@ -351,7 +395,7 @@ const LoopReturnsOption: FunctionComponent = () => {
           </form>
           <Modal
             header={
-              <ModalHeader>{checkoutSettings?.loopFormTitle || 'Returns Coverage'}</ModalHeader>
+              <ModalHeader>{checkoutSettings?.returnsFormTitle || 'Returns Coverage'}</ModalHeader>
             }
             isOpen={isInfoModalOpen}
             onRequestClose={onRequestClose}
@@ -359,7 +403,7 @@ const LoopReturnsOption: FunctionComponent = () => {
           >
             <div
               dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(checkoutSettings?.loopModalText || ''),
+                __html: DOMPurify.sanitize(checkoutSettings?.returnsModalText || ''),
               }}
             />
           </Modal>

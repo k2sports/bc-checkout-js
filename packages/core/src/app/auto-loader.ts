@@ -3,22 +3,22 @@ import type { BrowserOptions } from '@sentry/browser';
 
 import { loadFiles } from './loader';
 
-export interface LoopUpcharge {
+export interface ReturnsUpcharge {
   id: string;
-  loopUpchargeGroup: number[];
-  loopUpchargeRate: string;
+  returnsUpchargeGroup: number[];
+  returnsUpchargeRate: string;
 }
 export interface ManageShippingMethods {
   isEnabled: boolean;
   showRecommendedMethod?: boolean;
   hideFreeShippingGroups?: number[];
   withdrawalTermsUrl?: string;
-  enableLoop: boolean;
-  loopHideGroups: number[];
-  loopUpchargeRates?: LoopUpcharge[];
-  loopModalText?: string;
-  loopFormTitle?: string;
-  loopFieldLabel?: string;
+  enableReturns: boolean;
+  returnsHideGroups: number[];
+  returnsUpchargeRates?: ReturnsUpcharge[];
+  returnsModalText?: string;
+  returnsFormTitle?: string;
+  returnsFieldLabel?: string;
 }
 
 enum OrderPermalinkStatus {

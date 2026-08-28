@@ -4,6 +4,7 @@ import {
   type Checkout,
   type Fee,
   type LineItem,
+  type LineItemMap,
   type Order,
 } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
@@ -11,6 +12,8 @@ import { createRequestSender } from '@bigcommerce/request-sender';
 import { type CartMetafield, type LoopQuote } from './types';
 
 export const LOOP_NAMESPACE = 'loop_checkout_plus';
+export const RETURNS_ITEM_SKU = 'returns-coverage';
+export const FEE_DISPLAY_NAME = 'Checkout+ Returns Coverage';
 
 interface CheckoutResponse {
   error: boolean;
@@ -40,13 +43,32 @@ function getCartMetadataAmount(loopCartMetadata: CartMetafield | null): number |
   return cartMetadataObject?.fee_amount || null;
 }
 
+function getReturnsCartItem(cartItems: LineItemMap | undefined): string | null {
+  if (!cartItems || !cartItems?.customItems?.length) {
+    return null;
+  }
+
+  const returnsItem = cartItems.customItems?.find((item) => item.sku === RETURNS_ITEM_SKU);
+
+  return returnsItem?.id || null;
+}
+
 function shouldRemoveLoopFee(
   loopQuoteData: LoopQuote | null,
   appliedLoopOrderFee: Fee | undefined,
   loopCartMetadata: CartMetafield | null,
+  cartItems: LineItemMap,
 ): boolean {
-  if (!appliedLoopOrderFee && !loopCartMetadata?.value) {
+  const returnsItemId = getReturnsCartItem(cartItems);
+
+  if (!appliedLoopOrderFee && !loopCartMetadata?.value && !returnsItemId) {
     return false; // Nothing to remove
+  }
+
+  if (!appliedLoopOrderFee && !loopCartMetadata?.value && returnsItemId) {
+    console.log('REMOVE returns item');
+
+    return true;
   }
 
   // Remove order fee and cart metadata:
@@ -215,6 +237,8 @@ async function removeLoopOrderFees(
   checkoutId: string,
   loopOrderFee: Fee | null,
   cartMetafieldId: string | null,
+  cartItems: LineItemMap,
+  cartVersion?: number,
 ): Promise<CheckoutResponse> {
   let hasError = false;
   const promises = [];
@@ -240,6 +264,21 @@ async function removeLoopOrderFees(
           metafield: {
             id: cartMetafieldId,
           },
+        },
+      }),
+    );
+  }
+
+  const returnsItemId = getReturnsCartItem(cartItems);
+
+  console.log('cartItems', cartItems, 'returnsItemId', returnsItemId);
+
+  if (returnsItemId) {
+    promises.push(
+      requestSender.delete(`/checkout/bigcommerce/cart-items/${returnsItemId}`, {
+        body: {
+          checkoutId,
+          version: cartVersion,
         },
       }),
     );
@@ -276,4 +315,5 @@ export {
   getLoopQuote,
   shouldRemoveLoopFee,
   getCartMetadataAmount,
+  getReturnsCartItem,
 };
