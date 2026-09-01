@@ -72,7 +72,7 @@ const LoopReturnsOption: FunctionComponent = () => {
     checkout: data.getCheckout(),
   }));
 
-  const reloadWindow = useCallback((): void => {
+  const onCloseErrorModal = useCallback((): void => {
     console.log('can we just close this??');
     setModalError(undefined);
     // window.location.reload();
@@ -169,7 +169,7 @@ const LoopReturnsOption: FunctionComponent = () => {
             setModalError(new Error(removeResp?.message));
           }
         }
-        setCartMetafieldId(null);
+        // setCartMetafieldId(null);
         setLoopOrderFee(null);
       }
     } catch (error) {
@@ -235,7 +235,7 @@ const LoopReturnsOption: FunctionComponent = () => {
           setIsLoopAvailable(false);
           setLoopOrderFee(null);
           setIsLoopFieldChecked(false);
-          setCartMetafieldId(null);
+          // setCartMetafieldId(null);
           setIsInitializing(false);
           checkoutService.loadCheckout();
           return;
@@ -295,7 +295,7 @@ const LoopReturnsOption: FunctionComponent = () => {
 
           setLoopOrderFee(null);
           setIsLoopFieldChecked(false);
-          setCartMetafieldId(null);
+          // setCartMetafieldId(null);
           checkoutService.loadCheckout();
           setIsInitializing(false);
 
@@ -410,7 +410,7 @@ const LoopReturnsOption: FunctionComponent = () => {
           <ErrorModal
             error={modalError}
             message="Please refresh and try again."
-            onClose={reloadWindow}
+            onClose={onCloseErrorModal}
             shouldShowErrorCode={false}
           />
         </>

@@ -14,6 +14,7 @@ import { type CartMetafield, type LoopQuote } from './types';
 export const LOOP_NAMESPACE = 'loop_checkout_plus';
 export const RETURNS_ITEM_SKU = 'returns-coverage';
 export const FEE_DISPLAY_NAME = 'Checkout+ Returns Coverage';
+export const LOOP_EMPTY_VALUE = 'declined';
 
 interface CheckoutResponse {
   error: boolean;
@@ -34,7 +35,11 @@ function centsToDollars(amount: number) {
 }
 
 function getCartMetadataAmount(loopCartMetadata: CartMetafield | null): number | null {
-  if (!loopCartMetadata || !loopCartMetadata?.value) {
+  if (
+    !loopCartMetadata ||
+    !loopCartMetadata?.value ||
+    loopCartMetadata?.value === LOOP_EMPTY_VALUE
+  ) {
     return null;
   }
 
@@ -61,11 +66,19 @@ function shouldRemoveLoopFee(
 ): boolean {
   const returnsItemId = getReturnsCartItem(cartItems);
 
-  if (!appliedLoopOrderFee && !loopCartMetadata?.value && !returnsItemId) {
+  if (
+    !appliedLoopOrderFee &&
+    (!loopCartMetadata?.value || loopCartMetadata?.value === LOOP_EMPTY_VALUE) &&
+    !returnsItemId
+  ) {
     return false; // Nothing to remove
   }
 
-  if (!appliedLoopOrderFee && !loopCartMetadata?.value && returnsItemId) {
+  if (
+    !appliedLoopOrderFee &&
+    (!loopCartMetadata?.value || loopCartMetadata?.value === LOOP_EMPTY_VALUE) &&
+    returnsItemId
+  ) {
     console.log('REMOVE returns item');
 
     return true;
@@ -94,7 +107,10 @@ function shouldRemoveLoopFee(
   }
 
   // IF fee but no cart metadata
-  if (appliedLoopOrderFee && !loopCartMetadata?.value) {
+  if (
+    appliedLoopOrderFee &&
+    (!loopCartMetadata?.value || loopCartMetadata?.value === LOOP_EMPTY_VALUE)
+  ) {
     console.log(
       'REMOVE fee is applied but cart metadata is missing',
       appliedLoopOrderFee,
@@ -258,15 +274,29 @@ async function removeLoopOrderFees(
 
   if (cartMetafieldId) {
     promises.push(
-      requestSender.delete('/checkout/bigcommerce/delete-cart-metadata', {
+      requestSender.post('/checkout/bigcommerce/cart-metadata', {
         body: {
           checkoutId,
           metafield: {
             id: cartMetafieldId,
+            permission_set: 'write_and_sf_access',
+            namespace: LOOP_NAMESPACE,
+            key: LOOP_NAMESPACE,
+            value: 'declined',
           },
         },
       }),
     );
+    // promises.push(
+    //   requestSender.delete('/checkout/bigcommerce/delete-cart-metadata', {
+    //     body: {
+    //       checkoutId,
+    //       metafield: {
+    //         id: cartMetafieldId,
+    //       },
+    //     },
+    //   }),
+    // );
   }
 
   const returnsItemId = getReturnsCartItem(cartItems);
