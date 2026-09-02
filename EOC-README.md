@@ -75,3 +75,28 @@ const defaultShippingOption = recommendedOption || singleShippingOption;
     )}
 />
 ```
+
+### Translations
+
+- /Users/naitchison/git/bigcommerce-apps/bc-checkout-js/packages/locale/src/translations/de.json
+- /Users/naitchison/git/bigcommerce-apps/bc-checkout-js/packages/locale/src/translations/en.json
+- /Users/naitchison/git/bigcommerce-apps/bc-checkout-js/packages/locale/src/translations/es.json
+- /Users/naitchison/git/bigcommerce-apps/bc-checkout-js/packages/locale/src/translations/fr.json
+- /Users/naitchison/git/bigcommerce-apps/bc-checkout-js/packages/locale/src/translations/it.json
+
+```
+"optimized_checkout": {
+    ...
+    "withdrawal_terms": {
+        (de) "notice_with_link_text": "Bitte beachten Sie und unsere <a href=\"{url}\" target=\"_blank\">Widerrufsbelehrung</a>."
+        (en) "notice_with_link_text": "Please note our <a href=\"{url}\" target=\"_blank\">withdrawal policy</a>."
+        (es) "notice_with_link_text": "Le rogamos que tome nota de nuestra <a href=\"{url}\" target=\"_blank\">política de anulación</a>."
+        (fr) "notice_with_link_text": "Veuillez prendre connaissance de notre <a href=\"{url}\" target=\"_blank\">politique de rétractation</a>."
+        (it) "notice_with_link_text": "La preghiamo di prendere visione della nostra <a href=\"{url}\" target=\"_blank\">politica di cancellazione</a>."
+    }
+},
+```
+
+## EOC New Files
+
+- /packages/core/src/app/eoc/WithdrawalTermsNotice.tsx
