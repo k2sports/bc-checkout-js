@@ -113,7 +113,7 @@ export function mapToShippingOptions(
       checkoutService,
       checkoutState,
     }),
-    customer, // custom prop
+    customer, // eoc custom prop
   };
 }
 

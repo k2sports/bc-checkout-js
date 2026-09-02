@@ -43,7 +43,7 @@ import PaymentSubmitButton from './PaymentSubmitButton';
 import { ProvidersSectionOnTopOfPaymentsList } from './ProvidersSectionOnTopOfPaymentsList';
 import SpamProtectionField from './SpamProtectionField';
 import { StoreCreditField, StoreCreditOverlay } from './storeCredit';
-import WithdrawalTermsNotice from '../eoc/WithdrawalTermsNotice'; // custom import
+import WithdrawalTermsNotice from '../eoc/WithdrawalTermsNotice'; // eoc custom import
 
 export interface PaymentFormProps {
   additionalField?: Capabilities['payment']['additionalField'];
@@ -216,9 +216,9 @@ const PaymentForm: FunctionComponent<
 
       {invoicePaymentComment && <InvoicePaymentCommentField />}
 
-      {/* custom component start */}
+      {/* eoc custom component start */}
       <WithdrawalTermsNotice />
-      {/* custom component end */}
+      {/* eoc custom component end */}
 
       <div className="form-actions">
         {hideSubmitPaymentButton ? (

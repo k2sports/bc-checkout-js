@@ -3,6 +3,7 @@ import type { BrowserOptions } from '@sentry/browser';
 
 import { loadFiles } from './loader';
 
+// EOC custom interface
 export interface ManageShippingMethods {
   isEnabled: boolean;
   showRecommendedMethod?: boolean;
@@ -24,7 +25,7 @@ export interface CustomCheckoutWindow extends Window {
     publicPath?: string;
     sentryConfig?: BrowserOptions;
     permalinkStatus?: OrderPermalinkStatus | null;
-    manageShippingMethods?: ManageShippingMethods;
+    manageShippingMethods?: ManageShippingMethods; // eoc custom field
   };
 }
 
@@ -39,7 +40,7 @@ function isCustomCheckoutWindow(window: Window): window is CustomCheckoutWindow 
     throw new Error('Checkout config is missing.');
   }
 
-  console.log('Manage Shipping Methods v3.0.0', window.checkoutConfig);
+  console.log('EOC Custom Checkout v3.0.0', window.checkoutConfig); // eoc custom log
 
   const { renderOrderConfirmation, renderCheckout } = await loadFiles();
 
