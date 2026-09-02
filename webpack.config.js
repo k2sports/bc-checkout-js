@@ -9,8 +9,6 @@ const { DefinePlugin } = require('webpack');
 const WebpackAssetsManifest = require('webpack-assets-manifest');
 const { SubresourceIntegrityPlugin } = require('webpack-subresource-integrity');
 
-// TO DO!!! remove cors changes for local dev
-
 const smp = new SpeedMeasurePlugin({
   // Options go here
   disable: false, // Set to true to disable the plugin (useful for CI or production)
