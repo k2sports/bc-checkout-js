@@ -181,7 +181,6 @@ const LoopReturnsOption: FunctionComponent = () => {
   };
 
   useEffect(() => {
-    console.log('Use effect is triggered', checkout);
     const initializeLoop = async () => {
       console.log('Loop Returns Option component initializing');
       try {
@@ -257,11 +256,6 @@ const LoopReturnsOption: FunctionComponent = () => {
 
         // Apply upcharge if applicable
         if (customerGroupUpcharge && loopQuoteData) {
-          console.log('loop amount', loopQuoteData.chargeInstructions.amount);
-          console.log(
-            'upcharge amount',
-            dollarsToCents(Number(customerGroupUpcharge.returnsUpchargeRate)),
-          );
           const newRate =
             loopQuoteData.chargeInstructions.amount +
             dollarsToCents(Number(customerGroupUpcharge.returnsUpchargeRate));
@@ -308,7 +302,7 @@ const LoopReturnsOption: FunctionComponent = () => {
           !appliedLoopOrderFee &&
           loopCartMetadataAmount === loopQuoteData.chargeInstructions.amount
         ) {
-          console.log('Cart meta data set, apply order fee');
+          console.log('Cart metadata set, apply order fee');
           await requestSender.post('/checkout/bigcommerce/update-order-fees', {
             body: {
               checkoutId: checkout?.id,
@@ -425,6 +419,7 @@ const LoopReturnsOption: FunctionComponent = () => {
       checkout,
       isInfoModalOpen,
       isLoopAvailable,
+      modalError,
     ],
   );
 

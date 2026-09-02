@@ -287,21 +287,9 @@ async function removeLoopOrderFees(
         },
       }),
     );
-    // promises.push(
-    //   requestSender.delete('/checkout/bigcommerce/delete-cart-metadata', {
-    //     body: {
-    //       checkoutId,
-    //       metafield: {
-    //         id: cartMetafieldId,
-    //       },
-    //     },
-    //   }),
-    // );
   }
 
   const returnsItemId = getReturnsCartItem(cartItems);
-
-  console.log('cartItems', cartItems, 'returnsItemId', returnsItemId);
 
   if (returnsItemId) {
     promises.push(
