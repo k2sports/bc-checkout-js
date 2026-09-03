@@ -169,9 +169,9 @@ const PaymentForm: FunctionComponent<
 
   return (
     <Form className="checkout-form" testId="payment-form">
-      {/* custom component start */}
+      {/* eoc custom component start */}
       {isMobileView && <LoopReturnsOption />}
-      {/* custom component end */}
+      {/* eoc custom component end */}
 
       {usableStoreCredit > 0 && !disableStoreCredit && (
         <StoreCreditField
@@ -229,9 +229,9 @@ const PaymentForm: FunctionComponent<
 
       {invoicePaymentComment && <InvoicePaymentCommentField />}
 
-      {/* custom component start */}
+      {/* eoc custom component start */}
       <WithdrawalTermsNotice />
-      {/* custom component end */}
+      {/* eoc custom component end */}
 
       <div className="form-actions">
         {hideSubmitPaymentButton ? (

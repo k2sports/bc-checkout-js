@@ -74,9 +74,9 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ isMultiShippingMode })
             <aside aria-label="Cart Summary" className="layout-cart here">
               <CartSummaryComponent isMultiShippingMode={isMultiShippingMode} />
               <Extension region={ExtensionRegion.SummaryAfter} />
-              {/* custom component start */}
+              {/* eoc custom component start */}
               <LoopReturnsOption />
-              {/* custom component end */}
+              {/* eoc custom component end */}
             </aside>
           </LazyContainer>
         );

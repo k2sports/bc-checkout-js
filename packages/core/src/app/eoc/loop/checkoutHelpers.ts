@@ -1,3 +1,4 @@
+// EOC Helpers
 /* eslint-disable prettier/prettier */
 import {
   type Cart,

@@ -1,3 +1,4 @@
+// EOC Component
 import React, {
   ChangeEvent,
   type FunctionComponent,

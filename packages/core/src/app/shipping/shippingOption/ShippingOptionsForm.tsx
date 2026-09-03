@@ -45,7 +45,7 @@ const ShippingOptionsForm = (
     setFieldValue,
     shippingFormRenderTimestamp,
     setValues,
-    customer, // custom prop
+    customer, // eoc custom prop
   } = props;
   const { analyticsTracker } = useAnalytics();
 

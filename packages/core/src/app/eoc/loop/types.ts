@@ -1,3 +1,5 @@
+// EOC Types
+/* eslint-disable prettier/prettier */
 export interface CartMetafield {
   id: string;
   value: string;
