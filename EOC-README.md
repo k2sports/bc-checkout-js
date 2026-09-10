@@ -4,11 +4,24 @@
 
 ```
 // eoc custom interface
+export interface ReturnsUpcharge {
+  id: string;
+  returnsUpchargeGroup: number[];
+  returnsUpchargeRate: string;
+}
+
+// eoc custom interface
 export interface EOCCheckoutConfig {
   isEnabled: boolean;
   showRecommendedMethod?: boolean;
   hideFreeShippingGroups?: number[];
   withdrawalTermsUrl?: string;
+    enableReturns: boolean;
+  returnsHideGroups: number[];
+  returnsUpchargeRates?: ReturnsUpcharge[];
+  returnsModalText?: string;
+  returnsFormTitle?: string;
+  returnsFieldLabel?: string;
 }
 
 export interface CustomCheckoutWindow extends Window {
@@ -19,17 +32,67 @@ export interface CustomCheckoutWindow extends Window {
 }
 
 // eslint-disable-next-line no-console
-console.log('EOC Custom Checkout v3.0.0', window.checkoutConfig); // eoc custom log
+console.log('EOC Custom Checkout v4.0.0', window.checkoutConfig); // eoc custom log
+```
+
+- packages/core/src/app/checkout/components/CartSummary.tsx
+
+```
+import LoopReturnsOption from '../../eoc/loop/LoopReturnsOption'; // eoc custom import
+
+return (
+    <LazyContainer loadingSkeleton={<CartSummarySkeleton />}>
+    <aside aria-label="Cart Summary" className="layout-cart here">
+        <CartSummaryComponent isMultiShippingMode={isMultiShippingMode} />
+        <Extension region={ExtensionRegion.SummaryAfter} />
+        {/* eoc custom component start */}
+        <LoopReturnsOption />
+        {/* eoc custom component end */}
+    </aside>
+    </LazyContainer>
+);
+```
+
+- packages/core/src/app/order/OrderConfirmation/OrderConfirmation.tsx
+
+```
+import { setLoopOrderMetadata } from '../../eoc/loop/checkoutHelpers'; // eoc custom import
+
+  // EOC custom start
+  useEffect(() => {
+    const handleLoad = async () => {
+      if (order) {
+        await setLoopOrderMetadata(order);
+      }
+    };
+
+    if (!isLoadingOrder) {
+      handleLoad();
+    }
+  }, [order, isLoadingOrder]);
+  // EOC custom end
 ```
 
 - packages/core/src/app/payment/PaymentForm.tsx
 
 ```
+import {
+    ...
+  isMobileView as isMobileViewUI,
+} from '@bigcommerce/checkout/ui';
+
 import WithdrawalTermsNotice from '../eoc/WithdrawalTermsNotice'; // eoc custom import
 
+  const isMobileView = isMobileViewUI(); // eoc custom const
 return (
 <Form className="checkout-form" testId="payment-form">
     ...
+    {/* eoc custom component start */}
+        {isMobileView && <LoopReturnsOption />}
+    {/* eoc custom component end */}
+
+    ...
+
     {invoicePaymentComment && <InvoicePaymentCommentField />}
 
     {/* eoc custom component start */}
