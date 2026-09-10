@@ -8,7 +8,9 @@ export interface ReturnsUpcharge {
   returnsUpchargeGroup: number[];
   returnsUpchargeRate: string;
 }
-export interface ManageShippingMethods {
+
+// eoc custom interface
+export interface EOCCheckoutConfig {
   isEnabled: boolean;
   showRecommendedMethod?: boolean;
   hideFreeShippingGroups?: number[];
@@ -35,7 +37,7 @@ export interface CustomCheckoutWindow extends Window {
     publicPath?: string;
     sentryConfig?: BrowserOptions;
     permalinkStatus?: OrderPermalinkStatus | null;
-    manageShippingMethods?: ManageShippingMethods;
+    manageShippingMethods?: EOCCheckoutConfig; // eoc custom field
   };
 }
 
@@ -50,7 +52,7 @@ function isCustomCheckoutWindow(window: Window): window is CustomCheckoutWindow 
     throw new Error('Checkout config is missing.');
   }
 
-  console.log('Manage Shipping Methods v3.0.0:::', window.checkoutConfig);
+  console.log('EOC Custom Checkout v3.0.0:', window.checkoutConfig); // eoc custom console log
 
   const { renderOrderConfirmation, renderCheckout } = await loadFiles();
 

@@ -62,10 +62,10 @@ const ShippingOptionsForm = (
     const { availableShippingOptions, id } = consignment;
     const filteredShippingOptions = getFilteredShippingOptions(availableShippingOptions, customer);
     // const recommendedOption = getRecommendedShippingOption(availableShippingOptions);
-    const recommendedOption = getRecommendedShippingOption(filteredShippingOptions);
+    const recommendedOption = getRecommendedShippingOption(filteredShippingOptions); // eoc custom update
     // const singleShippingOption =
     //   availableShippingOptions.length === 1 && availableShippingOptions[0];
-    const singleShippingOption = filteredShippingOptions.length === 1 && filteredShippingOptions[0];
+    const singleShippingOption = filteredShippingOptions.length === 1 && filteredShippingOptions[0]; // eoc custom update
     const defaultShippingOption = recommendedOption || singleShippingOption;
 
     if (!defaultShippingOption) {
@@ -134,7 +134,7 @@ const ShippingOptionsForm = (
             shippingOptions={getFilteredShippingOptions(
               consignment?.availableShippingOptions,
               customer,
-            )}
+            )} // eoc custom update
           />
 
           {(!consignment.availableShippingOptions ||

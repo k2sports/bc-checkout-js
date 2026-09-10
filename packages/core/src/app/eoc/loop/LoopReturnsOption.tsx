@@ -34,7 +34,7 @@ import {
   RETURNS_ITEM_SKU,
   shouldRemoveLoopFee,
 } from './checkoutHelpers';
-import { CustomCheckoutWindow, ManageShippingMethods } from '../../auto-loader';
+import { CustomCheckoutWindow, EOCCheckoutConfig } from '../../auto-loader';
 import './LoopReturnsOption.scss';
 import IconInfo from '@bigcommerce/checkout/ui/icon/IconInfo';
 import DOMPurify from 'dompurify';
@@ -57,7 +57,7 @@ const requestSender = createRequestSender({
 // 8. if cart metadata same as loop quote but no fee, then add the fee
 
 const LoopReturnsOption: FunctionComponent = () => {
-  const [checkoutSettings, setCheckoutSettings] = useState<ManageShippingMethods | null>(null);
+  const [checkoutSettings, setCheckoutSettings] = useState<EOCCheckoutConfig | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [loopQuote, setLoopQuote] = useState<LoopQuote | null>(null);
   const [loopOrderFee, setLoopOrderFee] = useState<Fee | null>(null);
@@ -188,7 +188,7 @@ const LoopReturnsOption: FunctionComponent = () => {
         setIsInitializing(true);
         const customCheckoutWindow: CustomCheckoutWindow =
           window as unknown as CustomCheckoutWindow;
-        const checkoutSettings: ManageShippingMethods | undefined =
+        const checkoutSettings: EOCCheckoutConfig | undefined =
           customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
         setCheckoutSettings(checkoutSettings || null);
         console.log('checkoutSettings', checkoutSettings);

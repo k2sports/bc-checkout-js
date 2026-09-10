@@ -1,6 +1,6 @@
 import { Customer, ShippingOption } from '@bigcommerce/checkout-sdk';
 
-import { CustomCheckoutWindow, ManageShippingMethods } from '../auto-loader';
+import { CustomCheckoutWindow, EOCCheckoutConfig } from '../auto-loader';
 
 import getRecommendedShippingOption from './getRecommendedShippingOption';
 
@@ -9,7 +9,7 @@ export default function getFilteredShippingOptions(
   customer: Customer | undefined,
 ): ShippingOption[] {
   const customCheckoutWindow: CustomCheckoutWindow = window as unknown as CustomCheckoutWindow;
-  const manageShippingMethods: ManageShippingMethods | undefined =
+  const manageShippingMethods: EOCCheckoutConfig | undefined =
     customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
 
   const shippingOptions = availableShippingOptions || [];

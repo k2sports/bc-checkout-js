@@ -1,13 +1,13 @@
 // EOC Component
 
 import React, { type FunctionComponent, memo, useMemo } from 'react';
-import { CustomCheckoutWindow, ManageShippingMethods } from '../auto-loader';
+import { CustomCheckoutWindow, EOCCheckoutConfig } from '../auto-loader';
 import { TranslatedHtml } from '@bigcommerce/checkout/locale';
 import { Fieldset } from '@bigcommerce/checkout/ui';
 
 const WithdrawalTermsNotice: FunctionComponent = () => {
   const customCheckoutWindow: CustomCheckoutWindow = window as unknown as CustomCheckoutWindow;
-  const checkoutSettings: ManageShippingMethods | undefined =
+  const checkoutSettings: EOCCheckoutConfig | undefined =
     customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
 
   const url = checkoutSettings?.withdrawalTermsUrl;
