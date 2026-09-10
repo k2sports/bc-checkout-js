@@ -21,17 +21,13 @@ import { useCheckout } from '@bigcommerce/checkout/contexts';
 import { Fee } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
 import { ShopperCurrency } from '../../currency';
-import { CartMetadataResp, CartMetafield, LoopQuote } from './types';
 import {
   centsToDollars,
   dollarsToCents,
-  FEE_DISPLAY_NAME,
   getCartMetadataAmount,
   getLoopQuote,
   getReturnsCartItem,
-  LOOP_NAMESPACE,
   removeLoopOrderFees,
-  RETURNS_ITEM_SKU,
   shouldRemoveLoopFee,
 } from './checkoutHelpers';
 import { CustomCheckoutWindow, EOCCheckoutConfig } from '../../auto-loader';
@@ -39,6 +35,14 @@ import './LoopReturnsOption.scss';
 import IconInfo from '@bigcommerce/checkout/ui/icon/IconInfo';
 import DOMPurify from 'dompurify';
 import ErrorModal from '../../common/error/ErrorModal';
+import {
+  CartMetadataResp,
+  CartMetafield,
+  LoopQuote,
+  FEE_DISPLAY_NAME,
+  LOOP_NAMESPACE,
+  RETURNS_ITEM_SKU,
+} from './types';
 
 const requestSender = createRequestSender({
   // host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',

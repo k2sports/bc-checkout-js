@@ -1,5 +1,6 @@
-// EOC Helpers
+/* eslint-disable no-console */
 /* eslint-disable prettier/prettier */
+// EOC Helpers
 import {
   type Cart,
   type Checkout,
@@ -10,12 +11,13 @@ import {
 } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
 
-import { type CartMetafield, type LoopQuote } from './types';
-
-export const LOOP_NAMESPACE = 'loop_checkout_plus';
-export const RETURNS_ITEM_SKU = 'LOOP'; // 'returns-coverage';
-export const FEE_DISPLAY_NAME = 'Checkout+ Returns Coverage';
-export const LOOP_EMPTY_VALUE = 'declined';
+import {
+  type CartMetafield,
+  LOOP_EMPTY_VALUE,
+  LOOP_NAMESPACE,
+  type LoopQuote,
+  RETURNS_ITEM_SKU,
+} from './types';
 
 interface CheckoutResponse {
   error: boolean;
@@ -28,7 +30,7 @@ const requestSender = createRequestSender({
 });
 
 function dollarsToCents(amount: number) {
-  return amount * 100;
+  return Math.round(amount * 100);
 }
 
 function centsToDollars(amount: number) {
@@ -100,8 +102,8 @@ function shouldRemoveLoopFee(
   ) {
     console.log(
       'REMOVE quote does not match applied fee',
+      dollarsToCents(appliedLoopOrderFee?.cost),
       loopQuoteData?.chargeInstructions?.amount,
-      appliedLoopOrderFee?.cost,
     );
 
     return true;
