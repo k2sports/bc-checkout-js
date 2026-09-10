@@ -9,11 +9,24 @@ enum OrderPermalinkStatus {
 }
 
 // eoc custom interface
+export interface ReturnsUpcharge {
+  id: string;
+  returnsUpchargeGroup: number[];
+  returnsUpchargeRate: string;
+}
+
+// eoc custom interface
 export interface EOCCheckoutConfig {
   isEnabled: boolean;
   showRecommendedMethod?: boolean;
   hideFreeShippingGroups?: number[];
   withdrawalTermsUrl?: string;
+  enableReturns: boolean;
+  returnsHideGroups: number[];
+  returnsUpchargeRates?: ReturnsUpcharge[];
+  returnsModalText?: string;
+  returnsFormTitle?: string;
+  returnsFieldLabel?: string;
 }
 
 export interface CustomCheckoutWindow extends Window {
@@ -40,7 +53,7 @@ function isCustomCheckoutWindow(window: Window): window is CustomCheckoutWindow 
   }
 
   // eslint-disable-next-line no-console
-  console.log('EOC Custom Checkout v3.0.0', window.checkoutConfig); // eoc custom log
+  console.log('EOC Custom Checkout v4.0.0', window.checkoutConfig); // eoc custom log
 
   const { renderOrderConfirmation, renderCheckout } = await loadFiles();
 
