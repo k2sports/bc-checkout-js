@@ -162,6 +162,29 @@ return (
 );
 ```
 
+- packages/core/src/app/order/OrderSummaryItem.tsx
+
+```
+import { FEE_DISPLAY_NAME } from '../eoc/loop/types'; // eoc custom import
+
+const isReturnsProduct = name === FEE_DISPLAY_NAME; // eoc custom const
+
+{/* eoc custom content start */}
+  {isReturnsProduct && (
+    <figure className="product-column product-figure">
+      <img alt="Returns Arrow" src="https://k2sports.a.bigcontent.io/v1/static/returns-icon" />
+    </figure>
+  )}
+  {!isReturnsProduct && <figure className="product-column product-figure">{image}</figure>}
+{/* eoc custom content end */}
+
+{/* eoc custom style for visibility */}
+<div
+  className="product-column product-actions"
+  style={{ visibility: isReturnsProduct ? 'hidden' : 'visible' }}
+>
+```
+
 ### Translations
 
 Withdrawal Terms & Place Order button

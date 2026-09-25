@@ -152,6 +152,7 @@ const LoopReturnsOption: FunctionComponent = () => {
                     name: FEE_DISPLAY_NAME,
                     list_price: 0,
                     quantity: 1,
+                    image_url: 'https://k2sports.a.bigcontent.io/v1/static/returns-icon',
                   },
                 ],
               },
