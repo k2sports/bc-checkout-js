@@ -11,13 +11,7 @@ import {
 } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
 
-import {
-  type CartMetafield,
-  LOOP_EMPTY_VALUE,
-  LOOP_NAMESPACE,
-  type LoopQuote,
-  RETURNS_ITEM_SKU,
-} from './types';
+import { type CartMetafield, LOOP_EMPTY_VALUE, LOOP_NAMESPACE, type LoopQuote } from './types';
 
 interface CheckoutResponse {
   error: boolean;
@@ -51,12 +45,12 @@ function getCartMetadataAmount(loopCartMetadata: CartMetafield | null): number |
   return cartMetadataObject?.fee_amount || null;
 }
 
-function getReturnsCartItem(cartItems: LineItemMap | undefined): string | null {
+function getReturnsCartItem(cartItems: LineItemMap | undefined, sku: string): string | null {
   if (!cartItems || !cartItems?.customItems?.length) {
     return null;
   }
 
-  const returnsItem = cartItems.customItems?.find((item) => item.sku === RETURNS_ITEM_SKU);
+  const returnsItem = cartItems.customItems?.find((item) => item.sku === sku);
 
   return returnsItem?.id || null;
 }
@@ -66,8 +60,9 @@ function shouldRemoveLoopFee(
   appliedLoopOrderFee: Fee | undefined,
   loopCartMetadata: CartMetafield | null,
   cartItems: LineItemMap,
+  ghostSku: string,
 ): boolean {
-  const returnsItemId = getReturnsCartItem(cartItems);
+  const returnsItemId = getReturnsCartItem(cartItems, ghostSku);
 
   if (
     !appliedLoopOrderFee &&
@@ -257,6 +252,7 @@ async function removeLoopOrderFees(
   loopOrderFee: Fee | null,
   cartMetafieldId: string | null,
   cartItems: LineItemMap,
+  ghostSku: string,
   cartVersion?: number,
 ): Promise<CheckoutResponse> {
   let hasError = false;
@@ -292,7 +288,7 @@ async function removeLoopOrderFees(
     );
   }
 
-  const returnsItemId = getReturnsCartItem(cartItems);
+  const returnsItemId = getReturnsCartItem(cartItems, ghostSku);
 
   if (returnsItemId) {
     promises.push(

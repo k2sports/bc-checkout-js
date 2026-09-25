@@ -27,6 +27,8 @@ export interface EOCCheckoutConfig {
   returnsModalText?: string;
   returnsFormTitle?: string;
   returnsFieldLabel?: string;
+  returnsTaxId?: number;
+  returnsGhostSku?: string;
 }
 
 export interface CustomCheckoutWindow extends Window {

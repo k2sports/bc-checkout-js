@@ -2,7 +2,6 @@
 /* eslint-disable prettier/prettier */
 
 export const LOOP_NAMESPACE = 'loop_checkout_plus';
-export const RETURNS_ITEM_SKU = 'LOOP'; // 'returns-coverage';
 export const FEE_DISPLAY_NAME = 'Checkout+ Returns Coverage';
 export const LOOP_EMPTY_VALUE = 'declined';
 export interface CartMetafield {

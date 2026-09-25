@@ -41,7 +41,6 @@ import {
   LoopQuote,
   FEE_DISPLAY_NAME,
   LOOP_NAMESPACE,
-  RETURNS_ITEM_SKU,
 } from './types';
 
 const requestSender = createRequestSender({
@@ -70,6 +69,7 @@ const LoopReturnsOption: FunctionComponent = () => {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isLoopAvailable, setIsLoopAvailable] = useState(true);
   const [modalError, setModalError] = useState<Error | undefined>();
+  const [ghostSku, setGhostSku] = useState('LOOP');
   const {
     selectedState: { checkout },
     checkoutService,
@@ -106,6 +106,7 @@ const LoopReturnsOption: FunctionComponent = () => {
               display_name: FEE_DISPLAY_NAME,
               cost: centsToDollars(loopQuote.chargeInstructions.amount), // convert cents to dollars
               source: 'loop',
+              tax_class_id: checkoutSettings?.returnsTaxId,
             },
           },
         });
@@ -138,7 +139,7 @@ const LoopReturnsOption: FunctionComponent = () => {
         setCartMetafieldId(cartMetadataResp?.body?.data?.resource_id || null);
 
         // Add ghost item for netsuite support
-        const returnsItemId = getReturnsCartItem(checkout?.cart?.lineItems);
+        const returnsItemId = getReturnsCartItem(checkout?.cart?.lineItems, ghostSku);
         console.log('add returns item? ', returnsItemId);
         if (!returnsItemId) {
           const cartItemsResp = await requestSender.post('/checkout/bigcommerce/cart-items', {
@@ -147,13 +148,12 @@ const LoopReturnsOption: FunctionComponent = () => {
               items: {
                 custom_items: [
                   {
-                    sku: RETURNS_ITEM_SKU,
+                    sku: ghostSku,
                     name: FEE_DISPLAY_NAME,
                     list_price: 0,
                     quantity: 1,
                   },
                 ],
-                // version: checkout?.version,
               },
             },
           });
@@ -169,6 +169,7 @@ const LoopReturnsOption: FunctionComponent = () => {
             loopOrderFee,
             cartMetafieldId,
             checkout.cart.lineItems,
+            ghostSku,
           );
           if (removeResp.error) {
             setModalError(new Error(removeResp?.message));
@@ -196,6 +197,8 @@ const LoopReturnsOption: FunctionComponent = () => {
           customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
         setCheckoutSettings(checkoutSettings || null);
         console.log('checkoutSettings', checkoutSettings);
+
+        setGhostSku(checkoutSettings?.returnsGhostSku || 'LOOP');
 
         if (!checkout || !checkout?.cart || !checkout?.id || !checkoutSettings?.enableReturns) {
           // disable loop
@@ -229,7 +232,7 @@ const LoopReturnsOption: FunctionComponent = () => {
             appliedLoopOrderFee || null,
             loopCartMetadata?.id,
             checkout.cart.lineItems,
-            // checkout.version,
+            ghostSku,
           );
 
           if (removeResp.error) {
@@ -278,6 +281,7 @@ const LoopReturnsOption: FunctionComponent = () => {
             appliedLoopOrderFee,
             loopCartMetadata,
             checkout.cart.lineItems,
+            ghostSku,
           )
         ) {
           const removeResp = await removeLoopOrderFees(
@@ -285,7 +289,7 @@ const LoopReturnsOption: FunctionComponent = () => {
             appliedLoopOrderFee || null,
             loopCartMetadata?.id,
             checkout.cart.lineItems,
-            // checkout.version,
+            ghostSku,
           );
 
           if (removeResp.error) {
@@ -318,6 +322,7 @@ const LoopReturnsOption: FunctionComponent = () => {
                 display_name: 'Returns Coverage',
                 cost: centsToDollars(loopQuoteData.chargeInstructions.amount), // convert cents to dollars
                 source: 'loop',
+                tax_class_id: checkoutSettings?.returnsTaxId,
               },
             },
           });
