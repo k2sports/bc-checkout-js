@@ -1,0 +1,38 @@
+@import '../../../scss/Base';
+$color-highlight: #4496f6;
+$color-highlightDark: darken($color-highlight, 15%);
+
+.loop-returns-option-form {
+  margin-bottom: 20px;
+  padding: spacing('base');
+  border: 1px solid color('greys', 'light');
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+  label {
+    display: flex;
+  }
+  .loop-legend {
+    display: flex;
+    align-items: center;
+    padding: 0 0 15px;
+    legend {
+      margin-right: 8px;
+      padding: 0;
+    }
+    button {
+      border: none;
+      padding: 3px;
+      margin: 0;
+      svg {
+        fill: $color-highlight;
+      }
+
+      &:hover svg {
+        fill: $color-highlightDark;
+      }
+    }
+  }
+}

@@ -1,3 +1,4 @@
+// EOC custom method
 import { Customer, ShippingOption } from '@bigcommerce/checkout-sdk';
 
 import { CustomCheckoutWindow, EOCCheckoutConfig } from '../auto-loader';

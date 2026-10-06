@@ -1,3 +1,5 @@
+// EOC Component
+
 import React, { type FunctionComponent, memo, useMemo } from 'react';
 import { CustomCheckoutWindow, EOCCheckoutConfig } from '../auto-loader';
 import { TranslatedHtml } from '@bigcommerce/checkout/locale';
