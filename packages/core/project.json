@@ -9,6 +9,7 @@
       "options": {
         "command": "webpack --mode production"
       },
+      "outputs": ["{workspaceRoot}/dist"],
       "dependsOn": [
         {
           "target": "generate"
@@ -22,10 +23,7 @@
     "prerelease-build": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "rm -rf dist/",
-          "PRERELEASE=prerelease webpack --mode production"
-        ],
+        "commands": ["rm -rf dist/", "PRERELEASE=prerelease webpack --mode production"],
         "parallel": false
       },
       "dependsOn": [
