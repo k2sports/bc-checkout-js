@@ -81,7 +81,7 @@ const LoopReturnsOption: FunctionComponent = () => {
     try {
       if (isChecked && loopQuote?.chargeInstructions?.amount) {
         // Apply custom fee to checkout
-        const orderFeesResp = await requestSender.post('/checkout/bigcommerce/update-order-fees', {
+        await requestSender.post('/checkout/bigcommerce/update-order-fees', {
           body: {
             checkoutId: checkout?.id,
             fee: {
@@ -123,7 +123,7 @@ const LoopReturnsOption: FunctionComponent = () => {
         // Add ghost item for netsuite support
         const returnsItemId = getReturnsCartItem(checkout?.cart?.lineItems, ghostSku);
         if (!returnsItemId) {
-          const cartItemsResp = await requestSender.post('/checkout/bigcommerce/cart-items', {
+          await requestSender.post('/checkout/bigcommerce/cart-items', {
             body: {
               checkoutId: checkout?.id,
               items: {

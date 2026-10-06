@@ -133,7 +133,7 @@
     "transients-b05b199c.js",
     "polyfill-e955f287.js",
     "vendor-initial-e7da910a.js",
-    "checkout-b1c68dff.js",
+    "checkout-f59b7096.js",
     "loader-1.896.0.js"
   ],
   "css": [
@@ -176,7 +176,7 @@
     "cart-summary-e2c9187f.js": "sha256-sLAghgKrlndNBKEwchzllTRyjEQhr++vohYvqK0d/88= sha384-F/lw9Tx0PTOCo65oPIpdlq18McVMcthNouINFgwsH/ipCHB4QJmZ4ZwMbYWTjszh sha512-Yq/w0K4z65o0kmwmWUm/PHQRgt07Gl2OY19A6gBqBS27wc7+EZk33+n3MUyrpCIr3lxzNNt3EsDu6fd2l4ZRfA==",
     "checkout-button-a1aeb1de.js": "sha256-E4LpuVTROur7durXt6PE2htCPy9IDl4WZN5tXpvM0eA= sha384-tLoFG+ugnu1C5SLh4RCGss6GHQHMCGLwPoXOu0yJaAYYGEfvyA4yQ9YK+Ca8KfBc sha512-tH+vy8aW1mOALv3esF5yYzLCu9BQBzyfKSSIrHll4STiMsmDZA1b7x1K2aVInOAJe0WJh2hiQP3eQPEnIRzY9w==",
     "checkout-7d8be80f.css": "sha256-T6JMbc3PEMWh/TEFax8tsUaJCo9UAHGp7MJBztb9Ypg= sha384-hyv7XkyU1RbYDk1nZAtPI0GGqXGvBVIFR9zzTYmeHC/0jDnPjrm9LlwJcC3gXDtF sha512-/ZUmZeQzzmyZwS5jjBsp0zS3rxv/kcCQvJveD/uljVZxI62WIRxqrXz6BM5Jl+f/A8J3M09PSkfQCn72euGnuQ==",
-    "checkout-b1c68dff.js": "sha256-xUTVCgOC5RI+sUIF1xOqbJc15T95+o8bUtq8wwp9sKY= sha384-qJk5n18bb56rzZ7vEqoN0rDi/tnqEjIDIa3TKSa6HHHkNH7IB6K7RTWSOln4tw3j sha512-sBgiJjsucLkMhiZ3AtRVusaIlLZFvDSUf/aLM2x580r/0NmYB13+HJ4F3c4ykEXiTk+RDxryDYj0uwKbsOePEg==",
+    "checkout-f59b7096.js": "sha256-gJgRwmhKZhOFItLCDT/nZP2djNfCzTTvT0whBnfHrcQ= sha384-skULVT7TRm1bnQAkG5rdvRXdz7jFiZDavy0DoRtwvTpz6AaSFiGOELXQemQkKW45 sha512-RNY/gg/97j61xGnUCV1KocGXH85uVAj9ILMMKVryONI+cbZrMEdIrrpdxK+3k9b0n2BC1zW7Z65GyrQYZCAnvw==",
     "checkoutcom-custom-payment-method-d60418c1.css": "sha256-+yeE9Me9o/6S0OcUglsXTZz/qUskhvFIAHIiIRVaukI= sha384-8f0y1Z17Ih2HaSIhloOGCQfj5WR2n5H5klY+5ZrBunsAiEka5zlGKfG2kfMwW8UG sha512-0ndtd2SJ1SAoyzGiig18Sna3PSsqbw/mxaywLjGuHSKaK9Dh0lOp7hC67pfyvLrgRY6iBiORnGQxWMRGiJVftg==",
     "checkoutcom-custom-payment-method-029d15b2.js": "sha256-+52R2bRvL1hEhAr+v4aqz306MgGtYsP35nJPFkCUlYs= sha384-KyS8K4Pss8+riTOOZ3FQtmQWypjq9uPR53ZyVZ0QmeKkpeaBOAPPBCPqUnkaA1tB sha512-Yu5GFfWamVBpBs+0DgDJOmAG8WU4es3Ye/XOG9aVZcgrfgEepBf7f+bjrVtV8aOK64kJJfpCnrZMjiUaiEvv1w==",
     "cheque-payment-method-25b7a24c.css": "sha256-pQP3EZh9Un8lxewYh6ZyzwS8AlGbtnuSUNf45K8/rd8= sha384-NG4QQb2o646/89iChwossPpCq2yBYJB7grgiNydCetu7oICIE9NVg83t6EUPDubo sha512-fEkYUgU0LoZCOZrpnFSgQRqFx2FxKuVcHry9kl1/jZshNoG/uaZmC4qB4UqboMsVeq1ucyh/Q+Dk9oCClX1nrA==",
@@ -248,8 +248,8 @@
     "wallet-button-v1-resolver-6c6a0deb.js": "sha256-C6PXTyZUZ4pJJIOsbAT5HdTJFt7R53nHGPPBgQzijXk= sha384-mPH9Sn0f75jh7aYl+MERoSdkXptlu2IdXtqjHOIsyLKTNbUr3D+c15tk/AOaADAM sha512-/mAvT2kxQqOCV237SzEEJdf8RMW+yWngaAdxdgLU9GnnPsZqaM9UDY0rx7KUwUmFGy7EGxRJ49fJZ718FQXLoA==",
     "worldpay-credit-card-payment-method-d60418c1.css": "sha256-5/oQfeJMWfCJ0+OyNqFmIaev6V2q6zK9orBLFoEnTMY= sha384-3KLkYqIDZRcfLeqwtiUlnwl7CAtsEFtM9zodOjN/G+yulsijAEejm/QZ0pTjR/Im sha512-XcXvOxz7WADeOFNeCUdC7Pu5mBLSZntLgs69EVii6+dx7iEatHpFJznjogPw1UqhEKLlfhlg/LjIREjB2PUp1g==",
     "worldpay-credit-card-payment-method-1fd5e097.js": "sha256-0VP19IvL9pM3YhJLcoE3uZVeKt1Lonvz18MVVYAAgRQ= sha384-ozplrp+34DQ1/zma/NZslsUodEA3j6WS9TjIoEG5bV74OXznXJ1T7W4rN/bZzNWs sha512-z0znjlq1p9w4V/XlBeHeuJFRPJZxXeDOZBUnOJktwNqFfMqVdlQ5xVmiavpyI6Vzg+3DqL7ZwGHtUP1Rb+3sIQ==",
-    "auto-loader-1.896.0.js": "sha256-1OC3DVpJdBQSQVxEfNHOJnWVsn03pfasMizZT51Ek+0= sha384-7kzibQNR8YAqYdFyXWdgMKoRbmWj4iGUT0hUR1X1n/eUnpXHpIoXvzAbQCfDt2YW sha512-bR4fiSPa9CNuBxqg6bJDp2ybQVZEYK0gjHzqv1TusP8h54oZ27viCYUeACeJjz8yM/WrJx3lOYgagt+Kxeei/w==",
-    "loader-1.896.0.js": "sha256-XHQmaR173m1Gdvv5vOCoNXEbeOkTAFkzyQlgvlICBcU= sha384-MYw5UXaThrUZg4kV71F4zLAJ+5pfelQ6SAyTavKT0pVa4kv61GDvy7+is+foWBPn sha512-mJ2XuXKL0hsAA+5fdTT25VjHhiwRF6qB6YoF/9cloc9TcY7U5WyNHjbTb+LvtZcfAF8PJAKX+1KcOoRLrwWJmw==",
+    "auto-loader-1.896.0.js": "sha256-ZDAoFOVr0OSSMBejU2wXn4SRG4pfgBXP1d6VXhFSsL8= sha384-nzL4N8L/2ZZhG1Rd+PZr6z4Rafe0LenJmgdEB9P9NquvwlBapplRB+sYTV4VQ01Y sha512-Sg8y+0uU3AqYNW3CgBYyfJz/8Tkr6OMKFaeyeBf4LOIIfatXb5PPmAbGvSQnrvHjW5m9Y+t6rBYm+9C3tVI1bg==",
+    "loader-1.896.0.js": "sha256-UtskFxwDWiH6CAlj1gPc7WI7MZB6tslir4e08Fbhn6U= sha384-fq9si0kLER1ZmfxrZiqadrvj5zkUZHH3lAQuBo4IQIY38qkyY5ikheCkQdEG8Wnj sha512-aS+tf7ZrbJGeshH2OYYn6Duv9GyAuHPBn2tzHFnPR3LvjCDwRuMk5QZe1POAmGWSPQZ1nVCmPloFzZk9JIGrGA==",
     "translations-da-1.896.0.js": "sha256-VYxVWNXzhb1KWS/lQVyrIrqzM7qKBtkJH1ERaSwBws0= sha384-qIF7CB2x3qfA2mpd53T5MEgjiSyFUvird1uVMf3FyyMO8IvHu6qdthY0lEnAQiKe sha512-gd4paPe7ghXyA8prvQKrGDLjIvzehkZ+bnjmd/2s1Ajjn17D9WsHKaUdro1Jtf20+CrI+WPqrKlHyTCZfNvguw==",
     "translations-de-1.896.0.js": "sha256-ic6TDB1UfBIR8hqcY0cgNN+hTV0+W23LHOdi46Szi8E= sha384-EYBAQR+NBfsgvqJ6Fzn0O48bNtks8j3y84MIJWjtAdF/C+kt+SK9/aQthHQNgfn7 sha512-3HedGTnM1V/c2bffAcW+1fzdhxsoX8OL7A1vdv5pB9TJmsn+1cvAqSjNOgOqMf9RGIJP6Kj+7uceR404hSBo8A==",
     "translations-en-1.896.0.js": "sha256-p4kF4JBRgmEJYYtCBJvCooB+3UGVO3fUM0I5xHpOxRk= sha384-Z1YVDwXAdTrNkynL3xe9VLx5cQtjKIQwJER2RHuPkO1jB5HlEy1SgFkmETIu2fGY sha512-9Wd20Rk/zGf/Sr2mQZiOMcNRLfEF0OkA+EBhOwJQsLH729pZ6cux2J9tlfivltrfpoyvmg0+nsiYtANrw77POw==",
