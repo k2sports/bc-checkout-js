@@ -44,20 +44,8 @@ import {
 } from './types';
 
 const requestSender = createRequestSender({
-  // host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
-  host: 'https://dev-eoc-checkout-helper.onrender.com/api/v1/',
+  host: 'https://eoc-checkout-helper.onrender.com/api/v1/',
 });
-
-// done:
-// 1. check if loop is enabled in checkout settings
-// 2. check if loop fee was already added
-// 3. analyze cart and get quote from loop api
-// 4. if quote is different than current fee, remove fee and uncheck
-// 4. if quote is not eligible, remove fee and hide checkbox
-// 5, if quote is same as current fee, check and show quote
-// 6. if checked, add to order, reload checkout
-// 7. if order/cart/customer changes, redo steps 3-6
-// 8. if cart metadata same as loop quote but no fee, then add the fee
 
 const LoopReturnsOption: FunctionComponent = () => {
   const [checkoutSettings, setCheckoutSettings] = useState<EOCCheckoutConfig | null>(null);
@@ -78,7 +66,6 @@ const LoopReturnsOption: FunctionComponent = () => {
   }));
 
   const onCloseErrorModal = useCallback((): void => {
-    console.log('can we just close this??');
     setModalError(undefined);
     // window.location.reload();
   }, []);
@@ -90,11 +77,9 @@ const LoopReturnsOption: FunctionComponent = () => {
   const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
     setIsLoopFieldChecked(isChecked);
-    console.log('Loop Returns Option checked::', { isChecked, loopQuote, loopOrderFee });
 
     try {
       if (isChecked && loopQuote?.chargeInstructions?.amount) {
-        console.log('UPDATE, checked option');
         // Apply custom fee to checkout
         const orderFeesResp = await requestSender.post('/checkout/bigcommerce/update-order-fees', {
           body: {
@@ -110,8 +95,6 @@ const LoopReturnsOption: FunctionComponent = () => {
             },
           },
         });
-
-        console.log('orderFeesResp:: ', orderFeesResp);
 
         // Add loop data to cart metadata for future access
         const cartMetadataResp: CartMetadataResp = await requestSender.post(
@@ -135,12 +118,10 @@ const LoopReturnsOption: FunctionComponent = () => {
           },
         );
 
-        console.log('cartMetadataResp:: ', cartMetadataResp);
         setCartMetafieldId(cartMetadataResp?.body?.data?.resource_id || null);
 
         // Add ghost item for netsuite support
         const returnsItemId = getReturnsCartItem(checkout?.cart?.lineItems, ghostSku);
-        console.log('add returns item? ', returnsItemId);
         if (!returnsItemId) {
           const cartItemsResp = await requestSender.post('/checkout/bigcommerce/cart-items', {
             body: {
@@ -158,13 +139,10 @@ const LoopReturnsOption: FunctionComponent = () => {
               },
             },
           });
-
-          console.log('cartItemsResp:: ', cartItemsResp);
         }
       } else {
         // Delete fee and cart metadata if unchecked
         if (checkout?.id) {
-          console.log('DELETE, unchecked option');
           const removeResp = await removeLoopOrderFees(
             checkout.id,
             loopOrderFee,
@@ -189,7 +167,6 @@ const LoopReturnsOption: FunctionComponent = () => {
 
   useEffect(() => {
     const initializeLoop = async () => {
-      console.log('Loop Returns Option component initializing');
       try {
         setIsInitializing(true);
         const customCheckoutWindow: CustomCheckoutWindow =
@@ -197,8 +174,6 @@ const LoopReturnsOption: FunctionComponent = () => {
         const checkoutSettings: EOCCheckoutConfig | undefined =
           customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
         setCheckoutSettings(checkoutSettings || null);
-        console.log('checkoutSettings', checkoutSettings);
-
         setGhostSku(checkoutSettings?.returnsGhostSku || 'LOOP');
 
         if (!checkout || !checkout?.cart || !checkout?.id || !checkoutSettings?.enableReturns) {
@@ -213,21 +188,15 @@ const LoopReturnsOption: FunctionComponent = () => {
           `/checkout/bigcommerce/cart-metadata/${checkout?.id}/${LOOP_NAMESPACE}`,
         );
         const loopCartMetadata = cartMetadataResp?.body as CartMetafield;
-        console.log('loopCartMetadata', loopCartMetadata);
         const loopCartMetadataAmount = getCartMetadataAmount(loopCartMetadata);
 
         // Get & set loop fee if it's been applied
-        console.log('checkout', checkout);
         const appliedLoopOrderFee = checkout?.fees?.find((fee) => fee.name === LOOP_NAMESPACE);
-        console.log('appliedLoopOrderFee', appliedLoopOrderFee);
 
         const customerGroupId = checkout?.customer?.customerGroup?.id;
-        console.log('Customer Group Id:', customerGroupId);
-        console.log('Disable Loop for these customer groups:', checkoutSettings.returnsHideGroups);
 
         // Check if Loop is disabled for the customer's group
         if (customerGroupId && checkoutSettings.returnsHideGroups?.includes(customerGroupId)) {
-          console.log('Loop is disbled for the current customer group');
           const removeResp = await removeLoopOrderFees(
             checkout?.id,
             appliedLoopOrderFee || null,
@@ -258,7 +227,6 @@ const LoopReturnsOption: FunctionComponent = () => {
                 config.returnsUpchargeGroup?.includes(customerGroupId),
               )
             : undefined;
-        console.log('Upcharge for these customer groups:', customerGroupUpcharge);
 
         // Get loop quote
         const loopQuoteData = await getLoopQuote(checkout.cart, checkout);
@@ -270,10 +238,8 @@ const LoopReturnsOption: FunctionComponent = () => {
             dollarsToCents(Number(customerGroupUpcharge.returnsUpchargeRate));
 
           loopQuoteData.chargeInstructions.amount = newRate;
-          console.log(' new combined rate', newRate);
         }
 
-        console.log('loopQuoteData', loopQuoteData);
         setLoopQuote(loopQuoteData);
 
         if (
@@ -312,7 +278,6 @@ const LoopReturnsOption: FunctionComponent = () => {
           !appliedLoopOrderFee &&
           loopCartMetadataAmount === loopQuoteData.chargeInstructions.amount
         ) {
-          console.log('Cart metadata set, apply order fee');
           await requestSender.post('/checkout/bigcommerce/update-order-fees', {
             body: {
               checkoutId: checkout?.id,
@@ -338,7 +303,6 @@ const LoopReturnsOption: FunctionComponent = () => {
         setCartMetafieldId(loopCartMetadata?.id || null);
       } catch (error) {
         // hide loop
-        console.log('ERROR initializing', error);
         setModalError(error as Error);
       } finally {
         setIsInitializing(false);

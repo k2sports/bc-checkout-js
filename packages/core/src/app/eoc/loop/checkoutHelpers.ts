@@ -19,8 +19,7 @@ interface CheckoutResponse {
 }
 
 const requestSender = createRequestSender({
-  //   host: 'https://subconsciously-pointless-jeanne.ngrok-free.dev/api/v1/',
-  host: 'https://dev-eoc-checkout-helper.onrender.com/api/v1/',
+  host: 'https://eoc-checkout-helper.onrender.com/api/v1/',
 });
 
 function dollarsToCents(amount: number) {
@@ -77,16 +76,12 @@ function shouldRemoveLoopFee(
     (!loopCartMetadata?.value || loopCartMetadata?.value === LOOP_EMPTY_VALUE) &&
     returnsItemId
   ) {
-    console.log('REMOVE returns item');
-
     return true;
   }
 
   // Remove order fee and cart metadata:
   // IF no loop quote or order isn't eligible for Loop
   if (!loopQuoteData || !loopQuoteData?.eligible) {
-    console.log('REMOVE quote does not exist or is not eligible', loopQuoteData);
-
     return true;
   }
 
@@ -95,12 +90,6 @@ function shouldRemoveLoopFee(
     appliedLoopOrderFee &&
     dollarsToCents(appliedLoopOrderFee?.cost) !== loopQuoteData?.chargeInstructions?.amount
   ) {
-    console.log(
-      'REMOVE quote does not match applied fee',
-      dollarsToCents(appliedLoopOrderFee?.cost),
-      loopQuoteData?.chargeInstructions?.amount,
-    );
-
     return true;
   }
 
@@ -109,12 +98,6 @@ function shouldRemoveLoopFee(
     appliedLoopOrderFee &&
     (!loopCartMetadata?.value || loopCartMetadata?.value === LOOP_EMPTY_VALUE)
   ) {
-    console.log(
-      'REMOVE fee is applied but cart metadata is missing',
-      appliedLoopOrderFee,
-      loopCartMetadata,
-    );
-
     return true;
   }
 
@@ -123,12 +106,6 @@ function shouldRemoveLoopFee(
 
   // IF fee does not match cart metadata
   if (appliedLoopOrderFee && appliedLoopOrderFee?.cost !== centsToDollars(cartMetadataAmount)) {
-    console.log(
-      'REMOVE fee does not match cart metadata amount',
-      appliedLoopOrderFee,
-      cartMetadataAmount,
-    );
-
     return true;
   }
 
@@ -302,8 +279,6 @@ async function removeLoopOrderFees(
   }
 
   if (!promises?.length) {
-    console.log('removeLoopOrderFees: nothing to remove');
-
     return {
       error: hasError,
     };
