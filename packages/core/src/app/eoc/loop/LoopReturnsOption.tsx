@@ -293,6 +293,27 @@ const LoopReturnsOption: FunctionComponent = () => {
             },
           });
 
+          // Add ghost item for netsuite support
+          const returnsItemId = getReturnsCartItem(checkout?.cart?.lineItems, ghostSku);
+          if (!returnsItemId) {
+            await requestSender.post('/checkout/bigcommerce/cart-items', {
+              body: {
+                checkoutId: checkout?.id,
+                items: {
+                  custom_items: [
+                    {
+                      sku: ghostSku,
+                      name: FEE_DISPLAY_NAME,
+                      list_price: 0,
+                      quantity: 1,
+                      image_url: 'https://k2sports.a.bigcontent.io/v1/static/returns-icon',
+                    },
+                  ],
+                },
+              },
+            });
+          }
+
           checkoutService.loadCheckout();
           setIsInitializing(false);
           return;
