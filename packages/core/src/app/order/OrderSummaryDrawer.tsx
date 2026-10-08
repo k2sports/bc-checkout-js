@@ -1,3 +1,4 @@
+// EOC Override: This file has been modified to add a Withdrawal Terms Notice and Loop Returns Option
 import {
   type LineItemMap,
   type ShopperCurrency as ShopperCurrencyType,
