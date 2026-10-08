@@ -209,7 +209,7 @@ const PaymentForm: FunctionComponent<
   return (
     <Form className="checkout-form" testId="payment-form">
       {/* eoc custom component start */}
-      {isMobileView && <LoopReturnsOption />}
+      {isMobileView && <LoopReturnsOption isPaymentStep={true} />}
       {/* eoc custom component end */}
 
       {usableStoreCredit > 0 && !disableStoreCredit && (

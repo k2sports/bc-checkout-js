@@ -4,6 +4,7 @@
 export const LOOP_NAMESPACE = 'loop_checkout_plus';
 export const FEE_DISPLAY_NAME = 'Checkout+ Returns Coverage';
 export const LOOP_EMPTY_VALUE = 'declined';
+export const DEFAULT_GHOST_SKU = 'LOOP';
 export interface CartMetafield {
   id: string;
   value: string;

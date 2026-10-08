@@ -41,13 +41,22 @@ import {
   LoopQuote,
   FEE_DISPLAY_NAME,
   LOOP_NAMESPACE,
+  DEFAULT_GHOST_SKU,
 } from './types';
 
 const requestSender = createRequestSender({
   host: 'https://eoc-checkout-helper.onrender.com/api/v1/',
 });
 
-const LoopReturnsOption: FunctionComponent = () => {
+export interface LoopReturnsOptionProps {
+  hideUI?: boolean;
+  isPaymentStep?: boolean;
+}
+
+const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
+  hideUI = false,
+  isPaymentStep = false,
+}) => {
   const [checkoutSettings, setCheckoutSettings] = useState<EOCCheckoutConfig | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [loopQuote, setLoopQuote] = useState<LoopQuote | null>(null);
@@ -57,7 +66,7 @@ const LoopReturnsOption: FunctionComponent = () => {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isLoopAvailable, setIsLoopAvailable] = useState(true);
   const [modalError, setModalError] = useState<Error | undefined>();
-  const [ghostSku, setGhostSku] = useState('LOOP');
+  const [ghostSku, setGhostSku] = useState(DEFAULT_GHOST_SKU);
   const {
     selectedState: { checkout },
     checkoutService,
@@ -174,7 +183,8 @@ const LoopReturnsOption: FunctionComponent = () => {
         const checkoutSettings: EOCCheckoutConfig | undefined =
           customCheckoutWindow?.checkoutConfig?.manageShippingMethods;
         setCheckoutSettings(checkoutSettings || null);
-        setGhostSku(checkoutSettings?.returnsGhostSku || 'LOOP');
+        const ghostSkuValue = checkoutSettings?.returnsGhostSku || DEFAULT_GHOST_SKU;
+        setGhostSku(ghostSkuValue);
 
         if (!checkout || !checkout?.cart || !checkout?.id || !checkoutSettings?.enableReturns) {
           // disable loop
@@ -202,7 +212,7 @@ const LoopReturnsOption: FunctionComponent = () => {
             appliedLoopOrderFee || null,
             loopCartMetadata?.id,
             checkout.cart.lineItems,
-            ghostSku,
+            ghostSkuValue,
           );
 
           if (removeResp.error) {
@@ -248,7 +258,7 @@ const LoopReturnsOption: FunctionComponent = () => {
             appliedLoopOrderFee,
             loopCartMetadata,
             checkout.cart.lineItems,
-            ghostSku,
+            ghostSkuValue,
           )
         ) {
           const removeResp = await removeLoopOrderFees(
@@ -256,7 +266,7 @@ const LoopReturnsOption: FunctionComponent = () => {
             appliedLoopOrderFee || null,
             loopCartMetadata?.id,
             checkout.cart.lineItems,
-            ghostSku,
+            ghostSkuValue,
           );
 
           if (removeResp.error) {
@@ -274,6 +284,7 @@ const LoopReturnsOption: FunctionComponent = () => {
 
         // Set order fee if cart metadata exists and matched loop quote
         if (
+          !isPaymentStep &&
           loopQuoteData?.chargeInstructions?.amount &&
           !appliedLoopOrderFee &&
           loopCartMetadataAmount === loopQuoteData.chargeInstructions.amount
@@ -302,7 +313,7 @@ const LoopReturnsOption: FunctionComponent = () => {
                 items: {
                   custom_items: [
                     {
-                      sku: ghostSku,
+                      sku: ghostSkuValue,
                       name: FEE_DISPLAY_NAME,
                       list_price: 0,
                       quantity: 1,
@@ -337,7 +348,7 @@ const LoopReturnsOption: FunctionComponent = () => {
 
   const loopReturnsOption = useMemo(
     () =>
-      checkoutSettings?.enableReturns && isLoopAvailable ? (
+      checkoutSettings?.enableReturns && isLoopAvailable && !hideUI ? (
         <>
           <form className="loop-returns-option-form">
             <LoadingOverlay isLoading={isInitializing}>
@@ -416,6 +427,7 @@ const LoopReturnsOption: FunctionComponent = () => {
       isInfoModalOpen,
       isLoopAvailable,
       modalError,
+      hideUI,
     ],
   );
 
