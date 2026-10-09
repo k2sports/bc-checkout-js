@@ -11,7 +11,13 @@ import {
 } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
 
-import { type CartMetafield, LOOP_EMPTY_VALUE, LOOP_NAMESPACE, type LoopQuote } from './types';
+import {
+  type CartMetafield,
+  FEE_DISPLAY_NAME,
+  LOOP_EMPTY_VALUE,
+  LOOP_NAMESPACE,
+  type LoopQuote,
+} from './types';
 
 interface CheckoutResponse {
   error: boolean;
@@ -56,7 +62,7 @@ function getReturnsCartItem(cartItems: LineItemMap | undefined, sku: string): st
 
 function shouldRemoveLoopFee(
   loopQuoteData: LoopQuote | null,
-  appliedLoopOrderFee: Fee | undefined,
+  appliedLoopOrderFee: Fee | null,
   loopCartMetadata: CartMetafield | null,
   cartItems: LineItemMap,
   ghostSku: string,
@@ -224,6 +230,162 @@ async function setLoopOrderMetadata(order: Order): Promise<CheckoutResponse> {
   };
 }
 
+// Probably deleting this method
+async function getLoopOrderFee(checkoutId: string, orderFees: Fee[]): Promise<Fee | null> {
+  const appliedLoopOrderFees = orderFees?.filter((fee) => fee.name === LOOP_NAMESPACE);
+
+  console.log('appliedLoopOrderFees', appliedLoopOrderFees, checkoutId);
+
+  if (!appliedLoopOrderFees?.length) {
+    return null;
+  }
+
+  if (appliedLoopOrderFees.length === 1) {
+    return appliedLoopOrderFees[0];
+  }
+
+  // Get first fee to keep
+  const appliedLoopOrderFee = appliedLoopOrderFees.shift();
+
+  console.log('appliedLoopOrderFee', appliedLoopOrderFee);
+
+  // Remove all other loop fees
+  const feeIds = orderFees.map((fee) => fee.id);
+  const promises: any[] = [];
+
+  console.log('feeIds', feeIds);
+
+  // feeIds.forEach((id) => {
+  //   promises.push(
+  //     requestSender.delete('/checkout/bigcommerce/delete-order-fees', {
+  //       body: {
+  //         checkoutId,
+  //         fee: {
+  //           id,
+  //         },
+  //       },
+  //     }),
+  //   );
+  // });
+
+  if (promises?.length) {
+    await Promise.all(promises).catch((error) => {
+      console.log('Duplicate fee could not be removed', error);
+    });
+  }
+
+  return appliedLoopOrderFee || null;
+}
+
+async function applyLoopOrderFees(
+  checkoutId: string,
+  loopQuote: LoopQuote,
+  loopOrderFee: Fee | null,
+  cartItems: LineItemMap,
+  ghostSku: string,
+  taxId: number | undefined,
+) {
+  const removalPromises: any[] = [];
+
+  // add fee
+  await requestSender
+    .post('/checkout/bigcommerce/update-order-fees', {
+      body: {
+        checkoutId,
+        fee: {
+          id: loopOrderFee?.id,
+          type: 'custom_fee',
+          name: LOOP_NAMESPACE,
+          display_name: FEE_DISPLAY_NAME,
+          cost: centsToDollars(loopQuote.chargeInstructions.amount), // convert cents to dollars
+          source: 'loop',
+          tax_class_id: taxId,
+        },
+      },
+    })
+    .then((results: any) => {
+      console.log('applyLoopOrderFee results:', results?.body?.data?.fees);
+
+      const orderFees: Fee[] = results?.body?.data?.fees || [];
+      const feeIds: string[] = orderFees
+        ?.filter((fee) => fee.name === LOOP_NAMESPACE)
+        .map((fee: Fee) => fee.id);
+
+      if (feeIds.length > 1) {
+        // Keep first fee and remove all others
+        feeIds.shift();
+        feeIds.forEach((id) => {
+          removalPromises.push(
+            requestSender.delete('/checkout/bigcommerce/delete-order-fees', {
+              body: {
+                checkoutId,
+                fee: {
+                  id,
+                },
+              },
+            }),
+          );
+        });
+      }
+    })
+    .catch((error) => {
+      console.error('applyLoopOrderFee errors:', error);
+    });
+
+  // Add ghost item for netsuite support
+  const returnsItemId = getReturnsCartItem(cartItems, ghostSku);
+
+  if (!returnsItemId) {
+    await requestSender
+      .post('/checkout/bigcommerce/cart-items', {
+        body: {
+          checkoutId,
+          items: {
+            custom_items: [
+              {
+                sku: ghostSku,
+                name: FEE_DISPLAY_NAME,
+                list_price: 0,
+                quantity: 1,
+                image_url: 'https://k2sports.a.bigcontent.io/v1/static/returns-icon',
+              },
+            ],
+          },
+        },
+      })
+      .then((results: any) => {
+        console.log(
+          'add loop ghost product results:',
+          results?.body?.data?.line_items?.custom_items,
+        );
+
+        const customItem = results?.body?.data?.line_items?.custom_items?.find(
+          (item: LineItem) => item.sku === ghostSku,
+        );
+
+        console.log('customItem', customItem);
+
+        if (customItem && customItem.quantity > 1) {
+          // set to 1
+        }
+      })
+      .catch((error) => {
+        console.error('add loop ghost product  errors:', error);
+      });
+  }
+
+  console.log('removalPromises', removalPromises);
+
+  // delete duplicate fees and ghost products
+  await Promise.all(removalPromises)
+    .then((results) => {
+      console.log('removalPromises results:', results);
+    })
+    .catch((error) => {
+      console.error('removalPromises errors:', error);
+    });
+}
+
 async function removeLoopOrderFees(
   checkoutId: string,
   loopOrderFee: Fee | null,
@@ -308,4 +470,6 @@ export {
   shouldRemoveLoopFee,
   getCartMetadataAmount,
   getReturnsCartItem,
+  getLoopOrderFee,
+  applyLoopOrderFees,
 };

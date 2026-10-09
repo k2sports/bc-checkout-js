@@ -22,6 +22,7 @@ import { Fee } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
 import { ShopperCurrency } from '../../currency';
 import {
+  applyLoopOrderFees,
   centsToDollars,
   dollarsToCents,
   getCartMetadataAmount,
@@ -88,22 +89,31 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
     setIsLoopFieldChecked(isChecked);
 
     try {
-      if (isChecked && loopQuote?.chargeInstructions?.amount) {
+      if (isChecked && loopQuote?.chargeInstructions?.amount && checkout?.id) {
         // Apply custom fee to checkout
-        await requestSender.post('/checkout/bigcommerce/update-order-fees', {
-          body: {
-            checkoutId: checkout?.id,
-            fee: {
-              id: loopOrderFee?.id,
-              type: 'custom_fee',
-              name: LOOP_NAMESPACE,
-              display_name: FEE_DISPLAY_NAME,
-              cost: centsToDollars(loopQuote.chargeInstructions.amount), // convert cents to dollars
-              source: 'loop',
-              tax_class_id: checkoutSettings?.returnsTaxId,
-            },
-          },
-        });
+        // await requestSender.post('/checkout/bigcommerce/update-order-fees', {
+        //   body: {
+        //     checkoutId: checkout?.id,
+        //     fee: {
+        //       id: loopOrderFee?.id,
+        //       type: 'custom_fee',
+        //       name: LOOP_NAMESPACE,
+        //       display_name: FEE_DISPLAY_NAME,
+        //       cost: centsToDollars(loopQuote.chargeInstructions.amount), // convert cents to dollars
+        //       source: 'loop',
+        //       tax_class_id: checkoutSettings?.returnsTaxId,
+        //     },
+        //   },
+        // });
+
+        await applyLoopOrderFees(
+          checkout.id,
+          loopQuote,
+          loopOrderFee,
+          checkout?.cart?.lineItems,
+          ghostSku,
+          checkoutSettings?.returnsTaxId,
+        );
 
         // Add loop data to cart metadata for future access
         const cartMetadataResp: CartMetadataResp = await requestSender.post(
@@ -130,25 +140,25 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
         setCartMetafieldId(cartMetadataResp?.body?.data?.resource_id || null);
 
         // Add ghost item for netsuite support
-        const returnsItemId = getReturnsCartItem(checkout?.cart?.lineItems, ghostSku);
-        if (!returnsItemId) {
-          await requestSender.post('/checkout/bigcommerce/cart-items', {
-            body: {
-              checkoutId: checkout?.id,
-              items: {
-                custom_items: [
-                  {
-                    sku: ghostSku,
-                    name: FEE_DISPLAY_NAME,
-                    list_price: 0,
-                    quantity: 1,
-                    image_url: 'https://k2sports.a.bigcontent.io/v1/static/returns-icon',
-                  },
-                ],
-              },
-            },
-          });
-        }
+        // const returnsItemId = getReturnsCartItem(checkout?.cart?.lineItems, ghostSku);
+        // if (!returnsItemId) {
+        //   await requestSender.post('/checkout/bigcommerce/cart-items', {
+        //     body: {
+        //       checkoutId: checkout?.id,
+        //       items: {
+        //         custom_items: [
+        //           {
+        //             sku: ghostSku,
+        //             name: FEE_DISPLAY_NAME,
+        //             list_price: 0,
+        //             quantity: 1,
+        //             image_url: 'https://k2sports.a.bigcontent.io/v1/static/returns-icon',
+        //           },
+        //         ],
+        //       },
+        //     },
+        //   });
+        // }
       } else {
         // Delete fee and cart metadata if unchecked
         if (checkout?.id) {
@@ -177,6 +187,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
   useEffect(() => {
     const initializeLoop = async () => {
       try {
+        console.log('initializeLoop');
         setIsInitializing(true);
         const customCheckoutWindow: CustomCheckoutWindow =
           window as unknown as CustomCheckoutWindow;
@@ -193,6 +204,12 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
           return;
         }
 
+        console.log('checkout', checkout);
+
+        // Get loop fee if it's been applied
+        const appliedLoopOrderFee =
+          checkout?.fees?.find((fee) => fee.name === LOOP_NAMESPACE) || null;
+
         // Get cart metadata
         const cartMetadataResp = await requestSender.post(
           `/checkout/bigcommerce/cart-metadata/${checkout?.id}/${LOOP_NAMESPACE}`,
@@ -200,12 +217,8 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
         const loopCartMetadata = cartMetadataResp?.body as CartMetafield;
         const loopCartMetadataAmount = getCartMetadataAmount(loopCartMetadata);
 
-        // Get & set loop fee if it's been applied
-        const appliedLoopOrderFee = checkout?.fees?.find((fee) => fee.name === LOOP_NAMESPACE);
-
-        const customerGroupId = checkout?.customer?.customerGroup?.id;
-
         // Check if Loop is disabled for the customer's group
+        const customerGroupId = checkout?.customer?.customerGroup?.id;
         if (customerGroupId && checkoutSettings.returnsHideGroups?.includes(customerGroupId)) {
           const removeResp = await removeLoopOrderFees(
             checkout?.id,
@@ -296,7 +309,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
                 id: loopOrderFee?.id,
                 type: 'custom_fee',
                 name: LOOP_NAMESPACE,
-                display_name: 'Returns Coverage',
+                display_name: FEE_DISPLAY_NAME,
                 cost: centsToDollars(loopQuoteData.chargeInstructions.amount), // convert cents to dollars
                 source: 'loop',
                 tax_class_id: checkoutSettings?.returnsTaxId,
@@ -350,7 +363,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
     () =>
       checkoutSettings?.enableReturns && isLoopAvailable && !hideUI ? (
         <>
-          <form className="loop-returns-option-form">
+          <div className="loop-returns-option-form">
             <LoadingOverlay isLoading={isInitializing}>
               <fieldset>
                 <div className="loop-legend">
@@ -393,7 +406,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
                 )}
               </fieldset>
             </LoadingOverlay>
-          </form>
+          </div>
           <Modal
             header={
               <ModalHeader>{checkoutSettings?.returnsFormTitle || 'Returns Coverage'}</ModalHeader>
