@@ -14,6 +14,7 @@ import { createRequestSender } from '@bigcommerce/request-sender';
 import {
   type CartMetafield,
   FEE_DISPLAY_NAME,
+  HELPER_URL,
   LOOP_EMPTY_VALUE,
   LOOP_NAMESPACE,
   type LoopQuote,
@@ -25,7 +26,7 @@ interface CheckoutResponse {
 }
 
 const requestSender = createRequestSender({
-  host: 'https://eoc-checkout-helper.onrender.com/api/v1/',
+  host: HELPER_URL,
 });
 
 function dollarsToCents(amount: number) {
@@ -77,6 +78,7 @@ function shouldRemoveLoopFee(
     return false; // Nothing to remove
   }
 
+  // IF only the ghost product exists
   if (
     !appliedLoopOrderFee &&
     (!loopCartMetadata?.value || loopCartMetadata?.value === LOOP_EMPTY_VALUE) &&
@@ -217,10 +219,10 @@ async function setLoopOrderMetadata(order: Order): Promise<CheckoutResponse> {
     }),
   )
     .then((results) => {
-      console.log('setLoopOrderMetadata results:', results);
+      console.log('Loop Order Metadata Set Successfully:', results);
     })
     .catch((error) => {
-      console.error('setLoopOrderMetadata errors:', error);
+      console.error('Error Setting Loop Order Metadata:', error);
       hasError = true;
     });
 
@@ -230,58 +232,12 @@ async function setLoopOrderMetadata(order: Order): Promise<CheckoutResponse> {
   };
 }
 
-// Probably deleting this method
-async function getLoopOrderFee(checkoutId: string, orderFees: Fee[]): Promise<Fee | null> {
-  const appliedLoopOrderFees = orderFees?.filter((fee) => fee.name === LOOP_NAMESPACE);
-
-  console.log('appliedLoopOrderFees', appliedLoopOrderFees, checkoutId);
-
-  if (!appliedLoopOrderFees?.length) {
-    return null;
-  }
-
-  if (appliedLoopOrderFees.length === 1) {
-    return appliedLoopOrderFees[0];
-  }
-
-  // Get first fee to keep
-  const appliedLoopOrderFee = appliedLoopOrderFees.shift();
-
-  console.log('appliedLoopOrderFee', appliedLoopOrderFee);
-
-  // Remove all other loop fees
-  const feeIds = orderFees.map((fee) => fee.id);
-  const promises: any[] = [];
-
-  console.log('feeIds', feeIds);
-
-  // feeIds.forEach((id) => {
-  //   promises.push(
-  //     requestSender.delete('/checkout/bigcommerce/delete-order-fees', {
-  //       body: {
-  //         checkoutId,
-  //         fee: {
-  //           id,
-  //         },
-  //       },
-  //     }),
-  //   );
-  // });
-
-  if (promises?.length) {
-    await Promise.all(promises).catch((error) => {
-      console.log('Duplicate fee could not be removed', error);
-    });
-  }
-
-  return appliedLoopOrderFee || null;
-}
-
 async function applyLoopOrderFees(
   checkoutId: string,
   loopQuote: LoopQuote,
   loopOrderFee: Fee | null,
   cartItems: LineItemMap,
+  enableGhostProduct: boolean,
   ghostSku: string,
   taxId: number | undefined,
 ) {
@@ -304,8 +260,6 @@ async function applyLoopOrderFees(
       },
     })
     .then((results: any) => {
-      console.log('applyLoopOrderFee results:', results?.body?.data?.fees);
-
       const orderFees: Fee[] = results?.body?.data?.fees || [];
       const feeIds: string[] = orderFees
         ?.filter((fee) => fee.name === LOOP_NAMESPACE)
@@ -329,13 +283,13 @@ async function applyLoopOrderFees(
       }
     })
     .catch((error) => {
-      console.error('applyLoopOrderFee errors:', error);
+      console.error('add loop fee errors:', error);
     });
 
-  // Add ghost item for netsuite support
+  // Add ghost item for netsuite support, verify it doesn't exist first
   const returnsItemId = getReturnsCartItem(cartItems, ghostSku);
 
-  if (!returnsItemId) {
+  if (enableGhostProduct && !returnsItemId) {
     await requestSender
       .post('/checkout/bigcommerce/cart-items', {
         body: {
@@ -353,37 +307,17 @@ async function applyLoopOrderFees(
           },
         },
       })
-      .then((results: any) => {
-        console.log(
-          'add loop ghost product results:',
-          results?.body?.data?.line_items?.custom_items,
-        );
-
-        const customItem = results?.body?.data?.line_items?.custom_items?.find(
-          (item: LineItem) => item.sku === ghostSku,
-        );
-
-        console.log('customItem', customItem);
-
-        if (customItem && customItem.quantity > 1) {
-          // set to 1
-        }
-      })
       .catch((error) => {
-        console.error('add loop ghost product  errors:', error);
+        console.error('add loop ghost product errors:', error);
       });
   }
 
-  console.log('removalPromises', removalPromises);
-
   // delete duplicate fees and ghost products
-  await Promise.all(removalPromises)
-    .then((results) => {
-      console.log('removalPromises results:', results);
-    })
-    .catch((error) => {
+  if (removalPromises?.length) {
+    await Promise.all(removalPromises).catch((error) => {
       console.error('removalPromises errors:', error);
     });
+  }
 }
 
 async function removeLoopOrderFees(
@@ -446,14 +380,10 @@ async function removeLoopOrderFees(
     };
   }
 
-  await Promise.all(promises)
-    .then((results) => {
-      console.log('removeLoopOrderFees results:', results);
-    })
-    .catch((error) => {
-      console.error('removeLoopOrderFees errors:', error);
-      hasError = true;
-    });
+  await Promise.all(promises).catch((error) => {
+    console.error('removeLoopOrderFees errors:', error);
+    hasError = true;
+  });
 
   return {
     error: hasError,
@@ -470,6 +400,5 @@ export {
   shouldRemoveLoopFee,
   getCartMetadataAmount,
   getReturnsCartItem,
-  getLoopOrderFee,
   applyLoopOrderFees,
 };

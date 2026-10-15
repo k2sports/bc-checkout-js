@@ -27,7 +27,6 @@ import {
   dollarsToCents,
   getCartMetadataAmount,
   getLoopQuote,
-  getReturnsCartItem,
   removeLoopOrderFees,
   shouldRemoveLoopFee,
 } from './checkoutHelpers';
@@ -40,13 +39,13 @@ import {
   CartMetadataResp,
   CartMetafield,
   LoopQuote,
-  FEE_DISPLAY_NAME,
   LOOP_NAMESPACE,
   DEFAULT_GHOST_SKU,
+  HELPER_URL,
 } from './types';
 
 const requestSender = createRequestSender({
-  host: 'https://eoc-checkout-helper.onrender.com/api/v1/',
+  host: HELPER_URL,
 });
 
 export interface LoopReturnsOptionProps {
@@ -77,7 +76,6 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
 
   const onCloseErrorModal = useCallback((): void => {
     setModalError(undefined);
-    // window.location.reload();
   }, []);
 
   const onRequestClose = () => {
@@ -90,27 +88,13 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
 
     try {
       if (isChecked && loopQuote?.chargeInstructions?.amount && checkout?.id) {
-        // Apply custom fee to checkout
-        // await requestSender.post('/checkout/bigcommerce/update-order-fees', {
-        //   body: {
-        //     checkoutId: checkout?.id,
-        //     fee: {
-        //       id: loopOrderFee?.id,
-        //       type: 'custom_fee',
-        //       name: LOOP_NAMESPACE,
-        //       display_name: FEE_DISPLAY_NAME,
-        //       cost: centsToDollars(loopQuote.chargeInstructions.amount), // convert cents to dollars
-        //       source: 'loop',
-        //       tax_class_id: checkoutSettings?.returnsTaxId,
-        //     },
-        //   },
-        // });
-
+        // Apply custom fee and ghost item to checkout
         await applyLoopOrderFees(
           checkout.id,
           loopQuote,
           loopOrderFee,
           checkout?.cart?.lineItems,
+          checkoutSettings?.returnsEnableGhostProduct || false,
           ghostSku,
           checkoutSettings?.returnsTaxId,
         );
@@ -138,27 +122,6 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
         );
 
         setCartMetafieldId(cartMetadataResp?.body?.data?.resource_id || null);
-
-        // Add ghost item for netsuite support
-        // const returnsItemId = getReturnsCartItem(checkout?.cart?.lineItems, ghostSku);
-        // if (!returnsItemId) {
-        //   await requestSender.post('/checkout/bigcommerce/cart-items', {
-        //     body: {
-        //       checkoutId: checkout?.id,
-        //       items: {
-        //         custom_items: [
-        //           {
-        //             sku: ghostSku,
-        //             name: FEE_DISPLAY_NAME,
-        //             list_price: 0,
-        //             quantity: 1,
-        //             image_url: 'https://k2sports.a.bigcontent.io/v1/static/returns-icon',
-        //           },
-        //         ],
-        //       },
-        //     },
-        //   });
-        // }
       } else {
         // Delete fee and cart metadata if unchecked
         if (checkout?.id) {
@@ -173,7 +136,6 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
             setModalError(new Error(removeResp?.message));
           }
         }
-        // setCartMetafieldId(null);
         setLoopOrderFee(null);
       }
     } catch (error) {
@@ -187,7 +149,6 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
   useEffect(() => {
     const initializeLoop = async () => {
       try {
-        console.log('initializeLoop');
         setIsInitializing(true);
         const customCheckoutWindow: CustomCheckoutWindow =
           window as unknown as CustomCheckoutWindow;
@@ -203,8 +164,6 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
           setIsLoopAvailable(false);
           return;
         }
-
-        console.log('checkout', checkout);
 
         // Get loop fee if it's been applied
         const appliedLoopOrderFee =
@@ -235,7 +194,6 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
           setIsLoopAvailable(false);
           setLoopOrderFee(null);
           setIsLoopFieldChecked(false);
-          // setCartMetafieldId(null);
           setIsInitializing(false);
           checkoutService.loadCheckout();
           return;
@@ -288,55 +246,28 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
 
           setLoopOrderFee(null);
           setIsLoopFieldChecked(false);
-          // setCartMetafieldId(null);
           checkoutService.loadCheckout();
           setIsInitializing(false);
 
           return;
         }
 
-        // Set order fee if cart metadata exists and matched loop quote
+        // Apply fee and ghost item to order if cart metadata exists and matches loop quote
         if (
           !isPaymentStep &&
           loopQuoteData?.chargeInstructions?.amount &&
           !appliedLoopOrderFee &&
           loopCartMetadataAmount === loopQuoteData.chargeInstructions.amount
         ) {
-          await requestSender.post('/checkout/bigcommerce/update-order-fees', {
-            body: {
-              checkoutId: checkout?.id,
-              fee: {
-                id: loopOrderFee?.id,
-                type: 'custom_fee',
-                name: LOOP_NAMESPACE,
-                display_name: FEE_DISPLAY_NAME,
-                cost: centsToDollars(loopQuoteData.chargeInstructions.amount), // convert cents to dollars
-                source: 'loop',
-                tax_class_id: checkoutSettings?.returnsTaxId,
-              },
-            },
-          });
-
-          // Add ghost item for netsuite support
-          const returnsItemId = getReturnsCartItem(checkout?.cart?.lineItems, ghostSku);
-          if (!returnsItemId) {
-            await requestSender.post('/checkout/bigcommerce/cart-items', {
-              body: {
-                checkoutId: checkout?.id,
-                items: {
-                  custom_items: [
-                    {
-                      sku: ghostSkuValue,
-                      name: FEE_DISPLAY_NAME,
-                      list_price: 0,
-                      quantity: 1,
-                      image_url: 'https://k2sports.a.bigcontent.io/v1/static/returns-icon',
-                    },
-                  ],
-                },
-              },
-            });
-          }
+          await applyLoopOrderFees(
+            checkout?.id,
+            loopQuoteData,
+            loopOrderFee,
+            checkout?.cart?.lineItems,
+            checkoutSettings?.returnsEnableGhostProduct || false,
+            ghostSkuValue,
+            checkoutSettings?.returnsTaxId,
+          );
 
           checkoutService.loadCheckout();
           setIsInitializing(false);

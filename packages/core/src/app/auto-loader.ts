@@ -29,6 +29,7 @@ export interface EOCCheckoutConfig {
   returnsFieldLabel?: string;
   returnsTaxId?: number;
   returnsGhostSku?: string;
+  returnsEnableGhostProduct?: boolean;
 }
 
 export interface CustomCheckoutWindow extends Window {
