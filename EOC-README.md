@@ -88,7 +88,7 @@ return (
 <Form className="checkout-form" testId="payment-form">
     ...
     {/* eoc custom component start */}
-        {isMobileView && <LoopReturnsOption />}
+        {isMobileView && <LoopReturnsOption isPaymentStep={true} />}
     {/* eoc custom component end */}
 
     ...
@@ -183,6 +183,26 @@ const isReturnsProduct = name === FEE_DISPLAY_NAME; // eoc custom const
   className="product-column product-actions"
   style={{ visibility: isReturnsProduct ? 'hidden' : 'visible' }}
 >
+```
+
+- packages/core/src/app/order/OrderSummaryDrawer.tsx
+
+```
+import LoopReturnsOption from '../eoc/loop/LoopReturnsOption'; // eoc custom import
+
+...
+<div className="cartDrawer-body">
+  <h3 className="cartDrawer-items optimizedCheckout-headingPrimary">
+    <TranslatedString
+      data={{ count: getItemsCount(nonBundledLineItems) }}
+      id="cart.item_count_text"
+    />
+  </h3>
+  {/* eoc custom component start */}
+  <LoopReturnsOption hideUI={true} />
+  {/* eoc custom component end */}
+...
+</div>
 ```
 
 ### Translations
