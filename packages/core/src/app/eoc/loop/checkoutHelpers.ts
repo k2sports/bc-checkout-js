@@ -12,6 +12,7 @@ import {
 import { createRequestSender } from '@bigcommerce/request-sender';
 
 import {
+  type CartMetadataResp,
   type CartMetafield,
   FEE_DISPLAY_NAME,
   HELPER_URL,
@@ -68,6 +69,8 @@ function shouldRemoveLoopFee(
   cartItems: LineItemMap,
   ghostSku: string,
 ): boolean {
+  console.log('shouldRemoveLoopFee?', loopQuoteData, loopCartMetadata);
+
   const returnsItemId = getReturnsCartItem(cartItems, ghostSku);
 
   if (
@@ -84,12 +87,16 @@ function shouldRemoveLoopFee(
     (!loopCartMetadata?.value || loopCartMetadata?.value === LOOP_EMPTY_VALUE) &&
     returnsItemId
   ) {
+    console.log('only the ghost product exists');
+
     return true;
   }
 
   // Remove order fee and cart metadata:
   // IF no loop quote or order isn't eligible for Loop
   if (!loopQuoteData || !loopQuoteData?.eligible) {
+    console.log('no loop quote or order isnt eligible for Loop');
+
     return true;
   }
 
@@ -98,7 +105,9 @@ function shouldRemoveLoopFee(
     appliedLoopOrderFee &&
     dollarsToCents(appliedLoopOrderFee?.cost) !== loopQuoteData?.chargeInstructions?.amount
   ) {
-    return true;
+    console.log('quote changed from applied fee, but we dont care anymore');
+
+    // return true;
   }
 
   // IF fee but no cart metadata
@@ -106,6 +115,8 @@ function shouldRemoveLoopFee(
     appliedLoopOrderFee &&
     (!loopCartMetadata?.value || loopCartMetadata?.value === LOOP_EMPTY_VALUE)
   ) {
+    console.log('fee but no cart metadata');
+
     return true;
   }
 
@@ -114,13 +125,59 @@ function shouldRemoveLoopFee(
 
   // IF fee does not match cart metadata
   if (appliedLoopOrderFee && appliedLoopOrderFee?.cost !== centsToDollars(cartMetadataAmount)) {
-    return true;
+    console.log('fee does not match cart metadata, but we dont care anymore');
+    // return true;
   }
 
   // IF cart meta data amount does not match loop quote
   if (cartMetadataAmount !== loopQuoteData?.chargeInstructions?.amount) {
+    console.log('cart meta data amount does not match loop quote, but we dont care anymore');
+    //   return true;
+  }
+
+  return false;
+}
+
+function shouldUpdateLoopFee(
+  loopQuoteData: LoopQuote | null,
+  appliedLoopOrderFee: Fee | null,
+  loopCartMetadata: CartMetafield | null,
+): boolean {
+  console.log('shouldUpdateLoopFee?', loopQuoteData, loopCartMetadata, appliedLoopOrderFee);
+
+  // IF declined
+  if (loopCartMetadata?.value === LOOP_EMPTY_VALUE) {
+    console.log('loop declined, dont update');
+
+    return false;
+  }
+
+  // IF quote changed from applied fee
+  if (
+    appliedLoopOrderFee &&
+    dollarsToCents(appliedLoopOrderFee?.cost) !== loopQuoteData?.chargeInstructions?.amount
+  ) {
+    console.log('quote changed from applied fee, lets update');
+
     return true;
   }
+
+  const cartMetadataObject = JSON.parse(loopCartMetadata?.value || '');
+  const cartMetadataAmount = cartMetadataObject?.fee_amount || 0;
+
+  // IF fee does not match cart metadata
+  if (appliedLoopOrderFee && appliedLoopOrderFee?.cost !== centsToDollars(cartMetadataAmount)) {
+    console.log('fee does not match cart metadata, lets update');
+
+    return true;
+  }
+
+  // // IF cart meta data amount does not match loop quote
+  // if (cartMetadataAmount !== loopQuoteData?.chargeInstructions?.amount) {
+  //   console.log('cart meta data amount does not match loop quote, but we dont care anymore');
+  //   //   return true;
+  // }
+  console.log('do not need to update loop');
 
   return false;
 }
@@ -240,6 +297,7 @@ async function applyLoopOrderFees(
   enableGhostProduct: boolean,
   ghostSku: string,
   taxId: number | undefined,
+  cartMetafieldId: string | null,
 ) {
   const removalPromises: any[] = [];
 
@@ -286,6 +344,28 @@ async function applyLoopOrderFees(
       console.error('add loop fee errors:', error);
     });
 
+  // Add/update loop data in cart metadata for future access
+  const cartMetadataResp: CartMetadataResp = await requestSender.post(
+    '/checkout/bigcommerce/cart-metadata',
+    {
+      body: {
+        checkoutId,
+        metafield: {
+          id: cartMetafieldId,
+          permission_set: 'write_and_sf_access',
+          namespace: LOOP_NAMESPACE,
+          key: LOOP_NAMESPACE,
+          value: JSON.stringify({
+            session_id: loopQuote.sessionId,
+            accepted_offer_mode: loopQuote.mode,
+            fee_amount: loopQuote.chargeInstructions.amount,
+            fee_currency: loopQuote.chargeInstructions.currencyCode,
+          }),
+        },
+      },
+    },
+  );
+
   // Add ghost item for netsuite support, verify it doesn't exist first
   const returnsItemId = getReturnsCartItem(cartItems, ghostSku);
 
@@ -318,6 +398,8 @@ async function applyLoopOrderFees(
       console.error('removalPromises errors:', error);
     });
   }
+
+  return { cartMetafieldId: cartMetadataResp?.body?.data?.resource_id };
 }
 
 async function removeLoopOrderFees(
@@ -354,7 +436,7 @@ async function removeLoopOrderFees(
             permission_set: 'write_and_sf_access',
             namespace: LOOP_NAMESPACE,
             key: LOOP_NAMESPACE,
-            value: 'declined',
+            value: LOOP_EMPTY_VALUE,
           },
         },
       }),
@@ -380,10 +462,14 @@ async function removeLoopOrderFees(
     };
   }
 
-  await Promise.all(promises).catch((error) => {
-    console.error('removeLoopOrderFees errors:', error);
-    hasError = true;
-  });
+  await Promise.all(promises)
+    .then((results) => {
+      console.log('removeLoopOrderFees results', results);
+    })
+    .catch((error) => {
+      console.error('removeLoopOrderFees errors:', error);
+      hasError = true;
+    });
 
   return {
     error: hasError,
@@ -401,4 +487,5 @@ export {
   getCartMetadataAmount,
   getReturnsCartItem,
   applyLoopOrderFees,
+  shouldUpdateLoopFee,
 };

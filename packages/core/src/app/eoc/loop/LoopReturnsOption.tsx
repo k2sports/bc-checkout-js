@@ -12,6 +12,8 @@ import {
   Button,
   ButtonSize,
   ButtonVariant,
+  IconSize,
+  // ConfirmationModal,
   Legend,
   LoadingOverlay,
   Modal,
@@ -29,6 +31,7 @@ import {
   getLoopQuote,
   removeLoopOrderFees,
   shouldRemoveLoopFee,
+  shouldUpdateLoopFee,
 } from './checkoutHelpers';
 import { CustomCheckoutWindow, EOCCheckoutConfig } from '../../auto-loader';
 import './LoopReturnsOption.scss';
@@ -36,13 +39,15 @@ import IconInfo from '@bigcommerce/checkout/ui/icon/IconInfo';
 import DOMPurify from 'dompurify';
 import ErrorModal from '../../common/error/ErrorModal';
 import {
-  CartMetadataResp,
+  // CartMetadataResp,
   CartMetafield,
   LoopQuote,
   LOOP_NAMESPACE,
   DEFAULT_GHOST_SKU,
   HELPER_URL,
+  // LOOP_EMPTY_VALUE,
 } from './types';
+import { TranslatedString } from '@bigcommerce/checkout/locale';
 
 const requestSender = createRequestSender({
   host: HELPER_URL,
@@ -66,6 +71,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isLoopAvailable, setIsLoopAvailable] = useState(true);
   const [modalError, setModalError] = useState<Error | undefined>();
+  const [isModalNoticeOpen, setIsModalNoticeOpen] = useState(false);
   const [ghostSku, setGhostSku] = useState(DEFAULT_GHOST_SKU);
   const {
     selectedState: { checkout },
@@ -88,8 +94,9 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
 
     try {
       if (isChecked && loopQuote?.chargeInstructions?.amount && checkout?.id) {
+        console.log('opt in');
         // Apply custom fee and ghost item to checkout
-        await applyLoopOrderFees(
+        const applyFeesResponse = await applyLoopOrderFees(
           checkout.id,
           loopQuote,
           loopOrderFee,
@@ -97,32 +104,34 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
           checkoutSettings?.returnsEnableGhostProduct || false,
           ghostSku,
           checkoutSettings?.returnsTaxId,
+          cartMetafieldId,
         );
 
         // Add loop data to cart metadata for future access
-        const cartMetadataResp: CartMetadataResp = await requestSender.post(
-          '/checkout/bigcommerce/cart-metadata',
-          {
-            body: {
-              checkoutId: checkout?.id,
-              metafield: {
-                id: cartMetafieldId,
-                permission_set: 'write_and_sf_access',
-                namespace: LOOP_NAMESPACE,
-                key: LOOP_NAMESPACE,
-                value: JSON.stringify({
-                  session_id: loopQuote.sessionId,
-                  accepted_offer_mode: loopQuote.mode,
-                  fee_amount: loopQuote.chargeInstructions.amount,
-                  fee_currency: loopQuote.chargeInstructions.currencyCode,
-                }),
-              },
-            },
-          },
-        );
+        // const cartMetadataResp: CartMetadataResp = await requestSender.post(
+        //   '/checkout/bigcommerce/cart-metadata',
+        //   {
+        //     body: {
+        //       checkoutId: checkout?.id,
+        //       metafield: {
+        //         id: cartMetafieldId,
+        //         permission_set: 'write_and_sf_access',
+        //         namespace: LOOP_NAMESPACE,
+        //         key: LOOP_NAMESPACE,
+        //         value: JSON.stringify({
+        //           session_id: loopQuote.sessionId,
+        //           accepted_offer_mode: loopQuote.mode,
+        //           fee_amount: loopQuote.chargeInstructions.amount,
+        //           fee_currency: loopQuote.chargeInstructions.currencyCode,
+        //         }),
+        //       },
+        //     },
+        //   },
+        // );
 
-        setCartMetafieldId(cartMetadataResp?.body?.data?.resource_id || null);
+        setCartMetafieldId(applyFeesResponse?.cartMetafieldId || null);
       } else {
+        console.log('opt out');
         // Delete fee and cart metadata if unchecked
         if (checkout?.id) {
           const removeResp = await removeLoopOrderFees(
@@ -149,6 +158,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
   useEffect(() => {
     const initializeLoop = async () => {
       try {
+        console.log('initializeLoop');
         setIsInitializing(true);
         const customCheckoutWindow: CustomCheckoutWindow =
           window as unknown as CustomCheckoutWindow;
@@ -212,6 +222,14 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
         // Get loop quote
         const loopQuoteData = await getLoopQuote(checkout.cart, checkout);
 
+        // FOR TESTING DELETE!!
+        // if (loopQuoteData) {
+        //   const newRate = loopQuoteData.chargeInstructions.amount + 100;
+        //   loopQuoteData.chargeInstructions.amount = newRate;
+        //   console.log('overriding price for testing', newRate);
+        // }
+        // END TESTING
+
         // Apply upcharge if applicable
         if (customerGroupUpcharge && loopQuoteData) {
           const newRate =
@@ -232,6 +250,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
             ghostSkuValue,
           )
         ) {
+          console.log('Removing loop');
           const removeResp = await removeLoopOrderFees(
             checkout?.id,
             appliedLoopOrderFee || null,
@@ -250,15 +269,30 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
           setIsInitializing(false);
 
           return;
+        } else {
+          console.log('dont remove, keep going');
         }
 
         // Apply fee and ghost item to order if cart metadata exists and matches loop quote
+        // if (
+        //   !isPaymentStep &&
+        //   loopQuoteData?.chargeInstructions?.amount &&
+        //   !appliedLoopOrderFee &&
+        //   loopCartMetadataAmount === loopQuoteData.chargeInstructions.amount
+        // ) {
+        const shouldUpdate = shouldUpdateLoopFee(
+          loopQuoteData,
+          appliedLoopOrderFee,
+          loopCartMetadata,
+        );
         if (
           !isPaymentStep &&
           loopQuoteData?.chargeInstructions?.amount &&
           !appliedLoopOrderFee &&
-          loopCartMetadataAmount === loopQuoteData.chargeInstructions.amount
+          loopCartMetadataAmount != null
         ) {
+          // || (!isPaymentStep && loopQuoteData?.chargeInstructions?.amount && shouldUpdate)
+          console.log('adding loop');
           await applyLoopOrderFees(
             checkout?.id,
             loopQuoteData,
@@ -267,11 +301,21 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
             checkoutSettings?.returnsEnableGhostProduct || false,
             ghostSkuValue,
             checkoutSettings?.returnsTaxId,
+            loopCartMetadata?.id,
           );
 
+          setIsModalNoticeOpen(shouldUpdate);
           checkoutService.loadCheckout();
           setIsInitializing(false);
           return;
+        } else {
+          console.log(
+            'didnt add either??',
+            !isPaymentStep,
+            loopQuoteData?.chargeInstructions?.amount,
+            !appliedLoopOrderFee,
+            loopCartMetadataAmount != null,
+          );
         }
 
         setLoopOrderFee(appliedLoopOrderFee || null);
@@ -358,6 +402,32 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
             onClose={onCloseErrorModal}
             shouldShowErrorCode={false}
           />
+          <Modal
+            additionalModalClassName="modal--confirm"
+            footer={
+              <Button onClick={() => setIsModalNoticeOpen(false)} size={ButtonSize.Small}>
+                <TranslatedString id="common.ok_action" />
+              </Button>
+            }
+            header={
+              <ModalHeader>
+                <IconInfo
+                  additionalClassName="icon--info modal-header-icon"
+                  size={IconSize.Small}
+                />
+                <span aria-live="assertive" role="alert">
+                  Order Updated
+                </span>
+              </ModalHeader>
+            }
+            isOpen={isModalNoticeOpen}
+            onRequestClose={() => setIsModalNoticeOpen(false)}
+            shouldShowCloseButton={false}
+          >
+            <p aria-live="assertive" role="alert">
+              The cost of your returns coverage has updated.
+            </p>
+          </Modal>
         </>
       ) : null,
     [
@@ -372,6 +442,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
       isLoopAvailable,
       modalError,
       hideUI,
+      isModalNoticeOpen,
     ],
   );
 
