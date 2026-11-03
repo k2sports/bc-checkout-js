@@ -73,6 +73,10 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
   const [modalError, setModalError] = useState<Error | undefined>();
   const [isModalNoticeOpen, setIsModalNoticeOpen] = useState(false);
   const [ghostSku, setGhostSku] = useState(DEFAULT_GHOST_SKU);
+
+  // FOR TESTING DELETE!!
+  // const [newRateAdded, setNewRateAdded] = useState(false);
+
   const {
     selectedState: { checkout },
     checkoutService,
@@ -223,10 +227,11 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
         const loopQuoteData = await getLoopQuote(checkout.cart, checkout);
 
         // FOR TESTING DELETE!!
-        // if (loopQuoteData) {
-        //   const newRate = loopQuoteData.chargeInstructions.amount + 100;
+        // if (loopQuoteData && !newRateAdded) {
+        //   const newRate = loopQuoteData.chargeInstructions.amount + 500;
         //   loopQuoteData.chargeInstructions.amount = newRate;
         //   console.log('overriding price for testing', newRate);
+        //   setNewRateAdded(true);
         // }
         // END TESTING
 
@@ -274,24 +279,12 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
         }
 
         // Apply fee and ghost item to order if cart metadata exists and matches loop quote
-        // if (
-        //   !isPaymentStep &&
-        //   loopQuoteData?.chargeInstructions?.amount &&
-        //   !appliedLoopOrderFee &&
-        //   loopCartMetadataAmount === loopQuoteData.chargeInstructions.amount
-        // ) {
-        const shouldUpdate = shouldUpdateLoopFee(
-          loopQuoteData,
-          appliedLoopOrderFee,
-          loopCartMetadata,
-        );
         if (
           !isPaymentStep &&
           loopQuoteData?.chargeInstructions?.amount &&
           !appliedLoopOrderFee &&
           loopCartMetadataAmount != null
         ) {
-          // || (!isPaymentStep && loopQuoteData?.chargeInstructions?.amount && shouldUpdate)
           console.log('adding loop');
           await applyLoopOrderFees(
             checkout?.id,
@@ -304,18 +297,43 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
             loopCartMetadata?.id,
           );
 
-          setIsModalNoticeOpen(shouldUpdate);
           checkoutService.loadCheckout();
           setIsInitializing(false);
           return;
         } else {
-          console.log(
-            'didnt add either??',
-            !isPaymentStep,
-            loopQuoteData?.chargeInstructions?.amount,
-            !appliedLoopOrderFee,
-            loopCartMetadataAmount != null,
+          console.log('didnt add either, continue');
+        }
+
+        const shouldUpdate = shouldUpdateLoopFee(
+          loopQuoteData,
+          appliedLoopOrderFee,
+          loopCartMetadata,
+        );
+
+        if (
+          !isPaymentStep &&
+          appliedLoopOrderFee &&
+          loopQuoteData?.chargeInstructions?.amount &&
+          shouldUpdate
+        ) {
+          console.log('update loop', { appliedLoopOrderFee, loopCartMetadata, loopQuoteData });
+          await applyLoopOrderFees(
+            checkout?.id,
+            loopQuoteData,
+            appliedLoopOrderFee,
+            checkout?.cart?.lineItems,
+            checkoutSettings?.returnsEnableGhostProduct || false,
+            ghostSkuValue,
+            checkoutSettings?.returnsTaxId,
+            loopCartMetadata?.id,
           );
+
+          setIsModalNoticeOpen(true);
+          checkoutService.loadCheckout();
+          setIsInitializing(false);
+          return;
+        } else {
+          console.log('didnt update either');
         }
 
         setLoopOrderFee(appliedLoopOrderFee || null);
