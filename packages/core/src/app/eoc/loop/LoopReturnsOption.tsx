@@ -12,6 +12,7 @@ import {
   Button,
   ButtonSize,
   ButtonVariant,
+  IconSize,
   Legend,
   LoadingOverlay,
   Modal,
@@ -42,7 +43,9 @@ import {
   LOOP_NAMESPACE,
   DEFAULT_GHOST_SKU,
   HELPER_URL,
+  FEE_DISPLAY_NAME,
 } from './types';
+import { TranslatedString } from '@bigcommerce/checkout/locale';
 
 const requestSender = createRequestSender({
   host: HELPER_URL,
@@ -66,6 +69,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isLoopAvailable, setIsLoopAvailable] = useState(true);
   const [modalError, setModalError] = useState<Error | undefined>();
+  const [isModalNoticeOpen, setIsModalNoticeOpen] = useState(false);
   const [ghostSku, setGhostSku] = useState(DEFAULT_GHOST_SKU);
   const {
     selectedState: { checkout },
@@ -148,6 +152,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
 
   useEffect(() => {
     const initializeLoop = async () => {
+      console.log('initializeLoop');
       try {
         setIsInitializing(true);
         const customCheckoutWindow: CustomCheckoutWindow =
@@ -242,6 +247,8 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
 
           if (removeResp.error) {
             setModalError(new Error(removeResp?.message));
+          } else {
+            setIsModalNoticeOpen(true);
           }
 
           setLoopOrderFee(null);
@@ -298,7 +305,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
             <LoadingOverlay isLoading={isInitializing}>
               <fieldset>
                 <div className="loop-legend">
-                  <Legend>{checkoutSettings?.returnsFormTitle || 'Returns Coverage'}</Legend>
+                  <Legend>{checkoutSettings?.returnsFormTitle || FEE_DISPLAY_NAME}</Legend>
                   <Button
                     variant={ButtonVariant.Secondary}
                     size={ButtonSize.Tiny}
@@ -340,7 +347,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
           </div>
           <Modal
             header={
-              <ModalHeader>{checkoutSettings?.returnsFormTitle || 'Returns Coverage'}</ModalHeader>
+              <ModalHeader>{checkoutSettings?.returnsFormTitle || FEE_DISPLAY_NAME}</ModalHeader>
             }
             isOpen={isInfoModalOpen}
             onRequestClose={onRequestClose}
@@ -358,6 +365,33 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
             onClose={onCloseErrorModal}
             shouldShowErrorCode={false}
           />
+          <Modal
+            additionalModalClassName="modal--confirm"
+            footer={
+              <Button onClick={() => setIsModalNoticeOpen(false)} size={ButtonSize.Small}>
+                <TranslatedString id="common.ok_action" />
+              </Button>
+            }
+            header={
+              <ModalHeader>
+                <IconInfo
+                  additionalClassName="icon--info modal-header-icon"
+                  size={IconSize.Small}
+                />
+                <span aria-live="assertive" role="alert">
+                  {`${FEE_DISPLAY_NAME} Removed`}
+                </span>
+              </ModalHeader>
+            }
+            isOpen={isModalNoticeOpen}
+            onRequestClose={() => setIsModalNoticeOpen(false)}
+            shouldShowCloseButton={false}
+          >
+            <p aria-live="assertive" role="alert">
+              Checkout+ was removed from your order because of a fee change. Please review the
+              updated fee and opt-in again if you'd like to keep your returns coverage.
+            </p>
+          </Modal>
         </>
       ) : null,
     [
@@ -372,6 +406,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
       isLoopAvailable,
       modalError,
       hideUI,
+      isModalNoticeOpen,
     ],
   );
 

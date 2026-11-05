@@ -68,6 +68,8 @@ function shouldRemoveLoopFee(
   cartItems: LineItemMap,
   ghostSku: string,
 ): boolean {
+  console.log('should remove loop fee', { loopQuoteData, appliedLoopOrderFee, loopCartMetadata });
+
   const returnsItemId = getReturnsCartItem(cartItems, ghostSku);
 
   if (
@@ -84,12 +86,16 @@ function shouldRemoveLoopFee(
     (!loopCartMetadata?.value || loopCartMetadata?.value === LOOP_EMPTY_VALUE) &&
     returnsItemId
   ) {
+    console.log('remove IF only the ghost product exists');
+
     return true;
   }
 
   // Remove order fee and cart metadata:
   // IF no loop quote or order isn't eligible for Loop
   if (!loopQuoteData || !loopQuoteData?.eligible) {
+    console.log("remove IF no loop quote or order isn't eligible for Loop");
+
     return true;
   }
 
@@ -98,6 +104,8 @@ function shouldRemoveLoopFee(
     appliedLoopOrderFee &&
     dollarsToCents(appliedLoopOrderFee?.cost) !== loopQuoteData?.chargeInstructions?.amount
   ) {
+    console.log('remove IF quote changed from applied fee');
+
     return true;
   }
 
@@ -106,6 +114,8 @@ function shouldRemoveLoopFee(
     appliedLoopOrderFee &&
     (!loopCartMetadata?.value || loopCartMetadata?.value === LOOP_EMPTY_VALUE)
   ) {
+    console.log('remove IF fee but no cart metadata');
+
     return true;
   }
 
@@ -114,11 +124,15 @@ function shouldRemoveLoopFee(
 
   // IF fee does not match cart metadata
   if (appliedLoopOrderFee && appliedLoopOrderFee?.cost !== centsToDollars(cartMetadataAmount)) {
+    console.log('remove IF fee does not match cart metadata');
+
     return true;
   }
 
   // IF cart meta data amount does not match loop quote
   if (cartMetadataAmount !== loopQuoteData?.chargeInstructions?.amount) {
+    console.log('remove IF cart meta data amount does not match loop quote');
+
     return true;
   }
 
