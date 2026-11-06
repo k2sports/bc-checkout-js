@@ -3,11 +3,13 @@ import React, {
   ChangeEvent,
   type FunctionComponent,
   memo,
+  ReactNode,
   useCallback,
   useEffect,
   useMemo,
   useState,
 } from 'react';
+
 import {
   Button,
   ButtonSize,
@@ -18,7 +20,7 @@ import {
   Modal,
   ModalHeader,
 } from '@bigcommerce/checkout/ui';
-import { useCheckout } from '@bigcommerce/checkout/contexts';
+import { useCheckout, useLocale } from '@bigcommerce/checkout/contexts';
 import { Fee } from '@bigcommerce/checkout-sdk';
 import { createRequestSender } from '@bigcommerce/request-sender';
 import { ShopperCurrency } from '../../currency';
@@ -71,6 +73,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
   const [modalError, setModalError] = useState<Error | undefined>();
   const [isModalNoticeOpen, setIsModalNoticeOpen] = useState(false);
   const [ghostSku, setGhostSku] = useState(DEFAULT_GHOST_SKU);
+  const { currency } = useLocale();
   const {
     selectedState: { checkout },
     checkoutService,
@@ -297,6 +300,23 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
     }
   }, [checkout?.cart, checkout?.customer, checkout?.subtotal]);
 
+  const renderModalContent = (): ReactNode => {
+    const originalString = checkoutSettings?.returnsModalText || '';
+    const termToReplace = '%LOOP_FEE%';
+    const componentHtmlString = currency
+      ? currency.toCustomerCurrency(centsToDollars(loopQuote?.chargeInstructions?.amount || 0))
+      : '';
+    const finalHtml = originalString.replaceAll(termToReplace, componentHtmlString);
+
+    return (
+      <div
+        dangerouslySetInnerHTML={{
+          __html: DOMPurify.sanitize(finalHtml),
+        }}
+      />
+    );
+  };
+
   const loopReturnsOption = useMemo(
     () =>
       checkoutSettings?.enableReturns && isLoopAvailable && !hideUI ? (
@@ -353,11 +373,7 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
             onRequestClose={onRequestClose}
             shouldShowCloseButton={true}
           >
-            <div
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(checkoutSettings?.returnsModalText || ''),
-              }}
-            />
+            {renderModalContent()}
           </Modal>
           <ErrorModal
             error={modalError}
