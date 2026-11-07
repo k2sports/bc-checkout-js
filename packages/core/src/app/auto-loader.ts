@@ -30,6 +30,7 @@ export interface EOCCheckoutConfig {
   returnsTaxId?: number;
   returnsGhostSku?: string;
   returnsEnableGhostProduct?: boolean;
+  returnsFeeChangeText?: string;
 }
 
 export interface CustomCheckoutWindow extends Window {
@@ -56,7 +57,7 @@ function isCustomCheckoutWindow(window: Window): window is CustomCheckoutWindow 
   }
 
   // eslint-disable-next-line no-console
-  console.log('EOC Custom Checkout v4.0.2', window.checkoutConfig); // eoc custom log
+  console.log('EOC Custom Checkout v4.0.4', window.checkoutConfig); // eoc custom log
 
   const { renderOrderConfirmation, renderCheckout } = await loadFiles();
 

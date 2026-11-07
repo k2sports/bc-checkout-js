@@ -22,6 +22,8 @@ export interface EOCCheckoutConfig {
   returnsModalText?: string;
   returnsFormTitle?: string;
   returnsFieldLabel?: string;
+  returnsEnableGhostProduct?: boolean;
+  returnsFeeChangeText?: string;
 }
 
 export interface CustomCheckoutWindow extends Window {

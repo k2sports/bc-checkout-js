@@ -403,10 +403,14 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
             onRequestClose={() => setIsModalNoticeOpen(false)}
             shouldShowCloseButton={false}
           >
-            <p aria-live="assertive" role="alert">
-              Checkout+ was removed from your order because of a fee change. Please review the
-              updated fee and opt-in again if you'd like to keep your returns coverage.
-            </p>
+            <div
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(
+                  checkoutSettings?.returnsFeeChangeText ||
+                    "Checkout+ was removed from your order because of a fee change. Please review the updated fee and opt-in again if you'd like to keep your returns coverage.",
+                ),
+              }}
+            />
           </Modal>
         </>
       ) : null,
