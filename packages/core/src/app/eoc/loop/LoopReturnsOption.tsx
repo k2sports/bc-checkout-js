@@ -93,6 +93,14 @@ const LoopReturnsOption: FunctionComponent<LoopReturnsOptionProps> = ({
     const isChecked = event.target.checked;
     setIsLoopFieldChecked(isChecked);
 
+    if ((window as any).dataLayer) {
+      console.log('there is a datalayer!');
+      (window as any).dataLayer?.push({
+        event: isChecked ? 'returns_opt_in' : 'returns_opt_out',
+        _clear: true,
+      });
+    }
+
     try {
       if (isChecked && loopQuote?.chargeInstructions?.amount && checkout?.id) {
         // Apply custom fee and ghost item to checkout
